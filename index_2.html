@@ -1,0 +1,563 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>OLAM — Dunyoning eng go'zal manzaralari</title>
+<meta name="theme-color" content="#07080c">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07080c; --bg2:#0f1118; --card:#151823; --line:rgba(255,255,255,.08);
+  --text:#f5f3ee; --mute:#9aa0ae; --gold:#e8c27a; --gold2:#f3dca6; --heart:#ff5a76;
+  --serif:"Fraunces",Georgia,serif; --sans:Inter,system-ui,-apple-system,sans-serif;
+  --nav:68px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:#000;color:var(--text);font-family:var(--sans)}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+input{font:inherit}
+a{color:inherit;text-decoration:none}
+img{display:block}
+.app{position:relative;max-width:480px;height:100dvh;margin:0 auto;background:var(--bg);overflow:hidden;overflow:clip}
+svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ph{position:relative;overflow:hidden;background:#1a1d27}
+.ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.serif{font-family:var(--serif)}
+
+/* ===== ONBOARDING ===== */
+.ob{position:absolute;inset:0;z-index:100;background:#000;display:none}
+.ob.on{display:block}
+.ob .bgl{position:absolute;inset:0;opacity:0;transition:opacity 1.6s ease;background-size:cover;background-position:center}
+.ob .bgl.on{opacity:1;animation:kb 12s ease-out forwards}
+.ob .veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.25) 0%,rgba(0,0,0,.1) 30%,rgba(7,8,12,.85) 62%,#07080c 100%)}
+.ob .body{position:absolute;inset:auto 0 0 0;padding:24px 22px calc(26px + env(safe-area-inset-bottom));max-height:100%;overflow-y:auto}
+.ob .steps{display:flex;gap:6px;margin-bottom:22px}
+.ob .steps i{flex:1;height:3px;border-radius:3px;background:rgba(255,255,255,.18)}
+.ob .steps i.on{background:var(--gold)}
+.ob h1{font-family:var(--serif);font-weight:700;font-size:34px;line-height:1.08;margin-bottom:8px}
+.ob p.sub{color:#c9ccd4;font-size:15px;line-height:1.5;margin-bottom:20px}
+.ob .logo{font-family:var(--serif);font-size:56px;font-weight:700;letter-spacing:6px;color:var(--gold2);margin-bottom:6px}
+.ob label.f{display:block;font-size:13px;color:var(--mute);margin:14px 0 8px}
+.ob input.t{width:100%;background:rgba(255,255,255,.07);border:1px solid var(--line);border-radius:14px;padding:14px 16px;color:var(--text);font-size:16px;outline:0}
+.ob input.t:focus{border-color:var(--gold)}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opt{padding:11px 15px;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid var(--line);font-size:14px;font-weight:500;transition:.15s}
+.opt.on{background:var(--gold);color:#1a1405;border-color:var(--gold);font-weight:600}
+.dream{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px}
+.dream .ph{aspect-ratio:3/4;border-radius:14px;cursor:pointer;border:2px solid transparent}
+.dream .ph.on{border-color:var(--gold)}
+.dream .ph span{position:absolute;left:8px;right:8px;bottom:7px;font-size:12px;font-weight:600;z-index:1;text-shadow:0 1px 6px #000}
+.dream .ph::after{content:"";position:absolute;inset:0;background:linear-gradient(transparent 45%,rgba(0,0,0,.8))}
+.obb{display:flex;gap:10px;margin-top:24px}
+.btn{flex:1;padding:16px;border-radius:16px;font-weight:600;font-size:16px;text-align:center}
+.btn.g{background:var(--gold);color:#1a1405}
+.btn.g:disabled{opacity:.35}
+.btn.o{flex:0 0 auto;padding:16px 20px;background:rgba(255,255,255,.08)}
+
+/* ===== VIEWS ===== */
+.view{position:absolute;inset:0 0 var(--nav) 0;overflow-y:auto;display:none;scrollbar-width:none;overscroll-behavior:contain}
+.view::-webkit-scrollbar{display:none}
+.view.on{display:block}
+#watch{inset:0 0 var(--nav) 0;overflow:hidden;background:#000}
+
+/* nav */
+.nav{position:absolute;inset:auto 0 0 0;height:var(--nav);display:flex;justify-content:space-around;align-items:center;background:rgba(7,8,12,.96);border-top:1px solid var(--line);z-index:30;padding-bottom:env(safe-area-inset-bottom)}
+.nav button{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10.5px;color:var(--mute);width:70px;font-weight:500}
+.nav button.on{color:var(--gold2)}
+.nav .play{width:52px;height:52px;margin-top:-26px;border-radius:50%;background:var(--gold);color:#1a1405;display:grid;place-items:center;box-shadow:0 6px 24px rgba(232,194,122,.35)}
+.nav .play svg{width:24px;height:24px;fill:#1a1405;stroke:none}
+
+/* home hero */
+.hero{height:72vh;min-height:440px;position:relative;cursor:pointer}
+.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.45) 0%,transparent 25%,transparent 45%,rgba(7,8,12,.6) 72%,var(--bg) 100%)}
+.hero .hi{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;justify-content:flex-end;padding:0 22px 22px}
+.hero .top{position:absolute;top:0;left:0;right:0;z-index:2;display:flex;justify-content:space-between;align-items:center;padding:calc(14px + env(safe-area-inset-top)) 20px}
+.brand{font-family:var(--serif);font-size:24px;font-weight:700;letter-spacing:4px;color:var(--gold2)}
+.hello{font-size:13px;color:#e8e8ea;background:rgba(0,0,0,.35);padding:6px 12px;border-radius:999px}
+.kicker{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);font-weight:600;margin-bottom:8px}
+.hero h1{font-family:var(--serif);font-size:44px;line-height:1;font-weight:700;margin-bottom:8px}
+.hero p{color:#d6d8de;font-size:14px;line-height:1.5;margin-bottom:16px;max-width:340px}
+.row{display:flex;gap:10px}
+.pill{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;padding:12px 16px;border-radius:999px;font-weight:600;font-size:14px}
+.pill.g{background:var(--gold);color:#1a1405}
+.pill.g svg{fill:#1a1405;stroke:none;width:16px;height:16px}
+.pill.o{background:rgba(255,255,255,.12)}
+.sec{display:flex;justify-content:space-between;align-items:baseline;padding:26px 20px 12px}
+.sec h2{font-family:var(--serif);font-size:22px;font-weight:600}
+.sec span{color:var(--gold);font-size:13px;cursor:pointer}
+.sec small{display:block;color:var(--mute);font-size:12.5px;font-family:var(--sans);margin-top:3px;font-weight:400}
+.hs{display:flex;gap:12px;overflow-x:auto;padding:0 20px 4px;scroll-snap-type:x mandatory;scrollbar-width:none}
+.hs::-webkit-scrollbar{display:none}
+.card{flex:0 0 72%;aspect-ratio:4/5;border-radius:22px;scroll-snap-align:start;cursor:pointer}
+.card.sm{flex:0 0 42%;aspect-ratio:3/4;border-radius:18px}
+.card::after{content:"";position:absolute;inset:0;background:linear-gradient(transparent 50%,rgba(0,0,0,.82))}
+.card .ci{position:absolute;left:14px;right:14px;bottom:14px;z-index:1}
+.card b{font-family:var(--serif);font-size:22px;font-weight:600;display:block;line-height:1.1}
+.card.sm b{font-size:16px}
+.card small{color:#d2d4da;font-size:12px}
+.card .tag{position:absolute;top:12px;left:12px;z-index:1;font-size:11px;font-weight:600;background:rgba(0,0,0,.5);padding:5px 9px;border-radius:999px}
+.moods{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 20px}
+.mood{height:84px;border-radius:16px;cursor:pointer}
+.mood::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.45)}
+.mood span{position:absolute;inset:0;z-index:1;display:grid;place-items:center;font-weight:600;font-size:15px}
+.foot{height:30px}
+
+/* explore */
+.xhead{padding:calc(18px + env(safe-area-inset-top)) 20px 6px}
+.xhead h1{font-family:var(--serif);font-size:30px;margin-bottom:12px}
+.search{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.search input{flex:1;background:none;border:0;outline:0;color:var(--text);font-size:15px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:12px 20px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;padding:8px 14px;border-radius:999px;background:var(--card);border:1px solid var(--line);font-size:13px;font-weight:500}
+.chip.on{background:var(--gold);color:#1a1405;border-color:var(--gold)}
+.mas{columns:2;column-gap:10px;padding:4px 20px}
+.mas .card{display:block;width:100%;margin-bottom:10px;break-inside:avoid;aspect-ratio:3/4;border-radius:18px}
+.mas .card:nth-child(3n+2){aspect-ratio:3/5}
+.mas .card b{font-size:16px}
+.empty{padding:50px 30px;text-align:center;color:var(--mute);line-height:1.6}
+
+/* watch (immersive) */
+.layer{position:absolute;inset:-2%;background-size:cover;background-position:center;opacity:0;transition:opacity 1.2s ease}
+.layer.on{opacity:1}
+.layer.kb{animation:kb 10s linear forwards}
+@keyframes kb{from{transform:scale(1.04)}to{transform:scale(1.18) translate(-2%,-1.5%)}}
+#wv{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .8s}
+#wv.on{opacity:1}
+.wshade{position:absolute;inset:0;background:linear-gradient(rgba(0,0,0,.45),transparent 22%,transparent 55%,rgba(0,0,0,.78));pointer-events:none}
+.wbar{position:absolute;top:calc(10px + env(safe-area-inset-top));left:14px;right:14px;height:3px;background:rgba(255,255,255,.22);border-radius:3px;overflow:hidden;z-index:3}
+.wbar i{display:block;height:100%;width:0;background:#fff}
+.wtop{position:absolute;top:calc(22px + env(safe-area-inset-top));left:16px;right:16px;display:flex;justify-content:space-between;align-items:center;z-index:3}
+.wtop .brand{font-size:18px}
+.wtop .ib{width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,.35);display:grid;place-items:center}
+.wtap{position:absolute;inset:0;z-index:1}
+.wtxt{position:absolute;left:20px;right:80px;bottom:26px;z-index:2;pointer-events:none}
+.wtxt .kicker{margin-bottom:6px}
+.wtxt h2{font-family:var(--serif);font-size:38px;line-height:1.02;font-weight:700;text-shadow:0 2px 20px rgba(0,0,0,.5)}
+.wtxt p{color:#dfe1e6;font-size:14px;margin-top:8px;line-height:1.45}
+.wtxt.in>*{animation:rise .7s ease both}
+.wtxt.in>*:nth-child(2){animation-delay:.08s}.wtxt.in>*:nth-child(3){animation-delay:.16s}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.wside{position:absolute;right:12px;bottom:30px;z-index:3;display:flex;flex-direction:column;gap:16px}
+.wside button{width:46px;height:46px;border-radius:50%;background:rgba(0,0,0,.38);display:grid;place-items:center}
+.wside button.on svg{fill:var(--heart);stroke:var(--heart)}
+.wside button.sv.on svg{fill:var(--gold);stroke:var(--gold)}
+.paused{position:absolute;inset:0;display:none;place-items:center;z-index:2;pointer-events:none}
+.paused.on{display:grid}
+.paused div{width:72px;height:72px;border-radius:50%;background:rgba(0,0,0,.45);display:grid;place-items:center}
+.hint{position:absolute;left:0;right:0;top:46%;text-align:center;z-index:2;font-size:13px;color:#fff;opacity:0;pointer-events:none;transition:opacity .4s}
+.hint.on{opacity:.85}
+
+/* detail */
+.detail{position:absolute;inset:0;z-index:50;background:var(--bg);overflow-y:auto;transform:translateY(100%);visibility:hidden;transition:transform .32s cubic-bezier(.2,.8,.2,1),visibility 0s .32s;scrollbar-width:none}
+.detail::-webkit-scrollbar{display:none}
+.detail.on{transform:none;visibility:visible;transition:transform .32s cubic-bezier(.2,.8,.2,1)}
+.dg{height:64vh;min-height:400px;position:relative}
+.gal{position:absolute;inset:0;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
+.gal::-webkit-scrollbar{display:none}
+.gal .ph{flex:0 0 100%;scroll-snap-align:start}
+.dg::after{content:"";position:absolute;inset:0;background:linear-gradient(rgba(0,0,0,.4),transparent 20%,transparent 55%,var(--bg));pointer-events:none}
+.dg .x{position:absolute;top:calc(14px + env(safe-area-inset-top));left:16px;z-index:3;width:42px;height:42px;border-radius:50%;background:rgba(0,0,0,.45);display:grid;place-items:center}
+.dg .cnt{position:absolute;top:calc(22px + env(safe-area-inset-top));right:16px;z-index:3;font-size:12px;background:rgba(0,0,0,.45);padding:5px 10px;border-radius:999px}
+.dg .dt{position:absolute;left:20px;right:20px;bottom:6px;z-index:2;pointer-events:none}
+.dg h1{font-family:var(--serif);font-size:40px;line-height:1.02}
+.dg .loc{color:#d4d6dc;margin-top:6px;font-size:14px}
+.db{padding:16px 20px 0}
+.db .row .pill{flex:1;justify-content:center}
+.tagline{font-family:var(--serif);font-size:19px;line-height:1.4;color:var(--gold2);margin:20px 0 12px}
+.facts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:14px 0}
+.facts div{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px;font-size:11px;color:var(--mute)}
+.facts b{display:block;color:var(--text);font-size:13px;margin-top:3px}
+.wiki{color:#b9bcc6;line-height:1.6;font-size:13.5px}
+.wiki small{display:block;margin-top:6px;color:var(--mute);font-size:11px}
+.wiki small a{text-decoration:underline}
+.rec{display:flex;gap:14px;padding:8px 20px;cursor:pointer;align-items:center}
+.rec .ph{flex:0 0 132px;height:92px;border-radius:14px}
+.rec b{font-family:var(--serif);font-size:17px;font-weight:600;display:block;margin-bottom:4px}
+.rec small{color:var(--mute);font-size:12.5px;line-height:1.45;display:block}
+
+/* profile */
+.prof{padding:calc(30px + env(safe-area-inset-top)) 20px 4px;text-align:center}
+.prof .av{width:86px;height:86px;border-radius:50%;margin:0 auto 12px;background:linear-gradient(135deg,var(--gold),#b0703a);color:#1a1405;display:grid;place-items:center;font-family:var(--serif);font-size:36px;font-weight:700}
+.prof h1{font-family:var(--serif);font-size:26px}
+.prof p{color:var(--mute);font-size:13.5px;margin-top:4px}
+.prof .opts{justify-content:center;margin-top:14px}
+.prof .opt{padding:7px 12px;font-size:12.5px}
+.reset{display:block;margin:18px auto 0;color:var(--gold);font-size:13.5px;text-decoration:underline}
+.toast{position:absolute;left:50%;bottom:calc(var(--nav) + 18px);transform:translateX(-50%) translateY(16px);background:var(--text);color:#000;padding:10px 16px;border-radius:12px;font-size:13px;font-weight:600;opacity:0;transition:.25s;z-index:120;pointer-events:none;white-space:nowrap}
+.toast.on{opacity:1;transform:translateX(-50%)}
+@media (prefers-reduced-motion:reduce){.layer.kb,.ob .bgl.on{animation:none}}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <section class="ob" id="ob"><div class="bgl" id="obA"></div><div class="bgl" id="obB"></div><div class="veil"></div><div class="body" id="obBody"></div></section>
+
+  <main class="view on" id="home"></main>
+  <main class="view" id="watch"></main>
+  <main class="view" id="explore"></main>
+  <main class="view" id="profile"></main>
+  <section class="detail" id="detail"></section>
+
+  <nav class="nav">
+    <button class="on" data-v="home" onclick="go('home')"><svg viewBox="0 0 24 24"><path d="M3 11 12 3l9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Asosiy</button>
+    <button data-v="explore" onclick="go('explore')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg>Kashf et</button>
+    <button data-v="watch" onclick="go('watch')"><div class="play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></button>
+    <button data-v="saved" onclick="go('profile','saved')"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>Saqlangan</button>
+    <button data-v="profile" onclick="go('profile')"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Profil</button>
+  </nav>
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+/* ================= MA'LUMOTLAR =================
+   t = Wikipedia sahifa nomi (rasm, koordinata, tavsif shu yerdan)
+   q = Wikimedia Commons'da video qidirish so'zi                       */
+const INTERESTS = {tog:"⛰ Tog'lar",dengiz:"🏝 Dengiz va orollar",sharshara:"💧 Sharsharalar",tarix:"🏛 Qadimiy obidalar",shahar:"🌆 Go'zal shaharlar",tabiat:"🌲 Yovvoyi tabiat",qor:"❄️ Shimol va qor",sahro:"🏜 Kanyon va cho'llar"};
+const REGIONS = {uz:"🇺🇿 O'zbekiston bo'ylab",osiyo:"🌏 Osiyo",yevropa:"🏰 Yevropa",amerika:"🗽 Amerika",afrika:"🐪 Afrika va Yaqin Sharq",okeaniya:"🐚 Okeaniya"};
+const COUNTRIES = {"O'zbekiston":[41.3,69.28],"Qozog'iston":[43.24,76.89],"Qirg'iziston":[42.87,74.6],"Tojikiston":[38.56,68.78],"Turkmaniston":[37.95,58.38],"Rossiya":[55.75,37.62],"Turkiya":[41.0,28.97],"AQSh":[40.71,-74.0],"Boshqa":[41.3,69.28]};
+const P = [
+ ["registan","Registan","Registan Samarkand","Registon","Samarqand, O'zbekiston","uz","tarix shahar","Apr–Iyun","Uchta madrasa, ming yillik tarix — Sharqning eng go'zal maydoni.",["#0f4c81","#e0a458"]],
+ ["itchan","Itchan_Kala","Khiva Itchan Kala","Ichan qal'a","Xiva, O'zbekiston","uz","tarix sahro","Apr–May","Devorlar ichidagi butun bir shahar — ochiq osmon ostidagi muzey.",["#8a5a2b","#f0c27b"]],
+ ["kalon","Po-i-Kalyan","Bukhara Kalyan minaret","Poi Kalon","Buxoro, O'zbekiston","uz","tarix shahar","Sen–Okt","Chingizxon ham buzmagan minora — Buxoroning yuragi.",["#7a4a1e","#e9c46a"]],
+ ["charvak","Charvak_Reservoir","Charvak","Chorvoq","Toshkent viloyati, O'zbekiston","uz","tog tabiat","Iyun–Sen","Tog'lar orasidagi moviy suv — Toshkentdan 1,5 soat yo'l.",["#0077b6","#90e0ef"]],
+ ["issyk","Issyk-Kul","Issyk-Kul lake","Issiqko'l","Qirg'iziston","osiyo","tog tabiat","Iyul–Avg","Qorli cho'qqilar bilan o'ralgan, hech qachon muzlamaydigan ko'l.",["#023e8a","#caf0f8"]],
+ ["charyn","Charyn_Canyon","Charyn Canyon","Charin kanyoni","Qozog'iston","osiyo","sahro tabiat","May–Sen","Qizil qoyalar vodiysi — Katta Kanyonning kichik ukasi.",["#9c2c00","#f4a261"]],
+ ["santorini","Oia,_Greece","Santorini","Santorini","Gretsiya","yevropa","dengiz shahar","May–Okt","Oq uylar, ko'k gumbazlar va dunyodagi eng chiroyli quyosh botishi.",["#1d4e89","#dfe7fd"]],
+ ["eiffel","Eiffel_Tower","Eiffel Tower","Eyfel minorasi","Parij, Fransiya","yevropa","shahar","Apr–Iyun","Har soatda 5 daqiqa chiroqlar bilan yonib-o'chadi.",["#2b2d42","#f4a261"]],
+ ["machu","Machu_Picchu","Machu Picchu","Machu-Pikchu","Peru","amerika","tarix tog","May–Sen","Bulutlar ustidagi yo'qolgan inklar shahri.",["#2d6a4f","#b7e4c7"]],
+ ["maldives","Malé","Maldives beach","Maldiv orollari","Maldiv","osiyo","dengiz","Noy–Apr","Suv ustidagi uylar va shishadek tiniq okean.",["#0096c7","#caf0f8"]],
+ ["fuji","Mount_Fuji","Mount Fuji","Fudzi tog'i","Yaponiya","osiyo","tog qor","Mar–Apr","Sakura gullaganda Yaponiyaning ramzi yanada go'zal.",["#3a0ca3","#f72585"]],
+ ["burj","Burj_Khalifa","Burj Khalifa","Burj Xalifa","Dubay, BAA","afrika","shahar","Noy–Mar","828 metr — dunyodagi eng baland bino.",["#14213d","#fca311"]],
+ ["taj","Taj_Mahal","Taj Mahal","Toj Mahal","Agra, Hindiston","osiyo","tarix","Okt–Mar","Bobur avlodi Shoh Jahon qurdirgan muhabbat ramzi.",["#6d597a","#ffcdb2"]],
+ ["canyon","Grand_Canyon","Grand Canyon","Katta Kanyon","Arizona, AQSh","amerika","sahro tabiat","Mar–May","2 milliard yillik tarixni ko'rsatadigan qoyalar.",["#9c2c00","#ffb703"]],
+ ["wall","Great_Wall_of_China","Great Wall of China","Buyuk Xitoy devori","Xitoy","osiyo","tarix tog","Sen–Okt","Tog'lar bo'ylab 21 ming km cho'zilgan devor.",["#386641","#f2e8cf"]],
+ ["cappadocia","Cappadocia","Cappadocia balloons","Kapadokiya","Turkiya","osiyo","sahro tarix","Apr–Iyun","Tongda yuzlab havo sharlari osmonga ko'tariladi.",["#e76f51","#f4d35e"]],
+ ["venice","Venice","Venice canal","Venetsiya","Italiya","yevropa","shahar dengiz","Apr–Iyun","Ko'chalar o'rnida kanallar, mashina o'rnida gondola.",["#264653","#e9c46a"]],
+ ["petra","Petra","Petra Jordan","Petra","Iordaniya","afrika","tarix sahro","Mar–May","Qoyaga o'yib qurilgan pushti shahar.",["#9d0208","#ffba08"]],
+ ["wadirum","Wadi_Rum","Wadi Rum","Vodiy Ram","Iordaniya","afrika","sahro","Mar–May","Marsga o'xshash qizil cho'l — ko'plab filmlar shu yerda olingan.",["#9d4b16","#f6bd60"]],
+ ["borabora","Bora_Bora","Bora Bora","Bora-Bora","Fransuz Polineziyasi","okeaniya","dengiz","May–Okt","Firuza laguna o'rtasidagi yashil orol.",["#0077b6","#90e0ef"]],
+ ["banff","Peyto_Lake","Banff National Park","Banff milliy bog'i","Kanada","amerika","tog tabiat qor","Iyun–Sen","Firuza ko'llar va qorli Qoyali tog'lar.",["#03045e","#48cae4"]],
+ ["moraine","Moraine_Lake","Moraine Lake","Moreyn ko'li","Kanada","amerika","tog tabiat","Iyun–Sen","Rangi shunchalik moviyki, rasmga o'xshaydi.",["#023047","#8ecae6"]],
+ ["colosseum","Colosseum","Colosseum Rome","Kolizey","Rim, Italiya","yevropa","tarix shahar","Apr–Iyun","2000 yil oldin 50 ming tomoshabin sig'gan arena.",["#7f5539","#ede0d4"]],
+ ["kyoto","Kyoto","Kyoto temple","Kioto","Yaponiya","osiyo","shahar tarix","Mar–Apr, Noy","1600 ta ibodatxona va sokin bog'lar shahri.",["#9b2226","#ffd6a5"]],
+ ["zhangjiajie","Zhangjiajie_National_Forest_Park","Zhangjiajie","Chjanszyaszye","Xitoy","osiyo","tog tabiat","Apr–Okt","\"Avatar\" filmidagi uchar tog'larga ilhom bergan joy.",["#1b4332","#d8f3dc"]],
+ ["iguazu","Iguazu_Falls","Iguazu Falls","Iguasu sharsharasi","Argentina / Braziliya","amerika","sharshara tabiat","Mar–May","275 ta sharsharadan iborat ulkan tizim.",["#1b4332","#95d5b2"]],
+ ["angkor","Angkor_Wat","Angkor Wat","Angkor-Vat","Kambodja","osiyo","tarix tabiat","Noy–Mar","Dunyodagi eng katta ibodatxona majmuasi.",["#5f0f40","#fb8b24"]],
+ ["bali","Tanah_Lot","Bali rice terraces","Bali","Indoneziya","osiyo","dengiz tabiat","Apr–Okt","Sholi terrasalari, ibodatxonalar va to'lqinlar.",["#006d77","#ffddd2"]],
+ ["lofoten","Lofoten","Lofoten","Lofoten orollari","Norvegiya","yevropa","qor tog dengiz","Fev–Mar","Shimoliy yog'du ostidagi baliqchilar qishlog'i.",["#22223b","#9a8c98"]],
+ ["skogafoss","Skógafoss","Skogafoss","Skogafoss","Islandiya","yevropa","sharshara qor","Iyun–Avg","Quyoshli kunda doim kamalak chiqadigan sharshara.",["#283618","#dda15e"]],
+ ["sagrada","Sagrada_Família","Sagrada Familia","Sagrada Familiya","Barselona, Ispaniya","yevropa","shahar tarix","May–Iyun","140 yildan beri qurilayotgan bino.",["#b5838d","#ffcdb2"]],
+ ["plitvice","Plitvice_Lakes_National_Park","Plitvice Lakes","Plitvitse ko'llari","Xorvatiya","yevropa","sharshara tabiat","May–Sen","16 ta zinapoya ko'l va yuzlab kichik sharsharalar.",["#2a9d8f","#e9f5db"]],
+ ["halong","Ha_Long_Bay","Ha Long Bay","Xalong ko'rfazi","Vyetnam","osiyo","dengiz tabiat","Mar–May","Zumrad suvdan chiqib turgan 1600 ta orol.",["#2a9d8f","#e9f5db"]],
+ ["hallstatt","Hallstatt","Hallstatt","Xallshtatt","Avstriya","yevropa","tog shahar qor","May–Sen, Dek","Ko'l bo'yidagi ertak qishloq.",["#355070","#eaac8b"]],
+ ["pamukkale","Pamukkale","Pamukkale","Pamukkale","Turkiya","osiyo","tabiat","Apr–Iyun","Qordek oppoq ohak terrasalari va issiq suv havzalari.",["#457b9d","#f1faee"]],
+ ["victoria","Victoria_Falls","Victoria Falls","Viktoriya sharsharasi","Zambiya / Zimbabve","afrika","sharshara tabiat","Fev–May","Mahalliylar uni \"Gulduragan tutun\" deyishadi.",["#344e41","#a3b18a"]],
+ ["niagara","Niagara_Falls","Niagara Falls","Niagara sharsharasi","AQSh / Kanada","amerika","sharshara","Iyun–Avg","Har soniyada 2800 tonna suv quyiladi.",["#023e8a","#ade8f4"]],
+ ["uyuni","Salar_de_Uyuni","Salar de Uyuni","Uyuni sho'rxogi","Boliviya","amerika","sahro tabiat","Yan–Mar","Yomg'irdan keyin dunyodagi eng katta ko'zguga aylanadi.",["#adb5bd","#e9ecef"]],
+ ["sydney","Sydney_Opera_House","Sydney Opera House","Sidney opera teatri","Avstraliya","okeaniya","shahar dengiz","Sen–Noy","Yelkanlarga o'xshash dunyoga mashhur bino.",["#1d3557","#a8dadc"]],
+ ["milford","Milford_Sound","Milford Sound","Milford-Saund","Yangi Zelandiya","okeaniya","tog dengiz sharshara","Dek–Fev","Fiordlar va okeanga quyilayotgan sharsharalar.",["#1b263b","#778da9"]],
+];
+const PLACES = P.map(a=>({id:a[0],t:a[1],q:a[2],n:a[3],c:a[4],reg:a[5],tags:a[6].split(" "),best:a[7],s:a[8],g:a[9]}));
+
+/* ================= YORDAMCHILAR ================= */
+const $ = s=>document.querySelector(s);
+const byId = id=>PLACES.find(p=>p.id===id);
+const esc = s=>String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const hash = s=>[...s].reduce((a,c)=>(a*31+c.charCodeAt(0))>>>0,7);
+const grad = p=>`linear-gradient(140deg,${p.g[0]},${p.g[1]})`;
+const big = u=>u?u.replace(/\/\d+px-/,"/1280px-"):u;
+const FB = "if(!this.dataset.f&&/1280px-/.test(this.src)){this.dataset.f=1;this.src=this.src.replace('/1280px-','/500px-')}else{this.remove()}";
+const img = (p,lg)=>p.img?`<img src="${lg?big(p.img):p.img}" alt="" loading="lazy" decoding="async" onerror="${FB}">`:"";
+const ph = (p,cls="",inner="",lg=false,extra="")=>`<div class="ph ${cls}" style="background:${grad(p)}" ${extra}>${img(p,lg)}${inner}</div>`;
+const ls = {get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}}, set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const ICON={
+ play:'<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>',
+ heart:'<svg viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/></svg>',
+ save:'<svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>',
+ info:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>',
+ share:'<svg viewBox="0 0 24 24"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7M16 6l-4-4-4 4M12 2v13"/></svg>',
+ down:'<svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>',
+ mute:'<svg viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4zM23 9l-6 6M17 9l6 6"/></svg>',
+ vol:'<svg viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4zM15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></svg>',
+ pause:'<svg viewBox="0 0 24 24" style="width:30px;height:30px"><path d="M8 5v14M16 5v14"/></svg>',
+ search:'<svg viewBox="0 0 24 24" style="color:var(--mute)"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
+};
+function dist(p){ if(!U||p.lat==null) return null; const [a,b]=COUNTRIES[U.country]||COUNTRIES["O'zbekiston"]; const R=6371,r=Math.PI/180;
+  const d=Math.sin((p.lat-a)*r/2)**2+Math.cos(a*r)*Math.cos(p.lat*r)*Math.sin((p.lon-b)*r/2)**2; return Math.round(2*R*Math.asin(Math.sqrt(d))); }
+const km = d=>d==null?"—":d<1000?d+" km":(d/1000).toFixed(1).replace(".0","")+" ming km";
+
+/* ================= HOLAT ================= */
+let U = ls.get("olam_user",null);           // {name,country,interests[],regions[],dream}
+const saved = new Set(ls.get("olam_saved",[])), liked = new Set(ls.get("olam_liked",[]));
+const keep = ()=>{ ls.set("olam_saved",[...saved]); ls.set("olam_liked",[...liked]); };
+let cur = "home";
+
+function score(p){
+  if(!U) return hash(p.id)%10;
+  let s = p.tags.filter(t=>U.interests.includes(t)).length*3 + (U.regions.includes(p.reg)?2:0) + (U.dream===p.id?100:0);
+  return s + (hash(p.id)%10)/10;
+}
+const forYou = ()=>[...PLACES].sort((a,b)=>score(b)-score(a));
+
+/* ================= WIKIPEDIA (bitta so'rovda 20 ta joy) ================= */
+async function loadAll(){
+  for(let i=0;i<PLACES.length;i+=20){
+    const chunk = PLACES.slice(i,i+20);
+    try{
+      const u = "https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1&prop=pageimages|extracts|coordinates|info&inprop=url"
+        +"&piprop=thumbnail&pithumbsize=500&pilimit=50&exintro=1&explaintext=1&exsentences=3&exlimit=20&colimit=50&titles="+encodeURIComponent(chunk.map(p=>p.t.replace(/_/g," ")).join("|"));
+      const d = (await (await fetch(u)).json()).query||{};
+      const map = {}; (d.normalized||[]).forEach(x=>map[x.from]=x.to);
+      const red = {}; (d.redirects||[]).forEach(x=>red[x.from]=x.to);
+      const pages = {}; Object.values(d.pages||{}).forEach(pg=>pages[pg.title]=pg);
+      chunk.forEach(p=>{
+        let k = p.t.replace(/_/g," "); k = map[k]||k; k = red[k]||k; const pg = pages[k]; if(!pg) return;
+        if(pg.thumbnail && !/\.svg/i.test(pg.thumbnail.source)) p.img = pg.thumbnail.source;
+        if(pg.extract) p.desc = pg.extract;
+        if(pg.coordinates) { p.lat=pg.coordinates[0].lat; p.lon=pg.coordinates[0].lon; }
+        p.wurl = pg.fullurl;
+      });
+    }catch(e){}
+    refresh();
+  }
+}
+let refT;
+function refresh(){ clearTimeout(refT); refT=setTimeout(()=>{
+  if($("#ob").classList.contains("on")) { obBg(); if(obStep===3) renderOb(); return; }
+  if(cur==="home"||cur==="explore"||cur==="profile"){ const v=$("#"+cur), st=v.scrollTop; render(cur); v.scrollTop=st; }
+},120); }
+async function loadGallery(p){
+  if(p.gallery) return p.gallery;
+  try{
+    const d = await (await fetch("https://en.wikipedia.org/api/rest_v1/page/media-list/"+encodeURIComponent(p.t))).json();
+    p.gallery = (d.items||[]).filter(i=>i.type==="image"&&i.srcset&&!/\.(svg|gif|png)$/i.test(i.title)&&!/(map|flag|logo|icon|locator|coat|diagram|plan)/i.test(i.title))
+      .slice(0,10).map(i=>{const s=i.srcset[i.srcset.length-1].src; return s.startsWith("//")?"https:"+s:s;});
+  }catch(e){ p.gallery=[]; }
+  return p.gallery;
+}
+async function loadVideo(p){
+  if(p.video!==undefined) return p.video;
+  p.video=null;
+  try{
+    const u="https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrnamespace=6&gsrlimit=6&gsrsearch="
+      +encodeURIComponent("filetype:video "+p.q)+"&prop=videoinfo&viprop=url|derivatives";
+    const d=await (await fetch(u)).json();
+    const pages=Object.values(d.query?.pages||{}).filter(x=>x.videoinfo).sort((a,b)=>(a.index||0)-(b.index||0));
+    const webm=document.createElement("video").canPlayType('video/webm; codecs="vp9"');
+    const near=(arr)=>arr.sort((a,b)=>Math.abs(a.height-480)-Math.abs(b.height-480))[0];
+    for(const pg of pages){ const ds=pg.videoinfo[0].derivatives||[];
+      const pick=near(ds.filter(x=>/mp4/.test(x.type))) || (webm && near(ds.filter(x=>/webm/.test(x.type))));
+      if(pick){ p.video=pick.src; break; } }
+  }catch(e){}
+  return p.video;
+}
+
+/* ================= ONBOARDING (kirish savollari) ================= */
+let obStep=0, obData={name:"",country:"O'zbekiston",interests:[],regions:[],dream:null}, obI=0, obTimer;
+function obBg(){
+  const withImg = PLACES.filter(p=>p.img); const pool = withImg.length?withImg:PLACES;
+  const p = pool[obI++ % pool.length]; const a=$("#obA"), b=$("#obB");
+  const [on,off] = a.classList.contains("on")?[b,a]:[a,b];
+  const show=()=>{ on.style.backgroundImage = p.img?`url("${big(p.img)}"), ${grad(p)}`:grad(p); on.classList.add("on"); off.classList.remove("on"); };
+  if(p.img){ const im=new Image(); im.onload=show; im.onerror=()=>{p.img&&(on.style.backgroundImage=`url("${p.img}"), ${grad(p)}`);on.classList.add("on");off.classList.remove("on");}; im.src=big(p.img); } else show();
+}
+function startOb(){ obStep=0; obData={name:U?.name||"",country:U?.country||"O'zbekiston",interests:U?.interests||[],regions:U?.regions||[],dream:U?.dream||null};
+  $("#ob").classList.add("on"); obBg(); clearInterval(obTimer); obTimer=setInterval(obBg,6000); renderOb(); }
+const steps = n=>`<div class="steps">${[1,2,3].map(i=>`<i class="${i<=n?"on":""}"></i>`).join("")}</div>`;
+function renderOb(){
+  const B=$("#obBody"); const D=obData;
+  if(obStep===0){
+    B.innerHTML=`<div class="logo">OLAM</div><h1>Dunyoning eng go'zal manzaralari — bir joyda</h1>
+      <p class="sub">Tog'lar, okeanlar, qadimiy shaharlar. Shunchaki tomosha qiling, ilhomlaning va keyingi sayohatingizni tanlang.</p>
+      <div class="obb"><button class="btn g" onclick="obNext()">Boshlash</button></div>`;
+  } else if(obStep===1){
+    B.innerHTML=`${steps(1)}<h1>Tanishib olaylik</h1><p class="sub">Sizga mos joylarni topishimiz uchun 3 ta savol.</p>
+      <label class="f">Ismingiz</label><input class="t" id="nm" placeholder="Masalan, Bexruz" value="${esc(D.name)}" oninput="obData.name=this.value">
+      <label class="f">Qayerdansiz?</label><div class="opts">${Object.keys(COUNTRIES).map(c=>`<button class="opt ${D.country===c?"on":""}" onclick="obData.country=this.textContent;renderOb()">${c}</button>`).join("")}</div>
+      <div class="obb"><button class="btn o" onclick="obStep--;renderOb()">←</button><button class="btn g" onclick="obNext()">Davom etish</button></div>`;
+  } else if(obStep===2){
+    B.innerHTML=`${steps(2)}<h1>Nimalarga qiziqasiz?</h1><p class="sub">Bir nechtasini tanlang — lentangiz shunga qarab tuziladi.</p>
+      <div class="opts">${Object.entries(INTERESTS).map(([k,v])=>`<button class="opt ${D.interests.includes(k)?"on":""}" onclick="tog(obData.interests,'${k}');renderOb()">${v}</button>`).join("")}</div>
+      <div class="obb"><button class="btn o" onclick="obStep--;renderOb()">←</button><button class="btn g" ${D.interests.length?"":"disabled"} onclick="obNext()">Davom etish</button></div>`;
+  } else if(obStep===3){
+    const sug = PLACES.filter(p=>!D.regions.length||D.regions.includes(p.reg)).sort((a,b)=>b.tags.filter(t=>D.interests.includes(t)).length-a.tags.filter(t=>D.interests.includes(t)).length).slice(0,9);
+    B.innerHTML=`${steps(3)}<h1>Qaysi joyga bormoqchisiz?</h1><p class="sub">Yo'nalishni tanlang, xohlasangiz orzuingizdagi joyni ham belgilang.</p>
+      <div class="opts">${Object.entries(REGIONS).map(([k,v])=>`<button class="opt ${D.regions.includes(k)?"on":""}" onclick="tog(obData.regions,'${k}');renderOb()">${v}</button>`).join("")}</div>
+      <label class="f">Orzuingizdagi joy (ixtiyoriy)</label>
+      <div class="dream">${sug.map(p=>ph(p,D.dream===p.id?"on":"",`<span>${p.n}</span>`,false,`onclick="obData.dream=obData.dream==='${p.id}'?null:'${p.id}';renderOb()"`)).join("")}</div>
+      <div class="obb"><button class="btn o" onclick="obStep--;renderOb()">←</button><button class="btn g" ${D.regions.length?"":"disabled"} onclick="obDone()">Tayyor ✨</button></div>`;
+  }
+}
+function tog(arr,k){ const i=arr.indexOf(k); i<0?arr.push(k):arr.splice(i,1); }
+function obNext(){ obStep++; renderOb(); }
+function obDone(){
+  U={...obData,name:obData.name.trim()||"Sayohatchi"}; ls.set("olam_user",U);
+  clearInterval(obTimer); $("#ob").classList.remove("on"); go("home");
+  toast(`Siz uchun ${forYou().filter(p=>score(p)>=3).length || PLACES.length} ta joy tanlandi`);
+}
+
+/* ================= ASOSIY ================= */
+function cardH(p,cls="",tag=""){ return ph(p,"card "+cls,`${tag?`<div class="tag">${tag}</div>`:""}<div class="ci"><b>${p.n}</b><small>${p.c}</small></div>`,false,`onclick="openPlace('${p.id}')"`); }
+function renderHome(){
+  const list=forYou(), hero=U?.dream?byId(U.dream):list[0];
+  const near = PLACES.filter(p=>p.lat!=null&&p.id!==hero.id).sort((a,b)=>dist(a)-dist(b)).slice(0,8);
+  const uz = PLACES.filter(p=>p.reg==="uz");
+  const moods = Object.entries(INTERESTS).map(([k,v])=>{ const p=PLACES.find(x=>x.tags.includes(k)&&x.img)||PLACES.find(x=>x.tags.includes(k)); return ph(p,"mood",`<span>${v}</span>`,false,`onclick="openMood('${k}')"`); }).join("");
+  $("#home").innerHTML = `
+   <div class="hero ph" style="background:${grad(hero)}" onclick="openPlace('${hero.id}')">${img(hero,true)}
+     <div class="top"><div class="brand">OLAM</div><div class="hello">Salom, ${esc(U?.name||"do'stim")} 👋</div></div>
+     <div class="hi"><div class="kicker">${U?.dream===hero.id?"Orzuingizdagi joy":"Bugun siz uchun"}</div>
+       <h1>${hero.n}</h1><p>${hero.s}</p>
+       <div class="row"><button class="pill g" onclick="event.stopPropagation();go('watch','${hero.id}')">${ICON.play} Tomosha qilish</button>
+       <button class="pill o" onclick="event.stopPropagation();openPlace('${hero.id}')">Batafsil</button></div></div>
+   </div>
+   <div class="sec"><h2>Siz uchun tanlandi<small>Qiziqishlaringiz asosida</small></h2><span onclick="go('watch')">▶ Hammasi</span></div>
+   <div class="hs">${list.filter(p=>p.id!==hero.id).slice(0,8).map(p=>cardH(p,"",p.tags.filter(t=>U?.interests.includes(t)).map(t=>INTERESTS[t].split(" ")[0]).join(" "))).join("")}</div>
+   ${near.length?`<div class="sec"><h2>Sizga eng yaqin<small>${esc(U?.country||"")} dan masofa bo'yicha</small></h2></div>
+   <div class="hs">${near.map(p=>cardH(p,"sm",km(dist(p)))).join("")}</div>`:""}
+   <div class="sec"><h2>Kayfiyatga qarab</h2></div><div class="moods">${moods}</div>
+   <div class="sec"><h2>O'zbekiston durdonalari</h2></div>
+   <div class="hs">${uz.map(p=>cardH(p,"sm")).join("")}</div>
+   <div class="foot"></div>`;
+}
+function openMood(k){ X.tag=k; X.q=""; go("explore"); }
+
+/* ================= KASHF ET ================= */
+const X={tag:"all",q:""};
+function renderExplore(){
+  $("#explore").innerHTML=`<div class="xhead"><h1>Kashf eting</h1><label class="search">${ICON.search}<input id="xq" placeholder="Joy yoki davlat…" value="${esc(X.q)}" oninput="X.q=this.value;renderMas()"></label></div>
+   <div class="chips"><button class="chip ${X.tag==="all"?"on":""}" onclick="X.tag='all';renderExplore()">Hammasi</button>${Object.entries(INTERESTS).map(([k,v])=>`<button class="chip ${X.tag===k?"on":""}" onclick="X.tag='${k}';renderExplore()">${v}</button>`).join("")}</div>
+   <div id="mas"></div><div class="foot"></div>`;
+  renderMas();
+}
+function renderMas(){
+  const q=X.q.toLowerCase();
+  const l=forYou().filter(p=>(X.tag==="all"||p.tags.includes(X.tag))&&(!q||(p.n+" "+p.c+" "+p.t).toLowerCase().includes(q)));
+  $("#mas").innerHTML = l.length?`<div class="mas">${l.map(p=>cardH(p)).join("")}</div>`:`<div class="empty">Hech narsa topilmadi</div>`;
+}
+
+/* ================= PROFIL / SAQLANGAN ================= */
+function renderProfile(){
+  const l=PLACES.filter(p=>saved.has(p.id));
+  $("#profile").innerHTML=`<div class="prof"><div class="av">${esc((U?.name||"S")[0].toUpperCase())}</div><h1>${esc(U?.name||"Sayohatchi")}</h1>
+     <p>📍 ${esc(U?.country||"")} · ${saved.size} ta saqlangan · ${liked.size} ta yoqtirilgan</p>
+     <div class="opts">${(U?.interests||[]).map(k=>`<span class="opt on">${INTERESTS[k]}</span>`).join("")}${(U?.regions||[]).map(k=>`<span class="opt">${REGIONS[k]}</span>`).join("")}</div>
+     <button class="reset" onclick="startOb()">Qiziqishlarni o'zgartirish</button></div>
+   <div class="sec" id="savedSec"><h2>Saqlangan joylar</h2><span>${l.length} ta</span></div>
+   ${l.length?`<div class="mas">${l.map(p=>cardH(p)).join("")}</div>`:`<div class="empty">Hali hech narsa saqlanmagan.<br>Tomosha paytida 🔖 tugmasini bosing.</div>`}<div class="foot"></div>`;
+}
+
+/* ================= TOMOSHA (to'liq ekran, avtomatik) ================= */
+const W={list:[],i:0,t:null,paused:false,muted:true,dur:9000,start:0,left:0};
+function renderWatch(startId){
+  W.list=forYou(); if(startId){ const i=W.list.findIndex(p=>p.id===startId); W.list.unshift(...W.list.splice(i,1)); } W.i=0;
+  $("#watch").innerHTML=`<div class="layer" id="la"></div><div class="layer" id="lb"></div><video id="wv" playsinline muted loop></video><div class="wshade"></div>
+   <div class="wbar"><i id="wbi"></i></div>
+   <div class="wtop"><div class="brand">OLAM</div><button class="ib" onclick="wMute()" id="wm">${ICON.mute}</button></div>
+   <div class="wtap" id="wtap"></div><div class="paused" id="wp"><div>${ICON.pause}</div></div><div class="hint" id="wh">← oldingi · pauza · keyingi →</div>
+   <div class="wtxt" id="wt"></div>
+   <div class="wside"><button id="wl" onclick="wLike()">${ICON.heart}</button><button class="sv" id="ws" onclick="wSave()">${ICON.save}</button>
+     <button onclick="openPlace(W.list[W.i].id)">${ICON.info}</button><button onclick="share(W.list[W.i].id)">${ICON.share}</button></div>`;
+  const tap=$("#wtap"); let y0=null,x0=null;
+  tap.onclick=e=>{ const r=tap.getBoundingClientRect(), x=(e.clientX-r.left)/r.width; x<.3?wGo(-1):x>.7?wGo(1):wPause(); };
+  tap.ontouchstart=e=>{ y0=e.touches[0].clientY; x0=e.touches[0].clientX; };
+  tap.ontouchend=e=>{ if(y0==null) return; const dy=e.changedTouches[0].clientY-y0, dx=e.changedTouches[0].clientX-x0; if(Math.abs(dy)>60&&Math.abs(dy)>Math.abs(dx)){ e.preventDefault(); wGo(dy<0?1:-1);} y0=null; };
+  $("#wh").classList.add("on"); setTimeout(()=>$("#wh")?.classList.remove("on"),2500);
+  wShow();
+}
+function wShow(){
+  const p=W.list[W.i]; const a=$("#la"), b=$("#lb"); if(!a) return;
+  const [on,off]=a.classList.contains("on")?[b,a]:[a,b];
+  const v=$("#wv"); v.classList.remove("on"); v.pause(); v.removeAttribute("src"); v.load();
+  const put=u=>{ on.style.backgroundImage=u?`url("${u}"), ${grad(p)}`:grad(p); on.classList.remove("kb"); void on.offsetWidth; on.classList.add("on","kb"); off.classList.remove("on"); setTimeout(()=>off.classList.remove("kb"),1300); };
+  if(p.img){ const im=new Image(); im.onload=()=>put(big(p.img)); im.onerror=()=>put(p.img); im.src=big(p.img); } else put(null);
+  const t=$("#wt"); t.classList.remove("in"); void t.offsetWidth;
+  const d=dist(p);
+  t.innerHTML=`<div class="kicker">${p.c}${d!=null?" · "+km(d):""}</div><h2>${p.n}</h2><p>${p.s}</p>`; t.classList.add("in");
+  $("#wl").classList.toggle("on",liked.has(p.id)); $("#ws").classList.toggle("on",saved.has(p.id));
+  W.dur=9000; wTimer(W.dur);
+  const id=p.id;
+  loadVideo(p).then(src=>{ if(!src||W.list[W.i]?.id!==id||cur!=="watch") return;
+    v.src=src; v.muted=W.muted;
+    v.onplaying=()=>{ if(W.list[W.i]?.id!==id) return; v.classList.add("on"); W.dur=16000; wTimer(W.dur); };
+    if(!W.paused) v.play().catch(()=>{}); });
+  // keyingi joyni oldindan yuklash
+  const n=W.list[(W.i+1)%W.list.length]; if(n.img){ const im=new Image(); im.src=big(n.img); } loadVideo(n);
+}
+function wTimer(ms){
+  clearTimeout(W.t); const bar=$("#wbi"); if(!bar) return;
+  W.start=Date.now(); W.left=ms;
+  bar.style.transition="none"; bar.style.width="0"; void bar.offsetWidth;
+  if(W.paused) return;
+  bar.style.transition=`width ${ms}ms linear`; bar.style.width="100%";
+  W.t=setTimeout(()=>wGo(1),ms);
+}
+function wGo(d){ W.i=(W.i+d+W.list.length)%W.list.length; W.paused=false; $("#wp")?.classList.remove("on"); wShow(); }
+function wPause(){
+  const bar=$("#wbi"), v=$("#wv"); W.paused=!W.paused; $("#wp").classList.toggle("on",W.paused);
+  if(W.paused){ clearTimeout(W.t); const done=Date.now()-W.start; W.left=Math.max(500,W.left-done); bar.style.width=getComputedStyle(bar).width; bar.style.transition="none"; v.pause(); }
+  else { bar.style.transition=`width ${W.left}ms linear`; bar.style.width="100%"; W.start=Date.now(); W.t=setTimeout(()=>wGo(1),W.left); if(v.src) v.play().catch(()=>{}); }
+}
+function wStop(){ clearTimeout(W.t); const v=$("#wv"); if(v){ v.pause(); } }
+function wMute(){ W.muted=!W.muted; $("#wm").innerHTML=W.muted?ICON.mute:ICON.vol; $("#wv").muted=W.muted; }
+function wLike(){ const id=W.list[W.i].id; liked.has(id)?liked.delete(id):liked.add(id); keep(); $("#wl").classList.toggle("on",liked.has(id)); }
+function wSave(){ save(W.list[W.i].id); $("#ws").classList.toggle("on",saved.has(W.list[W.i].id)); }
+document.addEventListener("keydown",e=>{ if(cur!=="watch"||$("#detail").classList.contains("on")) return;
+  if(e.key==="ArrowRight"||e.key==="ArrowDown") wGo(1); if(e.key==="ArrowLeft"||e.key==="ArrowUp") wGo(-1); if(e.key===" "){e.preventDefault();wPause();} });
+document.addEventListener("visibilitychange",()=>{ if(document.hidden&&cur==="watch"&&!W.paused) wPause(); });
+
+/* ================= JOY SAHIFASI ================= */
+async function openPlace(id){
+  const p=byId(id), D=$("#detail");
+  if(cur==="watch"&&!W.paused) wPause();
+  const others=[...PLACES].filter(x=>x.id!==id).map(x=>({x,s:x.tags.filter(t=>p.tags.includes(t)).length*2+(x.reg===p.reg?1:0)+score(x)/10})).sort((a,b)=>b.s-a.s).slice(0,10).map(o=>o.x);
+  const maps=p.lat!=null?`https://www.google.com/maps?q=${p.lat},${p.lon}`:`https://www.google.com/maps/search/${encodeURIComponent(p.q)}`;
+  D.innerHTML=`<div class="dg"><div class="gal" id="gal">${ph(p,"","",true)}</div>
+     <button class="x" onclick="closePlace()">${ICON.down}</button><div class="cnt" id="gc" style="display:none"></div>
+     <div class="dt"><div class="kicker">${p.tags.map(t=>INTERESTS[t]).join(" · ")}</div><h1>${p.n}</h1><div class="loc">📍 ${p.c}</div></div></div>
+   <div class="db">
+     <div class="row"><button class="pill g" onclick="closePlace();go('watch','${p.id}')">${ICON.play} Tomosha</button>
+       <a class="pill o" href="${maps}" target="_blank" rel="noopener">📍 Xarita</a>
+       <button class="pill o" id="dsv" onclick="save('${p.id}');this.textContent=saved.has('${p.id}')?'✓ Saqlandi':'🔖 Saqlash'">${saved.has(p.id)?"✓ Saqlandi":"🔖 Saqlash"}</button></div>
+     <div class="tagline">${p.s}</div>
+     <div class="facts"><div>Eng yaxshi vaqt<b>${p.best}</b></div><div>Sizdan<b>${km(dist(p))}</b></div><div>Hudud<b>${REGIONS[p.reg].replace(/^\S+\s/,"")}</b></div></div>
+     ${p.desc?`<div class="wiki">${esc(p.desc)}<small>Manba: <a href="${p.wurl}" target="_blank" rel="noopener">Wikipedia</a> (ingliz tilida)</small></div>`:""}
+   </div>
+   <div class="sec"><h2>Boshqa go'zal joylar<small>Sizga yoqishi mumkin</small></h2></div>
+   ${others.map(o=>`<div class="rec" onclick="openPlace('${o.id}')">${ph(o)}<div><b>${o.n}</b><small>${o.c}<br>${o.s.length>60?o.s.slice(0,58)+"…":o.s}</small></div></div>`).join("")}
+   <div class="foot"></div>`;
+  D.classList.add("on"); D.scrollTop=0;
+  const g=await loadGallery(p);
+  if(g.length>1&&D.classList.contains("on")&&$("#gal")){
+    $("#gal").innerHTML=g.map((u,i)=>`<div class="ph" style="background:${grad(p)}"><img src="${u}" alt="" ${i?'loading="lazy"':""} decoding="async" onerror="this.remove()"></div>`).join("");
+    const gc=$("#gc"); gc.style.display=""; gc.textContent=`1 / ${g.length}`;
+    $("#gal").onscroll=e=>{ gc.textContent=`${Math.round(e.target.scrollLeft/e.target.clientWidth)+1} / ${g.length}`; };
+  }
+}
+function closePlace(){ $("#detail").classList.remove("on"); }
+
+/* ================= UMUMIY ================= */
+function render(v,arg){ ({home:renderHome,explore:renderExplore,profile:renderProfile,watch:()=>renderWatch(arg)})[v](); }
+function go(v,arg){
+  if(cur==="watch"&&v!=="watch") wStop();
+  cur=v; closePlace();
+  document.querySelectorAll(".view").forEach(x=>x.classList.toggle("on",x.id===v));
+  document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("on",b.dataset.v===(arg==="saved"?"saved":v)));
+  render(v, v==="watch"?arg:undefined);
+  const el=$("#"+v); el.scrollTop=0;
+  if(arg==="saved") setTimeout(()=>{ const s=$("#savedSec"); if(s) el.scrollTop=s.offsetTop-10; },0);
+}
+function save(id){ saved.has(id)?saved.delete(id):saved.add(id); keep(); toast(saved.has(id)?"Saqlanganlarga qo'shildi":"Olib tashlandi"); }
+async function share(id){ const p=byId(id), text=`${p.n} (${p.c}) — ${p.s} OLAM ilovasida tomosha qiling!`;
+  try{ if(navigator.share){ await navigator.share({title:p.n,text,url:location.href}); return; } await navigator.clipboard.writeText(text); toast("Matn nusxalandi"); }catch(e){} }
+function toast(t){ const el=$("#toast"); el.textContent=t; el.classList.add("on"); clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove("on"),2000); }
+
+/* ================= START ================= */
+if(U) go("home"); else startOb();
+loadAll();
+</script>
+</body>
+</html>
