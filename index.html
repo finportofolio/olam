@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>OLAM — Dunyoning eng go'zal joylari</title>
 <meta name="description" content="OLAM — dunyoning eng go'zal joylari: rasmlar, Full HD videolar, AI gid, 10 tilda.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
 <meta name="theme-color" content="#f4f8fd">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -20,7 +22,7 @@
   --text:#14233a; --mute:#8391a7; --star:#f5b301; --heart:#ff4d6d;
   --sh:0 10px 30px rgba(31,94,170,.10); --sh2:0 4px 14px rgba(31,94,170,.08);
   --font:"Poppins",system-ui,-apple-system,"Segoe UI",sans-serif;
-  --nav:84px; --page:#dfeaf7; --page:#dfeaf7; --page:#dfeaf7;
+  --nav:84px; --page:#dfeaf7; --page:#dfeaf7; --page:#dfeaf7; --page:#dfeaf7;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:var(--page);color:var(--text);font-family:var(--font)}
@@ -470,6 +472,64 @@ label.pill{cursor:pointer}a.pill{display:flex}
 .fxr{display:flex;align-items:center;gap:10px;font-size:16px}.fxr span{color:var(--mute)}.fxr.s{font-size:12.5px;margin-top:4px}
 .db .sgrp{box-shadow:none;margin-top:12px}
 [dir=rtl] .hd .ibtn{margin-left:0}[dir=rtl] .hd .ibtn:first-of-type{margin-right:auto}
+
+/* ===== v2: turlar, sozlamalar, tungi rejim, RTL ===== */
+.cats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 20px}
+.catt{aspect-ratio:1/1.05;border-radius:20px;cursor:pointer;box-shadow:var(--sh2)}
+.catt::after{content:"";position:absolute;inset:0;background:linear-gradient(transparent 35%,rgba(0,0,0,.65))}
+.catt .ci{position:absolute;left:10px;right:8px;bottom:9px;z-index:1;color:#fff}
+.catt .ci b{font-size:22px;display:block;line-height:1}
+.catt .ci small{font-size:11.5px;font-weight:600;line-height:1.2;display:block;margin-top:4px}
+.hd .ibtn+.ibtn{margin-left:0}.hd{gap:8px}.hd .ibtn{width:40px;height:40px;flex:0 0 40px}.hd small{display:block;line-height:1.3}
+.prof{position:relative}.pset{position:absolute;top:calc(20px + env(safe-area-inset-top));right:16px}
+.reset{background:none}
+.ob .opts.lng{margin:-4px 0 6px}.ob .body.splash .opts.lng .opt{background:rgba(255,255,255,.18);color:#fff;border-color:rgba(255,255,255,.35);padding:7px 11px;font-size:12.5px}
+.ob .body.splash .opts.lng .opt.on{background:var(--sky);border-color:var(--sky)}
+#set{padding:calc(70px + env(safe-area-inset-top)) 18px calc(var(--nav) + 30px)}
+.seth h1{font-size:26px;font-weight:700;margin-bottom:6px}
+.sgrp{background:var(--card);border-radius:22px;padding:14px;margin-top:12px;box-shadow:var(--sh2)}
+.sl{font-weight:600;font-size:15px;margin-bottom:10px}
+.sp{color:var(--mute);font-size:13px;line-height:1.5;margin-bottom:8px}
+.langs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.langs button{display:flex;align-items:center;gap:8px;padding:11px 12px;border-radius:14px;background:var(--bg);font-size:14px;font-weight:500;border:1.5px solid var(--line)}
+.langs button.on{background:var(--sky);color:#fff;border-color:var(--sky)}
+.seg{display:flex;gap:6px;background:var(--bg);padding:4px;border-radius:14px}
+.seg button{flex:1;padding:10px 6px;border-radius:11px;font-size:13px;font-weight:500}
+.seg button.on{background:var(--sky);color:#fff;box-shadow:0 4px 12px rgba(47,140,243,.35)}
+.wide{width:100%}
+[data-theme=dark]{--bg:#0e1622;--card:#16212f;--line:#22324a;--text:#e8eef7;--mute:#8fa1ba;--skyl:#1b2d44;--sky3:#20406b;--page:#070c14;--sh:0 10px 30px rgba(0,0,0,.45);--sh2:0 4px 14px rgba(0,0,0,.35)}
+[data-theme=dark] #home{background:linear-gradient(180deg,#10233d 0%,#0e1622 300px)}
+[data-theme=dark] .wiki{color:#b8c6da}[data-theme=dark] .tagline{color:var(--text)}
+[data-theme=dark] .mct p,[data-theme=dark] .qres p{color:#b8c6da}
+[data-theme=dark] .qo.ok{background:#12301f}[data-theme=dark] .qo.bad{background:#3a1717}
+[data-theme=dark] .leaflet-container{background:#0e1622}
+[dir=rtl] .app{direction:rtl}[dir=rtl] .wside,[dir=rtl] .nav{direction:ltr}
+#catv,#addv{padding:calc(70px + env(safe-area-inset-top)) 18px calc(var(--nav) + 30px)}
+#addv textarea.t{resize:vertical;font:inherit}
+.sheet{position:absolute;inset:0;z-index:85;display:none;background:rgba(0,0,0,.45)}.sheet.on{display:flex;align-items:flex-end}
+.shb{width:100%;max-height:80%;background:var(--bg);border-radius:26px 26px 0 0;display:flex;flex-direction:column;padding:10px 16px calc(14px + env(safe-area-inset-bottom));animation:shup .25s ease}
+@keyframes shup{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+.shh{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 2px 10px}.shh b{font-size:17px}.shh .x{width:40px;height:40px;border-radius:50%;background:var(--card);display:grid;place-items:center}
+.shl{overflow-y:auto;flex:1;min-height:120px}
+.trk{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:14px;background:var(--card);margin-bottom:8px}.trk.on{outline:2px solid var(--sky)}
+.trk span{flex:1;font-size:14px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.trk button{font-size:13px;color:var(--sky);font-weight:600}
+.cmi{background:var(--card);border-radius:16px;padding:10px 12px;margin-bottom:8px}.cmi b{font-size:13px}.cmi small{color:var(--mute);font-size:11px;margin:0 6px}.cmi p{font-size:14px;margin-top:3px;line-height:1.45;white-space:pre-wrap;word-break:break-word}
+.pcards{display:flex;gap:8px;overflow-x:auto;align-self:stretch;scrollbar-width:none;margin-top:-2px}
+.pcard{flex:0 0 auto;display:flex;align-items:center;gap:8px;background:var(--card);border-radius:16px;padding:6px 12px 6px 6px;box-shadow:var(--sh2);cursor:pointer;max-width:240px}
+.pcard .ph{flex:0 0 44px;width:44px;height:44px;border-radius:12px}.pcard b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pcard small{color:var(--sky);font-size:11.5px;font-weight:600}
+label.pill{cursor:pointer}.spk.on{color:var(--heart)!important}.mspk{display:block;margin-top:6px;font-size:14px;opacity:.75}.wside .spk.on{background:var(--sky)}a.pill{display:flex}
+.tiles{grid-template-columns:repeat(5,1fr);gap:8px}.tile i{width:54px;height:54px;border-radius:18px}.tile{font-size:11.5px}
+#tripv{padding:calc(70px + env(safe-area-inset-top)) 18px calc(var(--nav) + 30px)}
+.daily{position:relative;margin:0 20px;height:210px;border-radius:26px;overflow:hidden;cursor:pointer;box-shadow:var(--sh);background:#1d3557}
+.daily video,.daily img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.daily::after{content:"";position:absolute;inset:0;background:linear-gradient(transparent 45%,rgba(0,0,0,.6))}
+.dci{position:absolute;left:18px;bottom:16px;z-index:1;color:#fff}.dci b{display:block;font-size:20px;font-weight:700}.dci small{opacity:.9}
+.dpl{position:absolute;right:16px;bottom:16px;z-index:1;width:48px;height:48px;border-radius:50%;background:var(--sky);display:grid;place-items:center;color:#fff}.dpl svg{fill:#fff;stroke:none;width:18px}
+.wxr{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}.wxr>div{flex:1;min-width:52px;text-align:center;background:var(--bg);border-radius:14px;padding:8px 4px;display:flex;flex-direction:column;gap:2px}
+.wxr span{font-size:20px}.wxr b{font-size:14px}.wxr small{font-size:11px;color:var(--mute)}.wxr .wxn{background:var(--sky);color:#fff;min-width:64px}.wxr .wxn small{color:#e6f1ff}.wxr .wxn b{font-size:18px}
+.fxr{display:flex;align-items:center;gap:10px;font-size:16px}.fxr span{color:var(--mute)}.fxr.s{font-size:12.5px;margin-top:4px}
+.db .sgrp{box-shadow:none;margin-top:12px}
+[dir=rtl] .hd .ibtn{margin-left:0}[dir=rtl] .hd .ibtn:first-of-type{margin-right:auto}
 </style>
 </head>
 <body>
@@ -484,6 +544,11 @@ label.pill{cursor:pointer}a.pill{display:flex}
   <section class="chat" id="chat"></section>
   <section class="ov" id="mapv"></section>
   <section class="ov" id="quiz"></section>
+  <section class="ov" id="set"></section>
+  <section class="ov" id="catv"></section>
+  <section class="ov" id="addv"></section>
+  <section class="ov" id="tripv"></section>
+  <section class="sheet" id="sh" onclick="closeSheet()"></section>
   <section class="ov" id="set"></section>
   <section class="ov" id="catv"></section>
   <section class="ov" id="addv"></section>
@@ -633,6 +698,20 @@ ar:["🌤 الطقس","💱 سعر الصرف","🧳 رحلاتي","الرحلا
 zh:["🌤 天气","💱 汇率","🧳 我的旅行","旅行","➕ 新旅行","旅行名称，例如：暑假","🧳 加入旅行","已加入旅行","还没有旅行。把喜欢的地方加入旅行——AI 会为你制定完整计划。","✨ 让AI来规划","为这些地方制定旅行计划：{list}。按什么顺序去、需要几天、大概预算和实用建议。","加入哪个旅行？","{n} 个地方","📅 每日一景","每天一个新的绝美之地","🌐 360°","现在","创建"]};
 for(const l in V) K.forEach((k,i)=>I18N[l][k]=V[l][i]);})();
 
+/* ===== v2.3: ovozli gid, tabiat ovozlari, eslatma, internetsiz ===== */
+(()=>{const K=["listen","stop_l","tts_no","tts_fb","s_amb","amb_t","s_notif","notif_t","notif_on","notif_den","s_off","off_t","offline"];
+const V={
+uz:["🔊 Tinglash","⏹ To'xtatish","Bu qurilmada ovozli o'qish yo'q","Telefoningizda bu til ovozi yo'q — eng yaqin ovoz ishlatildi","🎧 Tabiat ovozlari","Tomosha paytida joyga mos ovoz: okean to'lqini, sharshara, shamol, o'rmon qushlari, shahar","🔔 Kun joyi eslatmasi","Har kuni ilovani ochganingizda yangi ajoyib joy haqida xabar chiqadi.","Eslatma yoqildi","Ruxsat berilmadi — telefon sozlamalaridan yoqing","📶 Internetsiz rejim","Ilova va ko'rilgan joylar rasmlari telefonda saqlanadi: internet bo'lmasa ham ochiladi (videolar bundan mustasno).","Internet yo'q — saqlangan ma'lumotlar ko'rsatilmoqda"],
+en:["🔊 Listen","⏹ Stop","Voice reading is not available on this device","Your phone has no voice for this language — the closest one is used","🎧 Nature sounds","Sound that matches the place while watching: ocean waves, waterfalls, wind, forest birds, the city","🔔 Place of the day reminder","Each day when you open the app you'll get a note about a new amazing place.","Reminder turned on","Permission denied — enable it in phone settings","📶 Offline mode","The app and photos of places you viewed are saved on your phone and open without internet (except videos).","No internet — showing saved content"],
+ru:["🔊 Слушать","⏹ Стоп","На этом устройстве нет озвучивания","На телефоне нет голоса для этого языка — использован ближайший","🎧 Звуки природы","Звук под место во время просмотра: волны, водопад, ветер, птицы в лесу, город","🔔 Напоминание «Место дня»","Каждый день при открытии приложения — уведомление о новом удивительном месте.","Напоминание включено","Разрешение не дано — включите в настройках телефона","📶 Офлайн-режим","Приложение и фото просмотренных мест сохраняются на телефоне и открываются без интернета (кроме видео).","Нет интернета — показаны сохранённые данные"],
+tr:["🔊 Dinle","⏹ Durdur","Bu cihazda sesli okuma yok","Telefonunuzda bu dil için ses yok — en yakın ses kullanıldı","🎧 Doğa sesleri","İzlerken yere uygun ses: dalgalar, şelale, rüzgâr, orman kuşları, şehir","🔔 Günün yeri hatırlatıcısı","Her gün uygulamayı açtığınızda yeni harika bir yer bildirimi gelir.","Hatırlatıcı açıldı","İzin verilmedi — telefon ayarlarından açın","📶 Çevrimdışı mod","Uygulama ve baktığınız yerlerin fotoğrafları telefonda saklanır, internetsiz de açılır (videolar hariç).","İnternet yok — kayıtlı içerik gösteriliyor"],
+kk:["🔊 Тыңдау","⏹ Тоқтату","Бұл құрылғыда дауыстап оқу жоқ","Телефоныңызда бұл тілдің дауысы жоқ — ең жақыны қолданылды","🎧 Табиғат дыбыстары","Көру кезінде орынға сай дыбыс: толқын, сарқырама, жел, орман құстары, қала","🔔 «Күн орны» еске салғышы","Күн сайын қосымшаны ашқанда жаңа ғажайып орын туралы хабар келеді.","Еске салғыш қосылды","Рұқсат берілмеді — телефон баптауларынан қосыңыз","📶 Интернетсіз режим","Қосымша мен қаралған жерлердің суреттері телефонда сақталады, интернетсіз де ашылады (бейнелерден басқа).","Интернет жоқ — сақталған деректер көрсетілуде"],
+ky:["🔊 Угуу","⏹ Токтотуу","Бул түзмөктө үн менен окуу жок","Телефонуңузда бул тилдин үнү жок — эң жакыны колдонулду","🎧 Табият үндөрү","Көрүп жатканда жерге ылайык үн: толкун, шаркыратма, шамал, токой куштары, шаар","🔔 «Күндүн жери» эскертмеси","Күн сайын тиркемени ачканда жаңы укмуш жер тууралуу билдирүү чыгат.","Эскертме күйгүзүлдү","Уруксат берилген жок — телефон жөндөөлөрүнөн күйгүзүңүз","📶 Интернетсиз режим","Тиркеме жана көрүлгөн жерлердин сүрөттөрү телефондо сакталат, интернетсиз да ачылат (видеолордон тышкары).","Интернет жок — сакталган маалымат көрсөтүлүүдө"],
+tg:["🔊 Гӯш кардан","⏹ Қатъ кардан","Дар ин дастгоҳ хондани овозӣ нест","Дар телефон овози ин забон нест — наздиктаринаш истифода шуд","🎧 Садоҳои табиат","Ҳангоми тамошо садои мувофиқ: мавҷ, шаршара, шамол, паррандаҳои ҷангал, шаҳр","🔔 Ёдраси «Ҷойи рӯз»","Ҳар рӯз ҳангоми кушодани барнома дар бораи ҷойи нави аҷиб паём меояд.","Ёдрас фаъол шуд","Иҷозат дода нашуд — аз танзимоти телефон фаъол кунед","📶 Реҷаи бе интернет","Барнома ва суратҳои ҷойҳои дидашуда дар телефон нигоҳ дошта мешаванд ва бе интернет кушода мешаванд (ба ҷуз видео).","Интернет нест — маълумоти нигоҳдошта нишон дода мешавад"],
+ar:["🔊 استمع","⏹ إيقاف","القراءة الصوتية غير متاحة على هذا الجهاز","لا يوجد صوت لهذه اللغة في هاتفك — استُخدم أقرب صوت","🎧 أصوات الطبيعة","صوت يناسب المكان أثناء المشاهدة: أمواج، شلال، رياح، طيور الغابة، المدينة","🔔 تذكير «مكان اليوم»","كل يوم عند فتح التطبيق يصلك إشعار بمكان مذهل جديد.","تم تفعيل التذكير","تم رفض الإذن — فعّله من إعدادات الهاتف","📶 وضع عدم الاتصال","يُحفظ التطبيق وصور الأماكن التي شاهدتها على هاتفك وتُفتح بدون إنترنت (عدا الفيديو).","لا يوجد إنترنت — يتم عرض المحتوى المحفوظ"],
+zh:["🔊 收听","⏹ 停止","此设备不支持语音朗读","手机上没有该语言的语音——已使用最接近的语音","🎧 自然之声","观看时播放与地点相符的声音：海浪、瀑布、风声、林中鸟鸣、城市","🔔 每日一景提醒","每天打开应用时，都会收到一个新绝美地点的通知。","提醒已开启","未获得权限——请在手机设置中开启","📶 离线模式","应用和你浏览过的地点照片会保存在手机上，没有网络也能打开（视频除外）。","无网络——正在显示已保存的内容"]};
+for(const l in V) K.forEach((k,i)=>I18N[l][k]=V[l][i]);})();
+
 /* ================= YORDAMCHILAR ================= */
 const $ = s=>document.querySelector(s);
 const esc = s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -640,7 +719,7 @@ const hash = s=>[...s].reduce((a,c)=>(a*31+c.charCodeAt(0))>>>0,7);
 const ls = {get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}}, set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 
 /* ================= SOZLAMALAR ================= */
-const SET = Object.assign({lang:null,mlist:"minus",music:true,video:true,theme:"auto",unit:"km",speed:2}, ls.get("olam_set",{}));
+const SET = Object.assign({lang:null,mlist:"minus",amb:true,notif:false,music:true,video:true,theme:"auto",unit:"km",speed:2}, ls.get("olam_set",{}));
 const saveSet = ()=>ls.set("olam_set",SET);
 if(!SET.lang){ const n=(navigator.language||"uz").toLowerCase(); SET.lang = n.startsWith("ru")?"ru":n.startsWith("en")?"en":n.startsWith("tr")?"tr":n.startsWith("kk")?"kk":n.startsWith("ky")?"ky":n.startsWith("tg")?"tg":n.startsWith("ar")?"ar":n.startsWith("zh")?"zh":"uz"; }
 let LANG = SET.lang;
@@ -801,6 +880,62 @@ function mPanel(){ const S=$("#sh"); if(!S||!S.classList.contains("on")||S.datas
    <div class="sl" style="margin-top:14px">${t("m_minus")}</div>${MUSIC.map(x=>row({id:x[0],name:x[1]},"m")).join("")}
    <p class="sp" style="margin-top:10px">${t("m_note")}</p></div></div>`; }
 function closeSheet(){ $("#sh").classList.remove("on"); }
+
+/* ===== Ovozli gid (telefon ovozi bilan o'qish) ===== */
+const TTSL={uz:"uz-UZ",uzk:"uz-UZ",ru:"ru-RU",en:"en-US",tr:"tr-TR",kk:"kk-KZ",ky:"ky-KG",tg:"tg-TJ",ar:"ar-SA",zh:"zh-CN"};
+let TTSWARN=false;
+function speak(text,btn){
+  if(!("speechSynthesis" in window)){ toast(t("tts_no")); return; }
+  const S=speechSynthesis; if(S.speaking||S.pending){ S.cancel(); document.querySelectorAll(".spk.on").forEach(b=>b.classList.remove("on")); if(btn&&btn.dataset.sp==="1"){ btn.dataset.sp=""; return; } }
+  const lc=TTSL[LANG]||"en-US"; const vs=S.getVoices(); const two=lc.slice(0,2);
+  let v=vs.find(x=>x.lang.replace("_","-").toLowerCase()===lc.toLowerCase())||vs.find(x=>x.lang.toLowerCase().startsWith(two));
+  const u=new SpeechSynthesisUtterance(String(text).replace(/[*#_]/g,"").slice(0,3000));
+  if(!v&&vs.length){ v=(LANG==="uz")?(vs.find(x=>/^tr/i.test(x.lang))||vs.find(x=>/^ru/i.test(x.lang))):(vs.find(x=>/^ru/i.test(x.lang))||vs.find(x=>/^tr/i.test(x.lang))); if(!TTSWARN){ TTSWARN=true; toast(t("tts_fb")); } }
+  if(v){ u.voice=v; u.lang=v.lang; } else u.lang=lc;
+  u.rate=0.95; const vol=BGM.volume; BGM.volume=0.15; AMB.g&&(AMB.g.gain.value=0.08);
+  u.onend=u.onerror=()=>{ BGM.volume=vol; AMB.g&&(AMB.g.gain.value=0.3); if(btn){ btn.classList.remove("on"); btn.dataset.sp=""; } };
+  if(btn){ btn.classList.add("on"); btn.dataset.sp="1"; }
+  S.speak(u);
+}
+try{ speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices(); }catch(e){}
+
+/* ===== Tabiat ovozlari (Web Audio — internet kerak emas) ===== */
+const AMB={ctx:null,nodes:[],kind:null,g:null,iv:null};
+function ambKind(p){ const tg=p?.tags||[]; if(tg.includes("dengiz")) return "waves"; if(tg.includes("sharshara")) return "water"; if(tg.some(x=>["tog","qor","sahro"].includes(x))) return "wind";
+  if(tg.some(x=>["tabiat","zoo","park"].includes(x))) return "forest"; if(tg.some(x=>["shahar","zamon","stadion"].includes(x))) return "city"; return "calm"; }
+function ambNoise(C,brown){ const len=C.sampleRate*4, buf=C.createBuffer(1,len,C.sampleRate), d=buf.getChannelData(0); let last=0;
+  for(let i=0;i<len;i++){ const w=Math.random()*2-1; if(brown){ last=(last+0.02*w)/1.02; d[i]=last*3.5; } else d[i]=w*0.6; } const s=C.createBufferSource(); s.buffer=buf; s.loop=true; return s; }
+function ambStop(){ clearInterval(AMB.iv); AMB.iv=null; const C=AMB.ctx, old=AMB.nodes, g=AMB.g; AMB.nodes=[]; AMB.kind=null; AMB.g=null;
+  if(C&&g){ try{ g.gain.cancelScheduledValues(C.currentTime); g.gain.setValueAtTime(g.gain.value,C.currentTime); g.gain.linearRampToValueAtTime(0,C.currentTime+0.8); }catch(e){} setTimeout(()=>old.forEach(n=>{ try{ n.stop(); }catch(e){} }),900); } }
+function ambStart(kind){
+  if(!SET.amb||!kind){ ambStop(); return; } if(AMB.kind===kind) return; ambStop();
+  try{ const C=AMB.ctx||(AMB.ctx=new (window.AudioContext||window.webkitAudioContext)()); if(C.state==="suspended") C.resume();
+    const g=C.createGain(); g.gain.value=0; g.connect(C.destination); g.gain.linearRampToValueAtTime(0.3,C.currentTime+1.5); AMB.g=g; AMB.kind=kind;
+    const add=n=>{ AMB.nodes.push(n); return n; };
+    const flt=(type,f,q)=>{ const x=C.createBiquadFilter(); x.type=type; x.frequency.value=f; if(q) x.Q.value=q; return x; };
+    const lfo=(hz,amt,target)=>{ const o=add(C.createOscillator()); o.frequency.value=hz; const a=C.createGain(); a.gain.value=amt; o.connect(a); a.connect(target); o.start(); };
+    if(kind==="waves"){ const n=add(ambNoise(C,true)), f=flt("lowpass",700), lg=C.createGain(); lg.gain.value=0.55; n.connect(f); f.connect(lg); lg.connect(g); lfo(0.11,0.45,lg.gain); n.start();
+      const n2=add(ambNoise(C,false)), f2=flt("highpass",2500), g2=C.createGain(); g2.gain.value=0.04; n2.connect(f2); f2.connect(g2); g2.connect(g); lfo(0.11,0.035,g2.gain); n2.start(); }
+    else if(kind==="water"){ const n=add(ambNoise(C,false)), f=flt("bandpass",1100,0.5), lg=C.createGain(); lg.gain.value=0.35; n.connect(f); f.connect(lg); lg.connect(g); n.start(); const n2=add(ambNoise(C,true)); n2.connect(g); n2.start(); }
+    else if(kind==="wind"){ const n=add(ambNoise(C,true)), f=flt("bandpass",420,1.2), lg=C.createGain(); lg.gain.value=0.9; n.connect(f); f.connect(lg); lg.connect(g); lfo(0.07,260,f.frequency); lfo(0.05,0.35,lg.gain); n.start(); }
+    else if(kind==="city"){ const n=add(ambNoise(C,true)), f=flt("lowpass",320), lg=C.createGain(); lg.gain.value=0.7; n.connect(f); f.connect(lg); lg.connect(g); lfo(0.03,0.2,lg.gain); n.start(); }
+    else { const n=add(ambNoise(C,true)), f=flt("lowpass",kind==="forest"?900:500), lg=C.createGain(); lg.gain.value=kind==="forest"?0.35:0.25; n.connect(f); f.connect(lg); lg.connect(g); lfo(0.06,0.15,lg.gain); n.start(); }
+    if(kind==="forest"){ const chirp=()=>{ if(!AMB.g) return; const o=C.createOscillator(), gg=C.createGain(), t0=C.currentTime, f0=2400+Math.random()*2200; o.type="sine";
+        o.frequency.setValueAtTime(f0,t0); o.frequency.exponentialRampToValueAtTime(f0*1.35,t0+0.07); o.frequency.exponentialRampToValueAtTime(f0*0.85,t0+0.15);
+        gg.gain.setValueAtTime(0,t0); gg.gain.linearRampToValueAtTime(0.05,t0+0.02); gg.gain.linearRampToValueAtTime(0,t0+0.17); o.connect(gg); gg.connect(AMB.g); o.start(t0); o.stop(t0+0.2); };
+      AMB.iv=setInterval(()=>{ if(Math.random()<0.55){ chirp(); setTimeout(chirp,180+Math.random()*120); if(Math.random()<0.4) setTimeout(chirp,450); } },1400); }
+  }catch(e){}
+}
+
+/* ===== Kun joyi eslatmasi va internetsiz rejim ===== */
+async function notifToggle(on){ if(!on){ SET.notif=false; saveSet(); renderSettings(); return; }
+  try{ const r=await Notification.requestPermission(); if(r==="granted"){ SET.notif=true; saveSet(); toast(t("notif_on")); dailyNotify(true); } else toast(t("notif_den")); }catch(e){ toast(t("notif_den")); } renderSettings(); }
+async function dailyNotify(force){ try{ if(!SET.notif||Notification.permission!=="granted") return; const day=new Date().toISOString().slice(0,10); if(!force&&ls.get("olam_nday","")===day) return; ls.set("olam_nday",day);
+  const p=dailyPlace(); if(!p) return; const body=pN(p)+" — "+pS(p); const reg=navigator.serviceWorker&&await navigator.serviceWorker.getRegistration();
+  if(reg) reg.showNotification(t("daily"),{body,icon:"icon-192.png",badge:"icon-192.png",tag:"daily",data:{id:p.id}}); else new Notification(t("daily"),{body}); }catch(e){} }
+if("serviceWorker" in navigator&&location.protocol==="https:"){ navigator.serviceWorker.register("sw.js").catch(()=>{}); navigator.serviceWorker.addEventListener?.("message",e=>{ if(e.data?.open&&byId(e.data.open)) openPlace(e.data.open); }); }
+const QP=new URLSearchParams(location.search).get("p");
+window.addEventListener("offline",()=>toast(t("offline")));
 
 /* ===== Izohlar (videolar va joylar uchun) ===== */
 const CMLOC=ls.get("olam_cm",{});
@@ -1206,6 +1341,9 @@ function renderSettings(){
    <div class="seth"><h1>${t("set_h")}</h1></div>
    <div class="sgrp"><div class="sl">${t("s_lang")}</div><div class="langs">${LANGS.map(([k,n,f])=>`<button class="${LANG===k?"on":""}" onclick="setLang('${k}');renderSettings()"><span>${f}</span>${n}</button>`).join("")}</div></div>
    <div class="sgrp"><div class="sl">${t("s_music")}</div>${seg("music",[[true,t("on")],[false,t("off")]])}<button class="pill o2 wide" style="margin-top:8px" onclick="openMusic()">${t("music_h")} · ${t("m_mine")}</button></div>
+   <div class="sgrp"><div class="sl">${t("s_amb")}</div>${seg("amb",[[true,t("on")],[false,t("off")]])}<p class="sp" style="margin:8px 0 0">${t("amb_t")}</p></div>
+   <div class="sgrp"><div class="sl">${t("s_notif")}</div><div class="seg"><button class="${SET.notif?"on":""}" onclick="notifToggle(true)">${t("on")}</button><button class="${SET.notif?"":"on"}" onclick="notifToggle(false)">${t("off")}</button></div><p class="sp" style="margin:8px 0 0">${t("notif_t")}</p></div>
+   <div class="sgrp"><div class="sl">${t("s_off")}</div><p class="sp" style="margin:0">✅ ${t("off_t")}</p></div>
    <div class="sgrp"><div class="sl">${t("s_video")}</div>${seg("video",[[true,t("v_on")],[false,t("v_off")]])}</div>
    <div class="sgrp"><div class="sl">${t("s_theme")}</div>${seg("theme",[["auto",t("th_auto")],["light",t("th_light")],["dark",t("th_dark")]])}</div>
    <div class="sgrp"><div class="sl">${t("s_units")}</div>${seg("unit",[["km",t("u_km")],["mi",t("u_mi")]])}</div>
@@ -1218,7 +1356,7 @@ function renderSettings(){
    <div class="foot"></div>`;
 }
 function setOpt(k,v){ SET[k]=v; saveSet();
-  if(k==="theme") applyTheme(); if(k==="music"){ v?mPlay():mPause(); } if(k==="video"){ PLACES.forEach(p=>{ p.video=undefined; }); }
+  if(k==="theme") applyTheme(); if(k==="amb"&&!v) ambStop(); if(k==="music"){ v?mPlay():mPause(); } if(k==="video"){ PLACES.forEach(p=>{ p.video=undefined; }); }
   renderSettings(); }
 function applyTheme(){ const dark=SET.theme==="dark"||(SET.theme==="auto"&&matchMedia("(prefers-color-scheme: dark)").matches); document.documentElement.dataset.theme=dark?"dark":"light"; document.querySelector('meta[name=theme-color]')?.setAttribute("content",dark?"#0e1622":"#f4f8fd"); }
 try{ matchMedia("(prefers-color-scheme: dark)").addEventListener("change",applyTheme); }catch(e){}
@@ -1241,7 +1379,7 @@ function renderWatch(startId){
    <div class="wtop"><div class="brand">OLAM</div><div class="wnext" id="wn"></div><button class="ib" onclick="openMusic()" id="wm" aria-label="Music"></button></div>
    <div class="wtap" id="wtap"></div><div class="paused" id="wp"><div>${ICON.pause}</div></div><div class="hint" id="wh">${t("hint")}</div>
    <div class="wtxt" id="wt"></div><div class="wfact" id="wf"></div>
-   <div class="wside"><button onclick="wFact()" title="AI" style="font-size:20px">✨</button><button id="wl" onclick="wLike()">${ICON.heart}</button><button class="sv" id="ws" onclick="wSave()">${ICON.save}</button>
+   <div class="wside"><button class="spk" onclick="const p=W.list[W.i];speak(pN(p)+'. '+pS(p)+' '+(pDesc(p)||''),this)" style="font-size:19px">🔊</button><button onclick="wFact()" title="AI" style="font-size:20px">✨</button><button id="wl" onclick="wLike()">${ICON.heart}</button><button class="sv" id="ws" onclick="wSave()">${ICON.save}</button>
      <button onclick="openComments(W.list[W.i].id)" style="font-size:19px">💬</button><button onclick="openPlace(W.list[W.i].id)">${ICON.info}</button><button onclick="share(W.list[W.i].id)">${ICON.share}</button></div>`;
   const tap=$("#wtap"); let y0=null,x0=null;
   tap.onclick=e=>{ const r=tap.getBoundingClientRect(); let x=(e.clientX-r.left)/r.width; if(LANG==="ar") x=1-x; x<.3?wGo(-1):x>.7?wGo(1):wPause(); };
@@ -1259,7 +1397,7 @@ function wShow(){
   const tx=$("#wt"); tx.classList.remove("in"); void tx.offsetWidth; const d=dist(p);
   tx.innerHTML=`<div class="kicker">${esc(pC(p))}${d!=null?" · "+km(d):""}</div><h2>${esc(pN(p))}</h2><p>${esc(pS(p))}</p>`; tx.classList.add("in");
   $("#wl").classList.toggle("on",liked.has(p.id)); $("#ws").classList.toggle("on",saved.has(p.id));
-  W.dur=SPD(); wTimer(W.dur);
+  W.dur=SPD(); wTimer(W.dur); ambStart(ambKind(p)); if(window.speechSynthesis?.speaking) speechSynthesis.cancel();
   const id=p.id;
   loadVideo(p).then(src=>{ if(W.list[W.i]?.id!==id||cur!=="watch") return;
     if(!src){ // video yo'q: galereya rasmlari almashib turadi
@@ -1279,7 +1417,7 @@ function wGo(d){ const dt=Date.now()-(W.shown||0), sid=W.list[W.i]?.id; if(sid) 
 function wPause(){ const bar=$("#wbi"), v=$("#wv"); if(!bar) return; W.paused=!W.paused; $("#wp").classList.toggle("on",W.paused);
   if(W.paused){ clearTimeout(W.t); const done=Date.now()-W.start; W.left=Math.max(500,W.left-done); bar.style.width=getComputedStyle(bar).width; bar.style.transition="none"; v.pause(); }
   else { bar.style.transition=`width ${W.left}ms linear`; bar.style.width="100%"; W.start=Date.now(); W.t=setTimeout(()=>wGo(1),W.left); if(v.getAttribute("src")) v.play().catch(()=>{}); } }
-function wStop(){ clearTimeout(W.t); clearInterval(W.gt); const v=$("#wv"); if(v) v.pause(); mPause(); }
+function wStop(){ ambStop(); try{ speechSynthesis.cancel(); }catch(e){} clearTimeout(W.t); clearInterval(W.gt); const v=$("#wv"); if(v) v.pause(); mPause(); }
 function wLike(){ const id=W.list[W.i].id; liked.has(id)?liked.delete(id):(liked.add(id),learn(id,3)); keep(); $("#wl").classList.toggle("on",liked.has(id)); }
 function wSave(){ save(W.list[W.i].id); $("#ws").classList.toggle("on",saved.has(W.list[W.i].id)); }
 document.addEventListener("keydown",e=>{ if(cur!=="watch"||$("#detail").classList.contains("on")||$("#chat").classList.contains("on")) return;
@@ -1307,7 +1445,7 @@ async function openPlace(id){
      <div class="facts"><div>${t("best_time")}<b>${bestTxt(p.best)}</b></div><div>${t("from_you")}<b>${km(dist(p))}</b></div><div>${t("region")}<b>${noEmoji(R[p.reg])}</b></div></div>
      <div class="sgrp wxb" id="wx"><div class="sl">${t("wx_h")}</div><div class="sp">…</div></div><div class="sgrp" id="fx"></div>
      <a class="pill o2 wide" style="margin-top:10px" href="${panoUrl(p)}" target="_blank" rel="noopener">${t("pano")} · Google Maps</a>
-     <div class="sec" style="padding:14px 0 8px"><h2>${t("about_h")}</h2></div>
+     <div class="sec" style="padding:14px 0 8px"><h2>${t("about_h")}</h2><span class="spk" onclick="speak(pN(byId('${p.id}'))+'. '+($('#pdesc')?.textContent||''),this)">${t("listen")}</span></div>
      <div class="wiki" id="pdesc">${desc?esc(desc):t("translating")}</div>
      ${p.wurl?`<div class="wiki"><small><a href="${p.wurl}" target="_blank" rel="noopener">${t("more_wiki")} ↗</a></small></div>`:""}
      <button class="pill o2" style="width:100%;margin-top:12px" onclick="openChat('${p.id}');chatSend(t('explain_q',{p:pN(byId('${p.id}'))}))">${t("explain")}</button>
@@ -1357,7 +1495,7 @@ function openChat(id){
 function closeChat(){ $("#chat").classList.remove("on"); }
 function drawMsgs(){
   const box=$("#msgs"); if(!box) return; const p=CH.place?byId(CH.place):null; const name=U?.name||t("friend");
-  box.innerHTML=`<div class="m a">${esc(p?t("hi_p",{name,p:pN(p)}):t("hi_g",{name}))}</div>`+CH.msgs.map(m=>`<div class="m ${m.role==="user"?"u":"a"}">${esc(m.text)}</div>`+(m.role!=="user"?placeCards(m.text):"")).join("")+(CH.busy?`<div class="m a t">${t("typing")}</div>`:"");
+  box.innerHTML=`<div class="m a">${esc(p?t("hi_p",{name,p:pN(p)}):t("hi_g",{name}))}</div>`+CH.msgs.map((m,i)=>`<div class="m ${m.role==="user"?"u":"a"}">${esc(m.text)}${m.role!=="user"?`<button class="spk mspk" onclick="speak(CH.msgs[${i}].text,this)">🔊</button>`:""}</div>`+(m.role!=="user"?placeCards(m.text):"")).join("")+(CH.busy?`<div class="m a t">${t("typing")}</div>`:"");
   box.scrollTop=box.scrollHeight;
 }
 function placeCards(text){ const low=" "+String(text).toLowerCase()+" "; const out=[];
@@ -1498,7 +1636,7 @@ function toast(x){ const el=$("#toast"); el.textContent=x; el.classList.add("on"
 /* ================= START ================= */
 applyTheme(); applyLang();
 if(U) go("home"); else startOb();
-loadHeroes(); loadAll(); mQueue(); loadCommunity();
+loadHeroes(); loadAll(); mQueue(); loadCommunity(); setTimeout(()=>dailyNotify(false),4000); if(QP&&byId(QP)) setTimeout(()=>openPlace(QP),300);
 if(!(LANG==="uz"||LANG==="uzk")){ wikiNames().then(aiTaglines); }
 
 </script>
