@@ -1,6 +1,8 @@
 const SITE=document.body.classList.contains("site");
-const LIFE=document.body.classList.contains("life");   // "Tirik olam" — jonzotlar ilovasi
-const HOME_URL=LIFE?"tirik/":"./", APP_URL=LIFE?"tirik/app/":"app/";
+const LIFE=document.body.classList.contains("life");   // to'plam ilovalari: Tirik olam va Bilim
+const COL=document.body.classList.contains("bilim")?"bilim":"life";   // qaysi to'plam
+const COLDIR=COL==="bilim"?"bilim":"tirik";
+const HOME_URL=LIFE?COLDIR+"/":"./", APP_URL=LIFE?COLDIR+"/app/":"app/";
 const clean = s=>String(s).replace(/^[^\p{L}\p{N}]+/u,"").trim();
 const EMO=/[\u{1F000}-\u{1FAFF}\u{2600}-\u{2604}\u{2606}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}\u{20E3}]/gu;
 const deEmo=x=>String(x).replace(EMO,"").replace(/[ \t]{2,}/g," ").replace(/^\s+|\s+$/g,"");
@@ -252,7 +254,7 @@ const down = u=>/3840px-|width=3840/.test(u)?u.replace("/3840px-","/1920px-").re
 function loadBest(u,ok,fail){ const im=new Image(); im.decoding="async"; im.onload=()=>ok(u); im.onerror=()=>{ const d=down(u); d?loadBest(d,ok,fail):fail&&fail(); }; im.src=u; }
 const huge = u=>u&&!u.startsWith("data:")?u.replace(/\/\d+px-/,"/1920px-").replace(/([?&]width=)\d+/,"$11920"):u;
 const FB = "if(!this.dataset.f&&/1280px-/.test(this.src)){this.dataset.f=1;this.src=this.src.replace('/1280px-','/960px-')}else{this.remove()}";
-const img = (p,lg)=>p.img?`<img src="${lg?big(p.img):p.img}" alt="" loading="lazy" decoding="async" onerror="${FB}">`:"";
+const img = (p,lg)=>p.img?`<img${p.logo?' class="lg"':""} src="${lg?big(p.img):p.img}" alt="" loading="lazy" decoding="async" onerror="${FB}">`:"";
 const ph = (p,cls="",inner="",lg=false,extra="")=>`<div class="ph ${cls}" style="background:${grad(p)}" ${extra}>${img(p,lg)}${inner}</div>`;
 const ICON={
  play:'<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>',
@@ -298,7 +300,7 @@ let cur = "home";
 const LRN = Object.assign({t:{},r:{},v:{},c:{},k:{},h:[],l:{},d:0}, ls.get("olam_learn",{}));
 (function decay(){ const day=Math.floor(Date.now()/864e5); if(!LRN.d){ LRN.d=day; return; } const n=day-LRN.d; if(n<=0) return; const f=Math.pow(0.97,Math.min(n,60));
   ["t","r","c","k","l"].forEach(o=>{ for(const x in LRN[o]){ LRN[o][x]*=f; if(Math.abs(LRN[o][x])<0.05) delete LRN[o][x]; } }); LRN.d=day; })();
-function learn(id,w){ const p=byId(id); if(!p) return; p.tags.forEach(x=>LRN.t[x]=(LRN.t[x]||0)+w); LRN.r[p.reg]=(LRN.r[p.reg]||0)+w;
+function learn(id,w){ const p=byId(id); if(!p) return; if(p.grp) LRN.c["g:"+p.grp]=(LRN.c["g:"+p.grp]||0)+w; p.tags.forEach(x=>LRN.t[x]=(LRN.t[x]||0)+w); LRN.r[p.reg]=(LRN.r[p.reg]||0)+w;
   (p.cc||"").split("/").filter(Boolean).forEach(c=>LRN.c[c]=(LRN.c[c]||0)+w); if(p.cls) LRN.k[p.cls]=(LRN.k[p.cls]||0)+w;
   LRN.l[id]=(LRN.l[id]||0)+w;   // shu joyga munosabat (yoqdi/yoqmadi)
   if(w>0){ LRN.v[id]=(LRN.v[id]||0)+1; LRN.h=[id,...LRN.h.filter(x=>x!==id)].slice(0,40); }
@@ -324,6 +326,7 @@ function score(p,w,tot){
   const cs=(p.cc||"").split("/"); let cw=0; cs.forEach(c=>cw=Math.max(cw,LRN.c[c]||0)); s+=Math.max(-2,Math.min(3,cw/6));
   if(p.cls&&LRN.k[p.cls]) s+=Math.max(-2,Math.min(2.5,LRN.k[p.cls]/5));
   if(LRN.l[p.id]<0) s+=Math.max(-4,LRN.l[p.id]);   // o'tkazib yuborilganlar pastga
+  if(p.grp){ s+=(U?.pref?.[COL]||[]).includes(p.grp)?5:0; s+=Math.max(-2,Math.min(4,(LRN.c["g:"+p.grp]||0)/4)); if(p.grp==="uzb"&&U?.country==="UZ") s+=1; }
   s+=p.animal?(p.dyn?Math.min(3,Math.log10(1+(p.sl||1))*1.3):3.5):p.cat?Math.min(1.5,Math.log10(1+(p.sl||1))*0.6):(p.dyn?0:1.2);
   // har kuni biroz yangilik (exploration)
   return s+(hash(p.id+":"+Math.floor(Date.now()/864e5))%100)/60;
@@ -368,7 +371,8 @@ const forYou = ()=>{ const key=PLACES.length+"|"+JSON.stringify(LRN.t).length+"|
   const w=taste(), tot=Object.values(w).reduce((a,b)=>a+b,0)||1; const sorted=PLACES.filter(p=>LIFE?(p.animal&&p.img!==undefined||p.animal):((!p.dyn||p.keep)&&!p.animal)).map(p=>[p,score(p,w,tot)]).sort((a,b)=>b[1]-a[1]).map(x=>x[0]);
   // xilma-xillik: ketma-ket bir xil davlat/turdagi joylar ko'p bo'lmasin (lentaning boshi)
   const head=sorted.slice(0,240), rest=sorted.slice(240), out=[];
-  while(head.length){ let k=head.findIndex(p=>{ const c=(p.cc||p.reg), t0=p.tags[0]; const a=out[out.length-1], b=out[out.length-2]; return !(a&&(a.cc||a.reg)===c&&b&&(b.cc||b.reg)===c)&&!(a&&a.tags[0]===t0&&b&&b.tags[0]===t0); }); if(k<0||k>8) k=0; out.push(head.splice(k,1)[0]); }
+  const K1=p=>p.grp||p.cc||p.reg, K2=p=>p.animal?p.grp:p.tags[0];
+  while(head.length){ let k=head.findIndex(p=>{ const c=K1(p), t0=K2(p); const a=out[out.length-1], b=out[out.length-2]; return !(a&&K1(a)===c&&b&&K1(b)===c)&&!(a&&K2(a)===t0&&b&&K2(b)===t0); }); if(k<0||k>8) k=0; out.push(head.splice(k,1)[0]); }
   FYC={k:key,ts:Date.now(),l:out.concat(rest)}; return FYC.l.slice(); };
 
 /* ================= WIKIPEDIA (koordinata, rasm) ================= */
@@ -393,7 +397,7 @@ async function loadAll(){
 }
 let refT;
 function refresh(){ clearTimeout(refT); refT=setTimeout(()=>{
-  if($("#ob").classList.contains("on")){ obBg(); if(obStep===3) renderOb(); return; }
+  if($("#ob").classList.contains("on")){ obBg(); if(obStep===3||(LIFE&&obStep===1)) renderOb(); return; }
   if(["home","explore","profile"].includes(cur)){ const v=$("#"+cur), st=v.scrollTop; render(cur); v.scrollTop=st; }
 },150); }
 const QIC={};
@@ -444,18 +448,26 @@ async function loadVideo(p){
 /* ================= ONBOARDING ================= */
 let obStep=0, obData={}, obI=0, obTimer;
 function obBg(){
-  const pool=PLACES.filter(p=>VID[p.id]?.length&&p.img); const all=pool.length?pool:PLACES;
+  const pool=LIFE?PLACES.filter(p=>p.animal&&p.img&&!p.logo):PLACES.filter(p=>VID[p.id]?.length&&p.img); const all=pool.length?pool:PLACES.filter(p=>p.img).length?PLACES.filter(p=>p.img):PLACES;
   const p=all[(obI++*7)%all.length]; const a=$("#obA"), b=$("#obB"), v=$("#obV");
   const [on,off]=a.classList.contains("on")?[b,a]:[a,b];
   on.style.backgroundImage=p.img?`url("${big(p.img)}"), ${grad(p)}`:grad(p); on.classList.remove("kb"); void on.offsetWidth; on.classList.add("on","kb"); off.classList.remove("on"); setTimeout(()=>{ if(!off.classList.contains("on")) off.classList.remove("kb"); },1800);
   const cap=$("#obCap"); if(cap) cap.textContent=pN(p)+" · "+pCountry(p);
   if(v&&SET.video&&VID[p.id]?.length){ v.style.opacity=0; setTimeout(()=>{ v.src=pexels(VID[p.id][0]); v.play().catch(()=>{}); },350); v.onplaying=()=>{ v.style.opacity=1; }; }
 }
-function startOb(){ obStep=0; obData={lat:U?.lat??null,lon:U?.lon??null,name:U?.name||"",country:U?.country||"UZ",interests:U?.interests||[],regions:U?.regions||[],dream:U?.dream||null,style:U?.style??"",with:U?.with??"",season:U?.season??""};
+function startOb(){ obStep=0; if(LIFE){ obData={name:U?.name||"",country:U?.country||"UZ",pref:[...(U?.pref?.[COL]||[])]}; $("#ob").classList.add("on"); obBg(); clearInterval(obTimer); obTimer=setInterval(obBg,9000); renderOb(); return; } obData={lat:U?.lat??null,lon:U?.lon??null,name:U?.name||"",country:U?.country||"UZ",interests:U?.interests||[],regions:U?.regions||[],dream:U?.dream||null,style:U?.style??"",with:U?.with??"",season:U?.season??""};
   $("#ob").classList.add("on"); obBg(); clearInterval(obTimer); obTimer=setInterval(obBg,9000); renderOb(); }
 const steps=n=>`<div class="steps">${[1,2,3,4].map(i=>`<i class="${i<=n?"on":""}"></i>`).join("")}</div>`;
 const langChips=(fn)=>`<div class="opts lng">${LANGS.map(([k,n,f])=>`<button class="opt ${LANG===k?"on":""}" onclick="setLang('${k}');${fn}">${n}</button>`).join("")}</div>`;
-function renderOb(){
+function renderObCol(){ const B=$("#obB")?$("#obBody"):$("#obBody"), Dd=obData; B.classList.toggle("splash",obStep===0);
+  if(obStep===0){ B.innerHTML=`<div class="logo">${t("life_brand")}</div><h1>${t("life_h1")}</h1><p class="sub">${t("life_sub")}</p>${langChips("renderOb()")}<div class="obb"><button class="btn g" onclick="obNext()">${t("start")}</button></div>`; return; }
+  const all=PLACES.filter(p=>p.animal); const gs=GRPS.filter(g=>all.some(p=>p.grp===g)||LIFEG.counts[g]||true);
+  B.innerHTML=`<div class="steps"><i class="on"></i><i class="on"></i></div><h1>${t("ob_col_h")}</h1><p class="sub">${t("ob_col_sub")}</p>
+    <label class="f">${t("name")}</label><input class="t" id="nm" placeholder="${esc(t("name_ph"))}" value="${esc(Dd.name||"")}" oninput="obData.name=this.value">
+    <label class="f">${t("from")}</label><div class="opts">${Object.keys(COUNTRIES).map(c=>`<button class="opt ${Dd.country===c?"on":""}" onclick="obData.country='${c}';renderOb()">${esc(cname(c))}</button>`).join("")}</div>
+    <label class="f">${t("ob_col_pick")}</label><div class="dream">${gs.map(g=>{ const c=grpCover(g); const on=Dd.pref.includes(g); return c&&c.img?ph(c,on?"on":"",`<span>${t("g_"+g)}</span>`,false,`onclick="tog(obData.pref,'${g}');renderOb()"`):`<button class="opt ${on?"on":""}" onclick="tog(obData.pref,'${g}');renderOb()">${t("g_"+g)}</button>`; }).join("")}</div>
+    <div class="obb"><button class="btn o" onclick="obStep--;renderOb()">←</button><button class="btn g" ${Dd.pref.length?"":"disabled"} onclick="obDone()">${t("done")}</button></div>`; }
+function renderOb(){ if(LIFE) return renderObCol();
   const B=$("#obBody"), Dd=obData; B.classList.toggle("splash",obStep===0);
   const back=`<button class="btn o" onclick="obStep--;renderOb()">←</button>`;
   if(obStep===0){
@@ -492,6 +504,8 @@ function renderOb(){
 function tog(arr,k){ const i=arr.indexOf(k); i<0?arr.push(k):arr.splice(i,1); }
 function obNext(){ obStep++; renderOb(); }
 function obDone(){
+  if(LIFE){ const prev=ls.get("olam_user",null)||U||{country:"UZ",interests:[],regions:[]}; U={...prev,country:obData.country||prev.country||"UZ",name:(obData.name||"").trim()||prev.name||t("traveler"),pref:{...(prev.pref||{}),[COL]:obData.pref}}; ls.set("olam_user",U); FYC=null;
+    clearInterval(obTimer); $("#ob").classList.remove("on"); $("#obV")?.pause(); go("home"); return; }
   U={...obData,name:obData.name.trim()||t("traveler")}; ls.set("olam_user",U);
   clearInterval(obTimer); $("#ob").classList.remove("on"); mPause(); $("#obV")?.pause(); go("home");
   toast(t("picked",{n:forYou().filter(p=>score(p)>=3).length||PLACES.length}));
@@ -651,7 +665,7 @@ function tripAdd(id){ const S=$("#sh"); S.dataset.k="trip"; S.classList.add("on"
   S.innerHTML=`<div class="shb" onclick="event.stopPropagation()"><div class="shh"><b>${t("trip_pick")}</b><button class="x" onclick="closeSheet()">${ICON.down}</button></div><div class="shl">
    ${TRIPS.map((tr,i)=>`<div class="trk"><span>${ICON.bag} ${esc(tr.name)} · ${tr.ids.length}</span><button onclick="${tr.ids.includes(id)?"":`TRIPS[${i}].ids.push('${id}');keepTrips();`}toast(t('trip_added'));closeSheet()">${tr.ids.includes(id)?"✓":"＋"}</button></div>`).join("")}
    <form class="cin" style="padding:6px 0 0;background:none" onsubmit="event.preventDefault();tripNew($('#trn2').value,'${id}')"><input id="trn2" maxlength="40" placeholder="${esc(t("trip_name_ph"))}"><button>＋</button></form></div></div>`; }
-const dailyPlace=()=>{ const pool=LIFE?PLACES.filter(p=>p.animal&&!p.dyn):PLACES.filter(p=>!p.dyn&&VID[p.id]?.length); const d=Math.floor(Date.now()/864e5); return pool[(d*7919)%pool.length]; };
+const dailyPlace=()=>{ const pool=LIFE?(l=>l.length?l:PLACES.filter(p=>p.animal&&p.img))(PLACES.filter(p=>p.animal&&p.img&&(!p.dyn||(p.sl||0)>=80))):PLACES.filter(p=>!p.dyn&&VID[p.id]?.length); const d=Math.floor(Date.now()/864e5); return pool[(d*7919)%pool.length]; };
 
 /* ================= KASHF ET ================= */
 const X={tag:"all",q:"",reg:"all"};
@@ -964,8 +978,11 @@ const HOOK={};
 const HIST=["tarix","islom","ibodat","saroy","muzey"];
 async function loadHook(p){ const key=p.id+"|"+LANG; const box=()=>stillOpen(p)?$("#phook"):null;
   if(HOOK[key]) return hookRender(p,HOOK[key]);
+  if(p.person){ box()?.remove(); return; }
   const hist=!p.animal&&p.tags.some(x=>HIST.includes(x));
-  const q=p.animal
+  const q=COL==="bilim"&&p.animal
+    ?`About "${pN(p)}" (${(p.nt||p.t).replace(/_/g," ")}), a ${grpName(p)}, write in my language, engaging but strictly factual (no invented numbers):\n## WHY — 3 short bullet points on why it matters or is famous (each line starts with "- ")\n## WHEN — when and by whom it was created or launched, 1-2 sentences\n## FACT — one surprising true fact, 1-2 sentences\nUnder 140 words. No emoji. Use exactly these ## headings.`
+    :p.animal
     ?`About the creature "${pN(p)}" (${(p.nt||p.t).replace(/_/g," ")}), write in my language, engaging but strictly factual (no invented numbers):\n## WHY — 3 short bullet points on what makes it amazing (each line starts with "- ")\n## WHERE — where in the wild it lives and where people can see it, 2 short sentences\n## FACT — one surprising true fact, 1-2 sentences\nUnder 140 words. No emoji. Use exactly these ## headings.`
     :`About "${pN(p)}" (${pCountry(p)}), write in my language, engaging but strictly factual (no invented numbers):\n## WHY — why people travel here: 3 short bullet points (each line starts with "- ")\n## WHEN — best season(s) and the best time of day to visit, 2 short sentences\n## FACT — one surprising true fact, 1-2 sentences${hist?"\n## TIMELINE — 4 to 6 key dates, each line exactly: - YEAR — event (use BC where needed)":""}\nUnder ${hist?230:150} words. No emoji. Use exactly these ## headings.`;
   try{ const txt=await ai(q,`${pN(p)} (${pC(p)})`); if(!txt){ box()?.remove(); return; } HOOK[key]=txt; hookRender(p,txt); }catch(e){ box()?.remove(); } }
@@ -975,8 +992,8 @@ function hookRender(p,txt){ const b=stillOpen(p)?$("#phook"):null; if(!b) return
   if(!Object.keys(sec).length){ b.remove(); return; }
   const card=(k,ic,title,body)=>body?`<div class="hk hk-${k}"><div class="hkh"><i>${SV(ic)}</i><b>${title}</b></div>${body}</div>`:"";
   b.innerHTML=
-    card("why",CATI.wonder,p.animal?t("hk_amaze"):t("hk_why"),sec.WHY?`<ul>${li(sec.WHY).map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:"")+
-    card("when",p.animal?CATI.globe:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',p.animal?t("hk_where"):t("hk_when"),(sec.WHEN||sec.WHERE)?`<p>${esc(li(sec.WHEN||sec.WHERE).join(" "))}</p>`:"")+
+    card("why",CATI.wonder,p.animal?(COL==="bilim"?t("hk_matter"):t("hk_amaze")):t("hk_why"),sec.WHY?`<ul>${li(sec.WHY).map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:"")+
+    card("when",p.animal?CATI.globe:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',p.animal?(COL==="bilim"?t("hk_made"):t("hk_where")):t("hk_when"),(sec.WHEN||sec.WHERE)?`<p>${esc(li(sec.WHEN||sec.WHERE).join(" "))}</p>`:"")+
     card("fact",'<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.8.8 1 1.5 1 2.5h6c0-1 .2-1.7 1-2.5A6 6 0 0 0 12 3z"/>',t("hk_fact"),sec.FACT?`<p>${esc(li(sec.FACT).join(" "))}</p>`:"")+
     card("time",CATI.tarix,t("hk_time"),sec.TIMELINE?`<ol class="tl">${li(sec.TIMELINE).map(x=>{ const m=/^(.{1,22}?)\s*[—–-]\s+(.+)$/.exec(x); return m?`<li><b>${esc(m[1])}</b><span>${esc(m[2])}</span></li>`:`<li><span>${esc(x)}</span></li>`; }).join("")}</ol>`:"")+
     `<p class="sp hkai">${t("hk_ai")}</p>`; }
@@ -1004,6 +1021,10 @@ async function loadFacts(p){
     const vs=val("P1174"); if(vs) rows.push(["f_visit",'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/>',num(vs)]);
     const pop=val("P1082"); if(pop&&!vs) rows.push(["f_pop",'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/>',num(pop)]);
     if(all("P1435").some(x=>x.id==="Q9259")||C.P757) rows.push(["f_unesco",CATI.wonder,t("f_yes")]);
+    const tf=v=>{ const m=/^([+-])0*(\d+)-(\d\d)-(\d\d)/.exec(v?.time||""); if(!m) return ""; const y=+m[2]; if(v.precision>=11&&+m[3]&&+m[4]){ try{ return new Intl.DateTimeFormat(LOC[LANG],{year:"numeric",month:"long",day:"numeric"}).format(new Date(Date.UTC(y,+m[3]-1,+m[4]))); }catch(e){} } return m[1]==="-"?t("f_bc",{y}):t("f_year",{y}); };
+    const bd=val("P569"); if(bd) rows.push(["f_born",'<path d="M4 21h16M6 21v-6h12v6M12 15V9M9 6l3-3 3 3"/>',tf(bd)]);
+    const dd=val("P570"); if(dd) rows.push(["f_died",'<path d="M12 3v18M7 8h10"/>',tf(dd)]);
+    const pub=val("P577"); if(pub&&!inc) rows.push(["f_rel",'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',tf(pub)]);
     const ms=val("P2067"); if(ms) rows.push(["f_mass",'<path d="M6 7h12l2 13H4z"/><circle cx="12" cy="5" r="2"/>',num(ms)+" "+({Q11570:"kg",Q191118:"t",Q41803:"g"}[String(ms.unit||"").split("/").pop()]||"")]);
     const ln=val("P2043"); if(ln) rows.push(["f_len",'<path d="M3 12h18M3 8v8M21 8v8"/>',num(ln)+" "+(unit(ln)||({Q174728:"cm",Q174789:"mm"}[String(ln.unit||"").split("/").pop()]||""))]);
     const tu=v=>({Q573:t("u_day"),Q23387:t("u_week"),Q5151:t("u_month"),Q577:t("f_yrs"),Q1092296:t("f_yrs")}[String(v.unit||"").split("/").pop()]||"");
@@ -1012,12 +1033,13 @@ async function loadFacts(p){
     const wg=val("P2050"); if(wg) rows.push(["f_wing",'<path d="M2 12c4-6 8-6 10 0 2-6 6-6 10 0"/>',num(wg)+" "+(unit(wg)||({Q174728:"cm"}[String(wg.unit||"").split("/").pop()]||""))]);
     const lt=val("P7725"); if(lt) rows.push(["f_litter",'<circle cx="8" cy="9" r="2.5"/><circle cx="16" cy="9" r="2.5"/><circle cx="12" cy="16" r="2.5"/>',num(lt)]);
     const lf=val("P2250"); if(lf) rows.push(["f_life",'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',num(lf)+" "+(tu(lf)||t("f_yrs"))]);
-    const ids=[...all("P84").slice(0,2).map(x=>["f_arch",x.id]),...all("P149").slice(0,2).map(x=>["f_style",x.id]),...(val("P141")?.id?[["f_iucn",val("P141").id]]:[]),...all("P1034").slice(0,3).map(x=>["f_food",x.id]),...all("P2974").slice(0,3).map(x=>["f_hab",x.id]),...all("P9714").slice(0,4).map(x=>["f_range",x.id]),...all("P183").slice(0,3).map(x=>["f_range",x.id])];
+    const ids=[...all("P84").slice(0,2).map(x=>["f_arch",x.id]),...all("P149").slice(0,2).map(x=>["f_style",x.id]),...(val("P141")?.id?[["f_iucn",val("P141").id]]:[]),...all("P1034").slice(0,3).map(x=>["f_food",x.id]),...all("P2974").slice(0,3).map(x=>["f_hab",x.id]),...all("P106").slice(0,3).map(x=>["f_occ",x.id]),...all("P27").slice(0,2).map(x=>["f_cit",x.id]),...all("P19").slice(0,1).map(x=>["f_bplace",x.id]),...all("P166").slice(0,3).map(x=>["f_award",x.id]),...all("P800").slice(0,3).map(x=>["f_work",x.id]),...all("P176").slice(0,2).map(x=>["f_maker",x.id]),...all("P178").slice(0,2).map(x=>["f_dev",x.id]),...all("P9714").slice(0,4).map(x=>["f_range",x.id]),...all("P183").slice(0,3).map(x=>["f_range",x.id])];
     if(ids.length){ try{ const d=(await (await fetch(`https://www.wikidata.org/w/api.php?action=wbgetentities&format=json&origin=*&ids=${[...new Set(ids.map(x=>x[1]))].join("|")}&props=labels&languages=${WL(LANG)}|en&languagefallback=1`)).json()).entities||{};
       const by={}; ids.forEach(([k,id])=>{ const l=d[id]?.labels?.[WL(LANG)]?.value||d[id]?.labels?.en?.value; if(l) (by[k]=by[k]||[]).push(LANG==="uzk"?cyr(l):l); });
       if(by.f_iucn) rows.unshift(["f_iucn",'<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/>',by.f_iucn[0]]);
       if(by.f_food) rows.push(["f_food",'<path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M17 21V3c-2.2 1.6-3 4.6-3 8h3"/>',by.f_food.join(", ")]);
       if(by.f_range) rows.push(["f_range",'<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',[...new Set(by.f_range)].join(", ")]);
+      [["f_occ",'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>'],["f_cit",CATI.globe],["f_bplace",'<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>'],["f_award",CATI.wonder],["f_work",CATI.kutub],["f_maker",'<path d="M3 21h18M5 21V9l6-3v15M11 21V3l8 4v14"/>'],["f_dev",'<path d="m8 9-4 3 4 3M16 9l4 3-4 3M14 5l-4 14"/>']].forEach(([k,ic])=>{ if(by[k]) rows.push([k,ic,[...new Set(by[k])].join(", ")]); });
       if(by.f_hab) rows.push(["f_hab",'<path d="M12 22v-5M12 2l6 8h-3l4 6H5l4-6H6z"/>',by.f_hab.join(", ")]);
       if(by.f_arch) rows.push(["f_arch",'<path d="M3 21h18M6 21V10l6-6 6 6v11M10 21v-6h4v6"/>',by.f_arch.join(", ")]); if(by.f_style) rows.push(["f_style",CATI.muzey,by.f_style.join(", ")]); }catch(x){} }
     const web=val("P856"); if(web&&/^https?:\/\//.test(web)) rows.push(["f_web",'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',`<a href="${esc(web)}" target="_blank" rel="noopener">${esc(web.replace(/^https?:\/\/(www\.)?/,"").replace(/\/$/,"").slice(0,32))} ↗</a>`,1]);
@@ -1067,7 +1089,7 @@ const CH={place:null,msgs:[],busy:false};
 function openChat(id){
   if(cur==="watch"&&!W.paused) wPause();
   if(CH.place!==(id||null)){ CH.place=id||null; CH.msgs=[]; }
-  const p=id?byId(id):null; const sug=p?(p.animal?tl("sg_a"):tl("sg_p")):tl("sg_g");
+  const p=id?byId(id):null; const sug=p?(p.animal?(COL==="bilim"?(p.person?tl("sg_bp"):tl("sg_bt")):tl("sg_a")):tl("sg_p")):tl("sg_g");
   const vp=p&&VID[p.id]?.length?p:forYou().find(x=>VID[x.id]?.length);
   $("#chat").innerHTML=`<div class="chh"><button class="x" onclick="closeChat()">${ICON.down}</button>
      <div><b>${t("guide")}</b><small>${p?esc(t("about_p",{p:pN(p)})):t("any_q")}</small></div></div>
@@ -1085,7 +1107,7 @@ function drawMsgs(){
   box.scrollTop=box.scrollHeight;
 }
 function placeCards(text){ const low=" "+String(text).toLowerCase()+" "; const out=[];
-  for(const p of PLACES){ if(p.dyn&&!p.keep) continue; const ns=[pN(p),p.n,(p.nt||p.t).replace(/_/g," ").replace(/\s*\(.*?\)/g,""),LZ[p.id]?.n].filter(x=>x&&x.length>=4).map(x=>x.toLowerCase());
+  for(const p of PLACES){ if(p.dyn&&!p.keep&&!(LIFE&&p.animal)) continue; if(LIFE&&!p.animal) continue; const ns=[pN(p),p.n,(p.nt||p.t).replace(/_/g," ").replace(/\s*\(.*?\)/g,""),LZ[p.id]?.n].filter(x=>x&&x.length>=4).map(x=>x.toLowerCase());
     if(ns.some(n=>low.includes(n))&&!out.includes(p)) out.push(p); if(out.length>=6) break; }
   return out.length?`<div class="pcards">${out.map(p=>`<div class="pcard" onclick="chatPlace('${p.id}')">${ph(p)}<div><b>${esc(pN(p))}</b><small>${t("open_app")}</small></div></div>`).join("")}</div>`:""; }
 const reqUser=()=>({name:U?.name,country:cname(U?.country||"UZ"),interests:userCtx()});
@@ -1128,7 +1150,22 @@ function countryIn(q){ if(!CNAMES||CNAMES.l!==LANG){ const dn=l=>{ try{ return n
     const extra={US:["aqsh","amerika qoshma","usa","сша","америк"],GB:["angliya","buyuk britaniya","англи","uk"],AE:["baa","дубай","dubay","dubai","оаэ"],KR:["koreya","корея"],CZ:["chexiya","чехия"],NL:["gollandiya","голланд"],TR:["turkiya","turkey","туркия"]};
     CNAMES={l:LANG,a:(ALLC||CTRY).map(c=>{ const iso=c[0]; const ns=new Set([cname(iso),...D.map(d=>d?.of(iso)),UZC[iso],...(extra[iso]||[])].filter(Boolean).map(NORM).filter(x=>x.length>=3)); return [iso,[...ns]]; })}; }
   const n=NORM(q); let best=null,bl=0; for(const [iso,ns] of CNAMES.a) for(const x of ns){ const stem=x.length>5?x.slice(0,x.length-1):x; if(n.includes(stem)&&stem.length>bl){ best=iso; bl=stem.length; } } return best; }
-async function findPlaces(q){ if(LIFE) return null;
+const CINT=[["car",/mashin|avtomob|elektromob|electric car|\bcars?\b|\bev\b|автомоб|машин|электромоб|mototsikl|motorcycle|мотоцикл/],["air",/samolyot|raketa|kosmos|aircraft|plane|rocket|space|самол|ракет|косм/],["dev",/telefon|smartfon|kompyuter|noutbuk|robot|konsol|phone|laptop|computer|console|телефон|смартф|компьют|робот|приставк/],
+ ["ai",/\bai\b|sun.?iy intellekt|chat-?bot|neyron|\bgpt|claude|gemini|\bии\b|искусствен|нейросет/],["web",/sayt|ijtimoiy|social|website|instagram|telegram|tiktok|youtube|сайт|соцсет/],["app",/ilova|dastur|\bapp|program|browser|brauzer|приложен|программ|браузер/],
+ ["sci",/olim|scientist|ixtirochi|inventor|учён|изобрет/],["art",/shoir|yozuvchi|rassom|writer|poet|painter|писател|поэт|художн/],["mus",/qo.?shiqchi|xonanda|aktyor|musiqa|kino|singer|actor|music|film|певец|актёр|музык|кино/],["sport",/sport|futbol|football|спорт|футбол/],
+ ["hist",/tarixiy|podshoh|king|historical|истор|цар|корол/],["pol",/siyosat|prezident|politic|президент|полит/],["biz",/tadbirkor|biznes|bloger|entrepreneur|business|предприним|блогер/],["uzb",/o.?zbek|uzbek|узбек/],
+ ["mam",/sut emizuvchi|mammal|млекопит/],["bird",/qush|bird|птиц/],["fish",/baliq|fish|рыб/],["rep",/ilon|kaltakesak|timsoh|snake|lizard|reptil|змея|ящер|рептил/],["amph",/qurbaqa|frog|amphib|лягуш|земновод/],["ins",/hasharot|kapalak|insect|butterfly|насеком|бабочк/],
+ ["spider",/o.?rgimchak|chayon|spider|scorpion|паук|скорпион/],["worm",/qurt|chuvalchang|worm|червь|черв/],["sea",/dengiz|okean|sea|ocean|мор|океан/],["plant",/o.?simlik|gul|daraxt|plant|flower|tree|растен|цвет|дерев/],["fungi",/zamburug|qo.?ziqorin|mushroom|fung|гриб/]];
+async function findItems(q){ const n=NORM(q); const gs=CINT.filter(([g,re])=>GRPS.includes(g)&&re.test(n)).map(x=>x[0]);
+  await Promise.all(gs.map(lifeGroup));
+  const words=n.split(/[^\p{L}\p{N}]+/u).filter(w=>w.length>=4&&!/kerak|menga|qanday|haqida|need|want|show|какой|нужен|нужна/.test(w));
+  const stem=w=>w.length>6?w.slice(0,w.length-2):w;
+  let pool=PLACES.filter(p=>p.animal&&(!gs.length||gs.includes(p.grp)));
+  const sc=p=>{ const hay=NORM([pN(p),p.n,p.nt,p.s].join(" ")); let m=0; words.forEach(w=>{ if(hay.includes(stem(w))) m++; }); return m; };
+  let ranked=pool.map(p=>[p,sc(p)]); const any=ranked.some(x=>x[1]>0); if(any) ranked=ranked.filter(x=>x[1]>0); else if(!gs.length) return null;
+  const w=taste(), tot=Object.values(w).reduce((a,b)=>a+b,0)||1;
+  return ranked.map(([p,m])=>[p,m*40+Math.log10(1+(p.sl||1))*20+score(p,w,tot)]).sort((a,b)=>b[1]-a[1]).slice(0,8).map(x=>x[0]); }
+async function findPlaces(q){ if(LIFE) return findItems(q);
   const n=NORM(q); const iso=countryIn(q); const fs=INTENTS.filter(([re])=>re.test(n)).map(x=>x[1]); if(!iso&&!fs.length) return null;
   const ok=p=>(!iso||(p.cc||"").split("/").includes(iso))&&(!fs.length||fs.some(f=>f(p)));
   let pool=PLACES.filter(p=>(!p.dyn||p.keep)&&ok(p));
@@ -1146,7 +1183,7 @@ async function chatSend(text){
   try{ const p=CH.place?byId(CH.place):null;
     const msgs=CH.msgs.slice(-10).map(m=>({role:m.role,text:m.quote?`[The user quotes this text from the OLAM app${p?" about "+pN(p):""}: "${m.quote}"]\n${m.text}`:m.text}));
     const style="\n\n[Style: reply in the user's language, warm and friendly, with fitting emojis 🌍✨, short paragraphs or a short list, exact place names.]";
-    const ctx=found&&found.length?`\n[Places found in the OLAM app for this request (they are shown to the user as cards): ${found.map(x=>pN(x)+" ("+pCountry(x)+")").join("; ")}. Describe each one in one line with an emoji, in the same order. Do not invent other places.]`:"";
+    const ctx=found&&found.length?(LIFE?`\n[Items found in this app for the request (shown to the user as tappable cards): ${found.map(x=>pN(x)+" — "+(pS(x)||grpName(x))).join("; ")}. Recommend from these first, writing their names exactly as given, one line each with an emoji; you may add brief general advice.]`:`\n[Places found in the OLAM app for this request (they are shown to the user as cards): ${found.map(x=>pN(x)+" ("+pCountry(x)+")").join("; ")}. Describe each one in one line with an emoji, in the same order. Do not invent other places.]`):"";
     msgs[msgs.length-1].text+=ctx+style;
     const r=await fetch(GID_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:msgs,lang:LANG,place:p?`${pN(p)} (${p.n}, ${pC(p)})`:"",user:reqUser()})});
     ans=(await r.json()).text||t("no_ans");
@@ -1384,7 +1421,8 @@ try{ idb().then(db=>{ try{ db.transaction("kv","readwrite").objectStore("kv").cl
 
 /* ================= AJOYIB JONZOTLAR: sut emizuvchilar, qushlar, baliqlar, sudralib yuruvchilar... ================= */
 // [id, guruh, Wikipedia (en) nomi, o'zbekcha nomi, qayerda ko'rish mumkin (ilovadagi joylar)]
-const GRPS=["mam","bird","fish","rep","amph","ins","spider","worm","sea","plant","fungi"];
+const GRPS=COL==="bilim"?["uzb","sci","art","mus","sport","hist","pol","biz","car","air","dev","web","ai","app"]:["mam","bird","fish","rep","amph","ins","spider","worm","sea","plant","fungi"];
+const PEOPLE_G=["uzb","sci","art","mus","sport","hist","pol","biz"];
 const ANIMALS=[["snowleopard","mam","Snow leopard","Qor qoploni",["pamir","chimgan"]],["giantpanda","mam","Giant panda","Katta panda",["panda"]],["lion","mam","Lion","Sher",["serengeti","masaimara","kruger","ngorongoro"]],
  ["elephant","mam","African bush elephant","Afrika savanna fili",["kruger","okavango","serengeti"]],["giraffe","mam","Giraffe","Jirafa",["serengeti","masaimara","kruger"]],["cheetah","mam","Cheetah","Gepard",["masaimara","serengeti"]],
  ["gorilla","mam","Mountain gorilla","Tog' gorillasi",[]],["orangutan","mam","Bornean orangutan","Orangutan",["singaporezoo"]],["tiger","mam","Bengal tiger","Bengal yo'lbarsi",[]],["polarbear","mam","Polar bear","Oq ayiq",[]],
@@ -1406,7 +1444,7 @@ const ANIMALS=[["snowleopard","mam","Snow leopard","Qor qoploni",["pamir","chimg
  ["monarch","ins","Monarch butterfly","Monarx kapalagi",[]],["honeybee","ins","Western honey bee","Asalari",[]],["firefly","ins","Firefly","Yaltiroq qo'ng'iz",[]],["morpho","ins","Morpho","Morfo kapalagi",["amazon"]],
  ["octopus","sea","Common octopus","Sakkizoyoq",[]],["jellyfish","sea","Jellyfish","Meduza",[]],["mantisshrimp","sea","Mantis shrimp","Mantis qisqichbaqasi",[]],["coral","sea","Coral","Marjon",["barrierreef","maldives"]],["giantsquid","sea","Giant squid","Gigant kalmar",[]]];
 const GRPT={mam:"tabiat",bird:"tabiat",fish:"dengiz",rep:"tabiat",amph:"tabiat",ins:"tabiat",sea:"dengiz"};
-ANIMALS.forEach(([k,grp,en,uz,see])=>{ const id="a_"+k; if(IDX[id]) return; const p={id,t:en.replace(/ /g,"_"),nt:en,q:en,n:uz,c:"",cc:"",reg:"",tags:["hayvon"],grp,best:"—",s:"",g:PAL2[hash(id)%PAL2.length],animal:1,see}; PLACES.push(p); IDX[id]=p; });
+if(!(LIFE&&COL==="bilim")) ANIMALS.forEach(([k,grp,en,uz,see])=>{ const id="a_"+k; if(IDX[id]) return; const p={id,t:en.replace(/ /g,"_"),nt:en,q:en,n:uz,c:"",cc:"",reg:"",tags:["hayvon"],grp,best:"—",s:"",g:PAL2[hash(id)%PAL2.length],animal:1,see}; PLACES.push(p); IDX[id]=p; });
 const grpName=p=>t("g_"+(p.grp||"mam"));
 const AN={g:"all",n:60};
 function animalsRow(){ return ""; const l=PLACES.filter(p=>p.animal&&p.img); if(l.length<4) return ""; const d=Math.floor(Date.now()/864e5);
@@ -1420,14 +1458,14 @@ function openAnimals(g){ const O=ensureCtryView(); if(!O.classList.contains("on"
 // GitHub'da yig'ilgan minglab turlar (assets/catalog/life/<til>.json)
 const LIFEG={ld:{},counts:{},total:0};
 async function lifeGroup(g){ if(!LIFE||LIFEG.ld[g]) return; LIFEG.ld[g]=1; const lang=catLang();
-  try{ let r=await fetch(`assets/catalog/life/${lang}/${g}.json`); if(!r.ok&&lang!=="en") r=await fetch(`assets/catalog/life/en/${g}.json`); if(!r.ok) return; const d=await r.json(); if(lang!==catLang()) return; lifeAdd(d.items||[],lang); refresh(); }catch(e){ LIFEG.ld[g]=0; } }
+  try{ let r=await fetch(`assets/catalog/${COL}/${lang}/${g}.json`); if(!r.ok&&lang!=="en") r=await fetch(`assets/catalog/${COL}/en/${g}.json`); if(!r.ok) return; const d=await r.json(); if(lang!==catLang()) return; lifeAdd(d.items||[],lang); refresh(); }catch(e){ LIFEG.ld[g]=0; } }
 function lifeAdd(items,lang){ const have=new Set(PLACES.filter(p=>p.animal&&!p.dyn).map(p=>p.nt.toLowerCase()));
-  for(const [qid,grp,label,en,loc,desc,file,sl] of items){ const id="q"+qid; if(IDX[id]||(en&&have.has(en.toLowerCase()))) continue;
+  for(const [qid,grp,label,en,loc,desc,file,sl,logo] of items){ const id="q"+qid; if(IDX[id]||(en&&have.has(en.toLowerCase()))) continue;
     const wl=loc?lang:"en", title=loc||en;
     const p={id,t:(en||label).replace(/ /g,"_"),nt:en||label,q:en||label,n:LANG==="uzk"?cyr(label):label,c:"",cc:"",reg:"",tags:["hayvon"],grp,best:"—",s:desc?desc.charAt(0).toUpperCase()+desc.slice(1):"",g:PAL2[hash(id)%PAL2.length],animal:1,dyn:1,wd:1,keep:0,wl,sl,see:[],
-      img:"https://commons.wikimedia.org/wiki/Special:FilePath/"+encodeURIComponent(file.replace(/ /g,"_"))+"?width=960",wt:{en,[lang]:loc||undefined},wurl:title?`https://${wl}.wikipedia.org/wiki/`+encodeURIComponent(title.replace(/ /g,"_")):""};
+      img:file?"https://commons.wikimedia.org/wiki/Special:FilePath/"+encodeURIComponent(file.replace(/ /g,"_"))+"?width=960":undefined,logo:logo?1:0,person:PEOPLE_G.includes(grp)&&COL==="bilim"?1:0,wt:{en,[lang]:loc||undefined},wurl:title?`https://${wl}.wikipedia.org/wiki/`+encodeURIComponent(title.replace(/ /g,"_")):""};
     PLACES.push(p); IDX[id]=p; } }
-async function lifeLoad(){ if(!LIFE) return; const lang=catLang(); try{ let r=await fetch("assets/catalog/life/"+lang+".json"); if(!r.ok&&lang!=="en") r=await fetch("assets/catalog/life/en.json"); if(!r.ok) return; const d=await r.json(); if(lang!==catLang()) return;
+async function lifeLoad(){ if(!LIFE) return; const lang=catLang(); try{ let r=await fetch(`assets/catalog/${COL}/${lang}.json`); if(!r.ok&&lang!=="en") r=await fetch(`assets/catalog/${COL}/en.json`); if(!r.ok) return; const d=await r.json(); if(lang!==catLang()) return;
   LIFEG.ld={}; LIFEG.counts=d.counts||{}; LIFEG.total=d.total||0; lifeAdd(d.items||[],lang); refresh(); tryQP(); return;
   const have=new Set(PLACES.filter(p=>p.animal).map(p=>p.nt.toLowerCase()));
   for(const [qid,grp,label,en,loc,desc,file,sl] of d.items||[]){ const id="q"+qid; if(IDX[id]||(en&&have.has(en.toLowerCase()))) continue;
@@ -1479,7 +1517,7 @@ function renderLife(){
 const HB={i:0,timer:null,pool:null};
 // fon uchun dunyodagi eng chiroyli manzaralar (qo'lda tanlangan)
 const HERO_BEST=["santorini","moraine","halong","banff","lauterbrunnen","matterhorn","borabora","maldives","geiranger","lofoten","jiuzhaigou","zhangjiajie","faroe","peritomoreno","torres","uyuni","iguazu","plitvice","hallstatt","bled","amalfi","cinqueterre","dolomites","milford","whitehaven","seychelles","machu","fuji","kyoto","cappadocia","tigersnest","guilin","phiphi","elnido","yosemite","antelope","monumentvalley","horseshoe","victoria","uluru","jokulsarlon","skogafoss","como","neuschwanstein","pamukkale","bigalmaty","kaindy","iskanderkul","charvak","registan"];
-function heroPool(){ if(HB.pool&&HB.pool.length) return HB.pool; if(LIFE){ HB.pool=shuffle(PLACES.filter(p=>p.animal&&p.img&&!p.dyn)); return HB.pool; } const best=HERO_BEST.map(byId).filter(p=>p&&p.img); const rest=shuffle(best.slice(6)); HB.pool=[...shuffle(best.slice(0,6)),...rest]; return HB.pool; }
+function heroPool(){ if(HB.pool&&HB.pool.length) return HB.pool; if(LIFE){ const l=PLACES.filter(p=>p.animal&&p.img&&!p.logo&&(!p.dyn||(p.sl||0)>=80)); HB.pool=shuffle(l.length?l:PLACES.filter(p=>p.animal&&p.img)).slice(0,60); return HB.pool; } const best=HERO_BEST.map(byId).filter(p=>p&&p.img); const rest=shuffle(best.slice(6)); HB.pool=[...shuffle(best.slice(0,6)),...rest]; return HB.pool; }
 function heroNext(){ const H=$("#shero"); if(!H||cur!=="home") return; const pool=heroPool(); if(!pool.length){ clearTimeout(HB.rt); HB.rt=setTimeout(heroNext,900); return; } const p=pool[HB.i++%pool.length];
   const a=$("#hbA"), b=$("#hbB"), v=$("#hbV"); const [on,off]=a.classList.contains("on")?[b,a]:[a,b];
   const land=(VID[p.id]||[]).filter(x=>/_1920_1080_/.test(x)===(innerWidth>innerHeight));
@@ -1548,11 +1586,13 @@ function siteInit(){
 }
 
 /* ================= START ================= */
+if(LIFE&&COL==="bilim"){ for(const l in I18N){ ["brand","kick","h1","sub","sub2","ph","n","g","day","q"].forEach(k=>{ if(I18N[l]["bil_"+k]) I18N[l]["life_"+k]=I18N[l]["bil_"+k]; }); } }
 if(LIFE){ for(const l in I18N){ if(I18N[l].life_q){ I18N[l].quiz_h=I18N[l].life_q; I18N[l].t_quiz=I18N[l].life_q; } } }
 applyTheme(); applyUI(); applyLang();
 if(!U&&(SITE||LIFE)) U={name:"",country:"UZ",interests:[],regions:[],dream:null,style:"",with:"",season:""};
-if(!SITE&&(!U||U.lat==null)&&!ls.get("olam_locask",false)){ ls.set("olam_locask",true); setTimeout(()=>locate(()=>{ if($("#ob").classList.contains("on")&&obStep===1) renderOb(); }),1200); }
-if(U) go("home"); else startOb();
+if(!SITE&&!LIFE&&(!U||U.lat==null)&&!ls.get("olam_locask",false)){ ls.set("olam_locask",true); setTimeout(()=>locate(()=>{ if($("#ob").classList.contains("on")&&obStep===1) renderOb(); }),1200); }
+const needColOb=LIFE&&!(ls.get("olam_user",null)?.pref?.[COL]);
+if(U&&!needColOb) go("home"); else startOb();
 if(SITE) siteInit();
 setTimeout(()=>catLoad(),600);
 loadHeroes(); loadAll(); mQueue(); loadCommunity(); setTimeout(()=>dailyNotify(false),4000); setTimeout(tryQP,300);
