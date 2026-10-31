@@ -119,12 +119,17 @@ console.log("davlat sahifalaridagi jami joylar:", full);
 // 5) JONZOTLAR: eng mashhur turlar (sut emizuvchilar, qushlar, baliqlar, sudralib yuruvchilar, amfibiyalar, hasharotlar, dengiz jonzotlari)
 //    assets/catalog/life/<til>.json: [qid,guruh,nom,en_maqola,mahalliy_maqola,tavsif,rasm,sitelinks]
 try{
-  const GROUPS = [["mam","Q7377"],["bird","Q5113"],["fish","Q127282"],["fish","Q25371"],["rep","Q10811"],["amph","Q10908"],["ins","Q1390"],["sea","Q25326"],["sea","Q25364"],["sea","Q1057"],["sea","Q25441"]];
+  // guruhlar ilmiy nomi bo'yicha (QID skriptda topiladi): hayvonlar, o'simliklar, zamburug'lar
+  const GNAMES = [["mam","Mammalia"],["bird","Aves"],["fish","Actinopterygii"],["fish","Chondrichthyes"],["rep","Reptilia"],["amph","Amphibia"],["ins","Insecta"],["spider","Arachnida"],["worm","Annelida"],["worm","Nematoda"],["worm","Platyhelminthes"],
+    ["sea","Mollusca"],["sea","Crustacea"],["sea","Cnidaria"],["sea","Echinodermata"],["plant","Magnoliopsida"],["plant","Liliopsida"],["plant","Pinopsida"],["plant","Polypodiopsida"],["fungi","Agaricomycetes"]];
+  const GROUPS = [];
+  for(const [grp, name] of GNAMES){ try{ const b = await sparql(`SELECT ?c WHERE { ?c wdt:P225 "${name}" ; wdt:P31 wd:Q16521 . } LIMIT 1`); const q = b[0]?.c?.value.split("/").pop(); if(q) GROUPS.push([grp, q]); else console.log("guruh topilmadi:", name); }catch(e){ console.log("guruh XATO", name, e.message); } }
+  console.log("guruhlar:", GROUPS.map(g=>g.join(":")).join(" "));
   const life = new Map();
   for(const [grp, cls] of GROUPS){
     if(Date.now()-T0 > 300*60000) break;
     try{
-      const minSl = grp==="ins" ? 20 : 12;
+      const minSl = (grp==="ins"||grp==="plant") ? 20 : 12;
       let b; try{ b = await sparql(`SELECT ?item ?img ?sl WHERE { ?item wdt:P105 wd:Q7432 ; wikibase:sitelinks ?sl . FILTER(?sl >= ${minSl}) ?item wdt:P171+ wd:${cls} ; wdt:P18 ?img . } ORDER BY DESC(?sl) LIMIT 3000`); }
       catch(e){ b = await sparql(`SELECT ?item ?img ?sl WHERE { ?item wdt:P105 wd:Q7432 ; wikibase:sitelinks ?sl . FILTER(?sl >= ${minSl*2}) ?item wdt:P171+ wd:${cls} ; wdt:P18 ?img . } ORDER BY DESC(?sl) LIMIT 1500`); }
       let n = 0; for(const r of b){ const id = r.item.value.split("/").pop(); if(life.has(id)) continue; const file = decodeURIComponent(r.img.value.split("FilePath/")[1]||""); if(!file || /\.(svg|png|gif|tif|tiff|webm|ogv|pdf)$/i.test(file)) continue; life.set(id, [id, grp, file, +r.sl.value]); n++; }
