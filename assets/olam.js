@@ -1363,7 +1363,7 @@ try{ idb().then(db=>{ try{ db.transaction("kv","readwrite").objectStore("kv").cl
 
 /* ================= AJOYIB JONZOTLAR: sut emizuvchilar, qushlar, baliqlar, sudralib yuruvchilar... ================= */
 // [id, guruh, Wikipedia (en) nomi, o'zbekcha nomi, qayerda ko'rish mumkin (ilovadagi joylar)]
-const GRPS=["mam","bird","fish","rep","amph","ins","sea"];
+const GRPS=["mam","bird","fish","rep","amph","ins","spider","worm","sea","plant","fungi"];
 const ANIMALS=[["snowleopard","mam","Snow leopard","Qor qoploni",["pamir","chimgan"]],["giantpanda","mam","Giant panda","Katta panda",["panda"]],["lion","mam","Lion","Sher",["serengeti","masaimara","kruger","ngorongoro"]],
  ["elephant","mam","African bush elephant","Afrika savanna fili",["kruger","okavango","serengeti"]],["giraffe","mam","Giraffe","Jirafa",["serengeti","masaimara","kruger"]],["cheetah","mam","Cheetah","Gepard",["masaimara","serengeti"]],
  ["gorilla","mam","Mountain gorilla","Tog' gorillasi",[]],["orangutan","mam","Bornean orangutan","Orangutan",["singaporezoo"]],["tiger","mam","Bengal tiger","Bengal yo'lbarsi",[]],["polarbear","mam","Polar bear","Oq ayiq",[]],
