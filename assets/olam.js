@@ -51,8 +51,8 @@ let LZ = {};   // {id:{n,d,s}}
 function lzLoad(){ LZ = (LANG==="uz"||LANG==="uzk")?{}:ls.get("olam_lz_"+LANG,{}); }
 lzLoad();
 const pN = p=>{ if(LANG==="uz") return p.n; if(LANG==="uzk") return cyr(p.n); if(p.dyn) return p.n; return LZ[p.id]?.n || (p.nt||p.t.replace(/_/g," ")).replace(/\s*\(.*?\)\s*/g,"").trim(); };
-const pC = p=>{ if(LANG==="uz") return p.c; if(LANG==="uzk") return cyr(p.c); if(p.dyn) return p.c; return (p.cc||"").split("/").map(cname).join(" / ")||p.c; };
-const pCountry = p=>{ if(LANG==="uz"||LANG==="uzk"){ const s=p.c.split(",").pop().trim(); return LANG==="uzk"?cyr(s):s; } return pC(p); };
+const pC = p=>{ if(p.animal) return grpName(p); if(LANG==="uz") return p.c; if(LANG==="uzk") return cyr(p.c); if(p.dyn) return p.c; return (p.cc||"").split("/").map(cname).join(" / ")||p.c; };
+const pCountry = p=>{ if(p.animal) return grpName(p); if(LANG==="uz"||LANG==="uzk"){ const s=p.c.split(",").pop().trim(); return LANG==="uzk"?cyr(s):s; } return pC(p); };
 const pS = p=>{ if(LANG==="uz") return p.s; if(LANG==="uzk") return cyr(p.s); if(p.dyn) return p.s; return LZ[p.id]?.s || LZ[p.id]?.d || ""; };
 const pDesc = p=>{ if(p.dyn) return p.desc||""; if(LANG==="uz") return DESC[p.id]||""; if(LANG==="uzk") return cyr(DESC[p.id]||""); return LZ[p.id]?.x || ""; };
 const WAPI="https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1";
@@ -160,12 +160,14 @@ function closeSheet(){ $("#sh").classList.remove("on"); }
 const TTSL={uz:"uz-UZ",uzk:"uz-UZ",ru:"ru-RU",en:"en-US",tr:"tr-TR",kk:"kk-KZ",ky:"ky-KG",tg:"tg-TJ",ar:"ar-SA",zh:"zh-CN"};
 let TTSWARN=false;
 const TTS_URL="https://olam-tts.behruzbekhasanboyev31.workers.dev";   // worker/olam-tts.js
-let TTSA=null;
+let TTSA=null, TTS_OK=false;
+// faqat tabiiy server ovozi (brauzer/qurilma ovozi ishlatilmaydi)
+function ttsCheck(){ document.documentElement.classList.toggle("notts",!TTS_OK); }
+(async()=>{ document.documentElement.classList.add("notts"); try{ const ac=new AbortController(); setTimeout(()=>ac.abort(),6000); const r=await fetch(TTS_URL,{signal:ac.signal}); const d=await r.json(); TTS_OK=!!d.ready; }catch(e){ TTS_OK=false; } ttsCheck(); })();
 function ttsOff(){ document.querySelectorAll(".spk.on").forEach(b=>{ b.classList.remove("on"); b.dataset.sp=""; }); BGM.volume=0.55; }
 async function speak(text,btn){
   // to'xtatish
   if(TTSA){ TTSA.pause(); TTSA=null; const was=btn&&btn.dataset.sp==="1"; ttsOff(); if(was) return; }
-  try{ if(speechSynthesis.speaking||speechSynthesis.pending){ speechSynthesis.cancel(); const was=btn&&btn.dataset.sp==="1"; ttsOff(); if(was) return; } }catch(e){}
   const txt=String(text||"").replace(EMO,"").replace(/[*#_«»"]/g,"").replace(/\s+/g," ").trim().slice(0,2500); if(!txt) return;
   if(btn){ btn.classList.add("on"); btn.dataset.sp="1"; } BGM.volume=0.12;
   // 1) tabiiy ovoz (server orqali, masalan Azure Speech) — tilga mos
@@ -176,15 +178,9 @@ async function speak(text,btn){
     else if(r.ok&&ct.includes("json")){ const d=await r.json(); if(d.audio) src=(String(d.audio).startsWith("data:")?"":"data:audio/mpeg;base64,")+d.audio; }
     if(src&&btn?.dataset.sp!==""){ TTSA=new Audio(src); TTSA.onended=TTSA.onerror=()=>{ TTSA=null; ttsOff(); }; await TTSA.play(); return; }
   }catch(e){}
-  if(btn&&btn.dataset.sp!=="1") return;
-  // 2) qurilma ovozi — faqat aynan shu tildagi ovoz bo'lsa (boshqa til ovozi g'alati o'qiydi)
-  if(!("speechSynthesis" in window)){ ttsOff(); toast(t("tts_no")); return; }
-  const S=speechSynthesis, lc=TTSL[LANG]||"en-US", two=lc.slice(0,2).toLowerCase(), vs=S.getVoices();
-  const v=vs.find(x=>x.lang.replace("_","-").toLowerCase()===lc.toLowerCase())||vs.find(x=>x.lang.toLowerCase().startsWith(two));
-  if(!v){ ttsOff(); toast(t("tts_nolang")); return; }
-  const u=new SpeechSynthesisUtterance(txt); u.voice=v; u.lang=v.lang; u.rate=0.95; u.onend=u.onerror=()=>ttsOff(); S.speak(u);
+  ttsOff();
 }
-try{ speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices(); }catch(e){}
+
 
 /* ===== Tabiat ovozlari (Web Audio — internet kerak emas) ===== */
 const AMB={ctx:null,nodes:[],kind:null,g:null,iv:null};
@@ -359,7 +355,7 @@ async function worldNear(lat,lon){
 let FYC=null;
 const forYou = ()=>{ const key=PLACES.length+"|"+JSON.stringify(LRN.t).length+"|"+Object.keys(LRN.l).length+"|"+saved.size+"|"+(U?.interests||[]).join();
   if(FYC&&FYC.k===key&&Date.now()-FYC.ts<4000) return FYC.l.slice();
-  const w=taste(), tot=Object.values(w).reduce((a,b)=>a+b,0)||1; const sorted=PLACES.filter(p=>!p.dyn||p.keep).map(p=>[p,score(p,w,tot)]).sort((a,b)=>b[1]-a[1]).map(x=>x[0]);
+  const w=taste(), tot=Object.values(w).reduce((a,b)=>a+b,0)||1; const sorted=PLACES.filter(p=>(!p.dyn||p.keep)&&!p.animal).map(p=>[p,score(p,w,tot)]).sort((a,b)=>b[1]-a[1]).map(x=>x[0]);
   // xilma-xillik: ketma-ket bir xil davlat/turdagi joylar ko'p bo'lmasin (lentaning boshi)
   const head=sorted.slice(0,240), rest=sorted.slice(240), out=[];
   while(head.length){ let k=head.findIndex(p=>{ const c=(p.cc||p.reg), t0=p.tags[0]; const a=out[out.length-1], b=out[out.length-2]; return !(a&&(a.cc||a.reg)===c&&b&&(b.cc||b.reg)===c)&&!(a&&a.tags[0]===t0&&b&&b.tags[0]===t0); }); if(k<0||k>8) k=0; out.push(head.splice(k,1)[0]); }
@@ -533,6 +529,7 @@ function renderHome(){ if(SITE) return renderHomeSite(); setTimeout(fillAIPicks,
    <div class="sec"><h2>${t("won_h")}<small>${t("won_sub")}</small></h2><span onclick="X.tag='wonder';X.q='';X.reg='all';go('explore')">${t("all")}</span></div>
    <div id="wond">${wondersHTML()}</div>
    ${recsHTML()}
+   ${animalsRow()}
    <div class="sec"><h2>${t("best_h")}<small>${PR[topTags(1)[0]]||t("based")}</small></h2><span onclick="go('explore')">${t("all")}</span></div>
    <div class="grid2">${popular.map(gcard).join("")}</div>
    ${near.length?`<div class="sec"><h2>${t("near_h")}<small>${t("near_sub",{c:esc(cname(U?.country||"UZ"))})}</small></h2></div>
@@ -661,7 +658,7 @@ function renderExplore(){
 }
 function renderMas(){
   const q=X.q.toLowerCase().trim();
-  const l=forYou().filter(p=>matchX(p)&&(!q||[pN(p),p.n,p.c,p.t,pC(p)].join(" ").toLowerCase().includes(q)));
+  const l=[...(q?PLACES.filter(p=>p.animal&&[pN(p),p.n,p.t].join(" ").toLowerCase().includes(q)).slice(0,24):[]),...forYou().filter(p=>matchX(p)&&(!q||[pN(p),p.n,p.c,p.t,pC(p)].join(" ").toLowerCase().includes(q)))];
   const aiBtn=q?`<button class="aisearch" onclick="aiSearch()">${t("ai_search",{q:esc(X.q.trim())})}</button>`:"";
   $("#mas").innerHTML=(l.length?`<div class="grid2">${l.slice(0,q?60:400).map(gcard).join("")}</div>`:(q?"":`<div class="empty">${t("nothing")}</div>`))+aiBtn;
   clearTimeout(X.wt); const W2=$("#wres"); if(!W2) return;
@@ -729,10 +726,10 @@ function applyUI(){ const R=document.documentElement; R.dataset.ui=curUI();
 function uiPick(v){ SET[SITE?"sui":"ui"]=v; saveSet(); applyUI(); applyTheme(); }
 function applyTheme(){ const dark=SET.theme==="dark"||(SET.theme==="auto"&&matchMedia("(prefers-color-scheme: dark)").matches); document.documentElement.dataset.theme=dark?"dark":"light"; document.querySelector('meta[name=theme-color]')?.setAttribute("content",dark?"#0e1622":"#f4f8fd"); }
 try{ matchMedia("(prefers-color-scheme: dark)").addEventListener("change",applyTheme); }catch(e){}
-function setLang(k){ if(k===LANG) return; const oldCat=catLang(); LANG=k; if(oldCat!==catLang()||k==="uzk"||oldCat==="uz"){ catReset(); setTimeout(()=>catLoad(),400); } SET.lang=k; saveSet(); lzLoad(); applyLang(); toast(t("lang_set"));
+function setLang(k){ if(k===LANG) return; const oldCat=catLang(); LANG=k; if(oldCat!==catLang()||k==="uzk"||oldCat==="uz"){ catReset(); setTimeout(()=>{ catLoad(); lifeLoad(); },400); } SET.lang=k; saveSet(); lzLoad(); applyLang(); toast(t("lang_set"));
   if(!$("#ob").classList.contains("on")){ render(cur==="watch"?"home":cur); if(cur==="watch") go("home"); }
   if(!(k==="uz"||k==="uzk")){ wikiNames(); aiTaglines(); } }
-function applyLang(){ document.documentElement.lang=LOC[LANG]; document.documentElement.dir=LANG==="ar"?"rtl":"ltr";
+function applyLang(){ try{ ttsCheck(); }catch(e){} document.documentElement.lang=LOC[LANG]; document.documentElement.dir=LANG==="ar"?"rtl":"ltr";
   const NK={home:"nav_home",explore:"nav_exp",watch:"nav_watch",saved:"nav_saved",profile:"nav_prof",map:"t_map"};
   document.querySelectorAll(".nav button,.tlinks button").forEach(b=>{ const k=NK[b.dataset.v]; if(!k) return; const l=clean(t(k)); b.setAttribute("aria-label",l); const sp=b.querySelector("span"); if(sp) sp.textContent=l; else if(b.closest(".tlinks")) b.textContent=l; });
   document.querySelectorAll("[data-t]").forEach(e=>{ e.textContent=t(e.dataset.t); }); const lb=$("#tlang"); if(lb){ const L=LANGS.find(x=>x[0]===LANG); lb.innerHTML=catIcon("globe")+(LANG==="uzk"?"ЎЗ":LANG.toUpperCase()); } }
@@ -793,7 +790,7 @@ function wPause(){ const bar=$("#wbi"), v=$("#wv"); if(!bar) return; W.paused=!W
 function vSound(){ SET.vsound=!SET.vsound; saveSet(); const v=$("#wv"); if(v){ v.muted=!SET.vsound; if(SET.vsound) v.play().catch(()=>{}); vDuck(v); } const b=$("#wvs"); if(b){ b.innerHTML=SET.vsound?ICON.sound:ICON.mute; b.classList.toggle("on",SET.vsound); }
   document.querySelectorAll("#gal video").forEach(x=>x.muted=!SET.vsound); }
 let WWH=0; document.addEventListener("wheel",e=>{ if(cur!=="watch"||$("#detail").classList.contains("on")||$("#chat").classList.contains("on")||Date.now()-WWH<700||Math.abs(e.deltaY)<25) return; WWH=Date.now(); wGo(e.deltaY>0?1:-1); },{passive:true});
-function wStop(){ ambStop(); BGM.volume=0.55; try{ speechSynthesis.cancel(); }catch(e){} clearTimeout(W.t); clearInterval(W.gt); const v=$("#wv"); if(v) v.pause(); mPause(); }
+function wStop(){ ambStop(); BGM.volume=0.55; if(TTSA){ TTSA.pause(); TTSA=null; ttsOff(); } clearTimeout(W.t); clearInterval(W.gt); const v=$("#wv"); if(v) v.pause(); mPause(); }
 function wLike(){ const id=W.list[W.i].id; liked.has(id)?liked.delete(id):(liked.add(id),learn(id,3)); keep(); $("#wl").classList.toggle("on",liked.has(id)); }
 function wSave(){ save(W.list[W.i].id); $("#ws").classList.toggle("on",saved.has(W.list[W.i].id)); }
 document.addEventListener("keydown",e=>{ if(cur!=="watch"||$("#detail").classList.contains("on")||$("#chat").classList.contains("on")) return;
@@ -804,7 +801,7 @@ document.addEventListener("visibilitychange",()=>{ if(document.hidden&&cur==="wa
 async function openPlace(id){
   const p=byId(id), DD=$("#detail"); if(!p) return; dynKeep(p); learn(id,1); if(PDW&&PDW.id!==id){ const dt=(Date.now()-PDW.t)/1000; learn(PDW.id,dt>90?3:dt>30?1.5:dt>12?0.5:0); } PDW={id,t:Date.now()};
   if(cur==="watch"&&!W.paused) wPause();
-  const others=PLACES.filter(x=>x.id!==id&&(!x.dyn||x.keep)).map(x=>({x,s:x.tags.filter(y=>p.tags.includes(y)).length*2+(x.reg===p.reg?1:0)+score(x)/10})).sort((a,b)=>b.s-a.s).slice(0,10).map(o=>o.x);
+  const others=p.animal?shuffle(PLACES.filter(x=>x.animal&&x.id!==id&&x.grp===p.grp&&x.img)).slice(0,10):PLACES.filter(x=>x.id!==id&&(!x.dyn||x.keep)&&!x.animal).map(x=>({x,s:x.tags.filter(y=>p.tags.includes(y)).length*2+(x.reg===p.reg?1:0)+score(x)/10})).sort((a,b)=>b.s-a.s).slice(0,10).map(o=>o.x);
   const C=CAT(), R=REGN(), WN=tl("won"), desc=pDesc(p);
   DD.innerHTML=`<div class="dg"><div class="gal" id="gal"><div class="gs ph act" style="background:${grad(p)}">${img(p,true)}</div></div>
      <button class="x" onclick="closePlace()">${ICON.down}</button>
@@ -814,25 +811,26 @@ async function openPlace(id){
    <div class="dt">${p.user?`<div class="wbadge">${t("ap_user")}</div>`:""}${wondersOf(p.id).map(w=>`<div class="wbadge">${WN[w][0]}</div>`).join("")}<div class="kicker">${p.tags.map(x=>C[x]?clean(C[x]):"").filter(Boolean).join(" · ")}</div><h1>${esc(pN(p))}</h1><div class="loc"><span>${PIN}${esc(pC(p))}</span><span class="r">${rate(p)}</span></div></div>
    <div class="db">
      <div class="row"><button class="pill g" onclick="closePlace();go('watch','${p.id}')">${ICON.play} ${t("b_watch")}</button>
-       <button class="pill o" onclick="closePlace();openMap('${p.id}')">${ICON.pin}<span>${clean(t("b_map"))}</span></button>
-       <button class="pill o" onclick="tripAdd('${p.id}')" aria-label="${esc(t("trip_add"))}">${ICON.bag}</button>
+       ${p.animal?"":`<button class="pill o" onclick="closePlace();openMap('${p.id}')">${ICON.pin}<span>${clean(t("b_map"))}</span></button>`}
+       ${p.animal?"":`<button class="pill o" onclick="tripAdd('${p.id}')" aria-label="${esc(t("trip_add"))}">${ICON.bag}</button>`}
        <button class="pill o sv ${saved.has(p.id)?"on":""}" onclick="save('${p.id}');this.classList.toggle('on',saved.has('${p.id}'));this.querySelector('span').textContent=clean(saved.has('${p.id}')?t('b_saved'):t('b_save'))">${ICON.save}<span>${clean(saved.has(p.id)?t("b_saved"):t("b_save"))}</span></button></div>
      <button class="ask" onclick="openChat('${p.id}')">${ICON.spark}<span>${clean(t("ask_guide"))}</span></button>
      <button class="pill o2" style="width:100%;margin-top:8px" onclick="openComments('${p.id}')">${ICON.chat}<span>${clean(t("cm_btn"))}</span></button>
-     <div class="aibar">${tl("aiq").map((q,i)=>`<button onclick="aiAsk('${p.id}',${i})">${ICON.spark}${esc(clean(q[0]))}</button>`).join("")}</div>
+     ${p.animal?"":`<div class="aibar">${tl("aiq").map((q,i)=>`<button onclick="aiAsk('${p.id}',${i})">${ICON.spark}${esc(clean(q[0]))}</button>`).join("")}</div>`}
      <div class="tagline">${esc(pS(p))}</div>
-     <div class="facts"><div>${t("best_time")}<b>${bestTxt(p.best)}</b></div><div>${t("from_you")}<b>${km(dist(p))}</b></div><div>${t("region")}<b>${clean(R[p.reg])}</b></div></div>
-     <div class="sgrp wxb" id="wx"><div class="sl">${t("wx_h")}</div><div class="sp">…</div></div><div class="sgrp" id="fx"></div>
-     <div class="gmap"><a class="pill gm" href="${gmapsUrl(p)}" target="_blank" rel="noopener">${ICON.pin}<span>${t("gm_open")}</span></a><a class="pill gm g2" href="${gdirUrl(p)}" target="_blank" rel="noopener">${ICON.route}<span>${t("gm_dir")}</span></a></div>
-     <a class="pill o2 wide" style="margin-top:8px" href="${panoUrl(p)}" target="_blank" rel="noopener">${ICON.eye}<span>${clean(t("pano"))} · Google Maps</span></a>
+     ${p.animal?"":`     <div class="facts"><div>${t("best_time")}<b>${bestTxt(p.best)}</b></div><div>${t("from_you")}<b>${km(dist(p))}</b></div><div>${t("region")}<b>${clean(R[p.reg])}</b></div></div>
+     <div class="sgrp wxb" id="wx"><div class="sl">\${t("wx_h")}</div><div class="sp">…</div></div><div class="sgrp" id="fx"></div>
+     <div class="gmap"><a class="pill gm" href="\${gmapsUrl(p)}" target="_blank" rel="noopener">\${ICON.pin}<span>\${t("gm_open")}</span></a><a class="pill gm g2" href="\${gdirUrl(p)}" target="_blank" rel="noopener">\${ICON.route}<span>\${t("gm_dir")}</span></a></div>
+     <a class="pill o2 wide" style="margin-top:8px" href="\${panoUrl(p)}" target="_blank" rel="noopener">\${ICON.eye}<span>\${clean(t("pano"))} · Google Maps</span></a>`}
      <div class="sec" style="padding:14px 0 8px"><h2>${t("about_h")}</h2><span class="spk" onclick="speak(pN(byId('${p.id}'))+'. '+($('#pdesc')?.textContent||''),this)">${t("listen")}</span></div>
      <div class="wiki" id="pdesc">${desc?esc(desc):t("translating")}</div>
      <div class="wiki more" id="pmore"></div>
      <div class="sgrp pfacts" id="pfacts"><div class="sl">${t("f_h")}</div><div class="pfg"><div class="sp">…</div></div></div>
      ${p.wurl?`<div class="wiki"><small><a href="${p.wurl}" target="_blank" rel="noopener">${t("more_wiki")} ↗</a></small></div>`:""}
-     <button class="pill o2" style="width:100%;margin-top:12px" onclick="openChat('${p.id}');chatSend(t('explain_q',{p:pN(byId('${p.id}'))}))">${t("explain")}</button>
+     <button class="artb" onclick="openArticle('${p.id}')"><span>${catIcon("kutub")}</span><div><b>${t("art_btn")}</b><small>${t("art_sub")}</small></div>${ICON.arrow}</button>
    </div>
-   <div class="sec"><h2>${t("others_h")}<small>${t("may_like")}</small></h2></div>
+   ${p.animal&&(p.see||[]).map(byId).filter(Boolean).length?`<div class="sec"><h2>${t("an_see")}</h2></div><div class="hs">${p.see.map(byId).filter(Boolean).map(x=>cardH(x)).join("")}</div>`:""}
+   <div class="sec"><h2>${p.animal?t("an_more"):t("others_h")}<small>${t("may_like")}</small></h2></div>
    ${others.map(o=>{ const s=pS(o); return `<div class="rec" onclick="openPlace('${o.id}')">${ph(o)}<div><b>${esc(pN(o))}</b><small>${esc(pCountry(o))}<br>${esc(s.length>60?s.slice(0,58)+"…":s)}</small></div></div>`; }).join("")}
    <div class="foot"></div>`;
   DD.classList.add("on"); DD.scrollTop=0;
@@ -847,7 +845,8 @@ async function galBuild(p){
   let g=[], vids=[];
   try{ [g]=await Promise.all([loadGallery(p), SET.video?loadVideo(p):Promise.resolve(null)]); }catch(e){}
   if(!galOpen(id)) return;
-  if(SET.video){ const wide=$("#gal").clientWidth>=$("#gal").clientHeight; vids=(VID[p.id]||[]).filter(x=>/_1920_1080_/.test(x)===wide).map(pexels).slice(0,3); }
+  if(SET.video){ const wide=$("#gal").clientWidth>=$("#gal").clientHeight; vids=(VID[p.id]||[]).filter(x=>/_1920_1080_/.test(x)===wide).map(pexels).slice(0,3);
+    if(!vids.length&&!(VID[p.id]||[]).length&&p.vlist?.length) vids=p.vlist.filter(u=>!/pexels/.test(u)).slice(0,3); }
   const imgs=(g&&g.length?g:(p.img?[big(p.img)]:[]));
   const slides=[...(vids[0]?[{v:vids[0]}]:[]),...imgs.map(u=>({i:hq(u)})),...vids.slice(1).map(u=>({v:u}))];
   if(!slides.length) return;
@@ -886,6 +885,53 @@ function placeSoundStart(p){ if(cur==="watch") return; ambStart(ambKind(p)); if(
   const id=PTRACK[p.tags.find(x=>PTRACK[x])]||94; if(SET.mlist==="minus"||!M.q.length){ const k=M.q.findIndex(x=>String(x.id)===String(id)); if(k>=0&&String(M.cur)!==String(id)){ M.i=k; mTrack(); } }
   mPlay(); }
 function placeSound(){ SET.music=!SET.music; saveSet(); if(SET.music){ const p=byId(G?.p); if(p) placeSoundStart(p); else mPlay(); } else mPause(); const b=$("#gsnd"); if(b){ b.innerHTML=SET.music?ICON.music:ICON.mute; b.classList.toggle("on",SET.music); } }
+/* ===== To'liq maqola: Wikipedia (sizning tilingizda yoki tarjima) + sayohatchi qo'llanmasi ===== */
+const ART={};
+const SKIPSEC=/^(references|see also|external links|notes|further reading|bibliography|sources|gallery|citations|footnotes|literature|manbalar|havolalar|izohlar|adabiyotlar|yana qarang|tashqi havolalar|примечания|литература|ссылки|см\. также|источники|галерея|kaynakça|ayrıca bakınız|dış bağlantılar|notlar|дереккөздер|сілтемелер|шилтемелер|эскертүүлер|адабиёт|пайвандҳо|المراجع|انظر أيضا|وصلات خارجية|参考文献|参见|外部链接|注释)$/i;
+function artParse(txt){ const out=[]; let cur={h:"",p:[]}; String(txt||"").split("\n").forEach(line=>{ const m=/^(={2,4})\s*(.+?)\s*\1\s*$/.exec(line.trim()); if(m){ if(cur.h||cur.p.length) out.push(cur); cur={h:m[2],lvl:m[1].length,p:[]}; } else if(line.trim()) cur.p.push(line.trim()); }); if(cur.h||cur.p.length) out.push(cur);
+  const res=[]; let skip=false, skipLvl=9; for(const sct of out){ if(sct.h){ if(skip&&sct.lvl>skipLvl) continue; skip=SKIPSEC.test(sct.h); skipLvl=sct.lvl; } if(skip) continue; if(sct.p.length) res.push(sct); } return res; }
+const words=secs=>secs.reduce((a,x)=>a+x.p.join(" ").split(/\s+/).length,0);
+async function wikiFull(l,title){ const d=await (await fetch(`https://${l}.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1&prop=extracts&explaintext=1&exsectionformat=wiki${l==="zh"?"&variant=zh-cn":""}&titles=`+encodeURIComponent(title))).json(); return Object.values(d.query?.pages||{})[0]?.extract||""; }
+function ensureArtView(){ let O=$("#artv"); if(!O){ O=document.createElement("section"); O.className="ov art"; O.id="artv"; $("#app").insertBefore(O,$("#sh")); } return O; }
+function closeArticle(){ $("#artv")?.classList.remove("on"); }
+async function openArticle(id){
+  const p=byId(id); if(!p) return; const O=ensureArtView(); O.classList.add("on"); O.scrollTop=0; learn(id,1.5);
+  const key=id+"|"+LANG;
+  O.innerHTML=`<button class="ovx" onclick="closeArticle()">${ICON.down}</button>
+   <article class="artw"><div class="arth ph" style="background:${grad(p)}">${p.img?`<img src="${hq(p.img)}" alt="" onerror="this.src='${big(p.img)}'">`:""}<div class="arthi"><span class="kicker">${esc(pCountry(p))}</span><h1>${esc(pN(p))}</h1><p>${esc(pS(p))}</p></div></div>
+   <div class="artm" id="artm">${t("art_load")}</div><nav class="arttoc" id="arttoc"></nav><div id="artb"><div class="artsk"><i></i><i></i><i></i><i></i></div></div><div class="foot"></div></article>`;
+  if(ART[key]) return artRender(p,ART[key]);
+  const lang=LANG, wl=WL(lang)==="uzk"?"uz":WL(lang); let secs=[], srcL=wl, tr=false;
+  try{ const qid=await qidOf(p); let title=p.wt?.[wl]||(wl==="en"?(p.wt?.en||(p.nt||p.t).replace(/_/g," ")):null), en=p.wt?.en||(!p.dyn?(p.nt||p.t).replace(/_/g," "):null);
+    if((!title||!en)&&qid){ const d=await (await fetch(`https://www.wikidata.org/w/api.php?action=wbgetentities&format=json&origin=*&ids=${qid}&props=sitelinks&sitefilter=${wl}wiki|enwiki`)).json(); const sl=d.entities?.[qid]?.sitelinks||{}; title=title||sl[wl+"wiki"]?.title; en=en||sl.enwiki?.title; }
+    if(title) secs=artParse(await wikiFull(wl,title));
+    if(words(secs)<700&&en&&wl!=="en"){ const es=artParse(await wikiFull("en",en)); if(words(es)>words(secs)+300||(!secs.length&&es.length)){
+      // inglizcha maqola — bo'limma-bo'lim tarjima (taxminan 2000 so'zgacha)
+      let budget=2100; const pick=[]; for(const x of es){ if(budget<=0) break; const w=x.p.join(" ").split(/\s+/).length; const keep=w>budget?{...x,p:x.p.slice(0,Math.max(1,Math.round(x.p.length*budget/w)))}:x; pick.push(keep); budget-=Math.min(w,budget); }
+      secs=pick.map(x=>({h:x.h,p:x.p,raw:1})); srcL="en"; tr=true; } }
+  }catch(e){}
+  if(!$("#artv")?.classList.contains("on")) return;
+  if(!secs.length){ $("#artb").innerHTML=`<p class="sp">${t("art_none")}</p>`; artGuide(p); return; }
+  if(LANG==="uzk") secs=secs.map(x=>({...x,h:cyr(x.h),p:x.p.map(cyr)}));
+  const A={secs,srcL,tr,guide:null}; artRender(p,A);
+  if(tr){ for(let i=0;i<secs.length;i++){ if(!$("#artv")?.classList.contains("on")) return; $("#artm").textContent=t("art_tr",{d:i+1,t:secs.length});
+      try{ const src=(secs[i].h?"### "+secs[i].h+"\n":"")+secs[i].p.join("\n\n"); let out=await aiTranslate(src); if(out){ if(LANG==="uzk") out=cyr(out); const lines=out.split(/\n+/).map(x=>x.trim()).filter(Boolean); let h=secs[i].h; if(/^#{1,4}\s*/.test(lines[0]||"")) h=lines.shift().replace(/^#{1,4}\s*/,""); secs[i]={h,p:lines.length?lines:secs[i].p}; } }catch(e){}
+      artRender(p,A); }
+    A.tr=false; }
+  ART[key]=A; artRender(p,A); artGuide(p);
+}
+function artRender(p,A){ const b=$("#artb"); if(!b) return; const w=words(A.secs);
+  $("#artm").innerHTML=`<span>${t("art_words",{n:w.toLocaleString(LOC[LANG]),m:Math.max(1,Math.round(w/200))})}</span><span>${t("art_src",{l:A.srcL.toUpperCase()})}${A.tr?" · "+t("art_trd"):""}</span>`;
+  $("#arttoc").innerHTML=A.secs.filter(x=>x.h).length>2?`<b>${t("art_toc")}</b>${A.secs.map((x,i)=>x.h?`<a href="#" onclick="event.preventDefault();document.getElementById('as${i}')?.scrollIntoView({behavior:'smooth'})">${esc(x.h)}</a>`:"").join("")}`:"";
+  b.innerHTML=A.secs.map((x,i)=>`<section id="as${i}">${x.h?`<h2>${esc(x.h)}</h2>`:""}${x.p.map(q=>`<p${x.raw?' class="raw"':""}>${esc(q)}</p>`).join("")}</section>`).join("")+`<div id="artg"></div>`;
+  if(A.guide) artGuideRender(A.guide); }
+async function artGuide(p){ const key=p.id+"|"+LANG; const A=ART[key]||{}; if(A.guide){ artGuideRender(A.guide); return; } const box=$("#artg"); if(box) box.innerHTML=`<div class="artgd"><h2>${t("art_guide")}</h2><p class="sp">${t("thinking")}</p></div>`;
+  try{ const g=await ai(`Write a practical travel guide about "${pN(p)}" (${pCountry(p)}) in my language. Use exactly these sections, each starting with "## ": best time to visit; how to get there; tickets, hours and approximate prices (say clearly if unknown or variable); what to see and do; useful tips. 300-450 words total. Only facts you are confident about; no invented numbers. Plain sentences, no emoji.`,`${pN(p)} (${pC(p)})`);
+    if(ART[key]) ART[key].guide=g; else ART[key]={secs:[],srcL:"",guide:g}; if($("#artv")?.classList.contains("on")) artGuideRender(g); }catch(e){ $("#artg")?.remove(); } }
+function artGuideRender(g){ const box=$("#artg"); if(!box) return; const parts=String(g).split(/^##\s*/m).map(x=>x.trim()).filter(Boolean);
+  box.innerHTML=`<div class="artgd"><h2>${t("art_guide")}</h2>${parts.map(x=>{ const [h,...r]=x.split("\n"); return r.length?`<h3>${esc(h.replace(/[*#]/g,""))}</h3>${r.join("\n").split(/\n+/).filter(Boolean).map(q=>`<p>${esc(q.replace(/\*\*/g,"").replace(/^[-*]\s*/,"• "))}</p>`).join("")}`:`<p>${esc(h)}</p>`; }).join("")}<p class="sp">${t("art_ai")}</p></div>`; }
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&$("#artv")?.classList.contains("on")) closeArticle(); });
+
 /* ===== Batafsil ma'lumot: Wikidata faktlari va Wikipedia'dan to'liq tavsif ===== */
 const stillOpen=p=>$("#detail").classList.contains("on")&&$("#detail h1")?.textContent===pN(p);
 async function qidOf(p){ if(p.wd) return p.id.slice(1); if(p.qid) return p.qid;
@@ -909,9 +955,20 @@ async function loadFacts(p){
     const vs=val("P1174"); if(vs) rows.push(["f_visit",'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/>',num(vs)]);
     const pop=val("P1082"); if(pop&&!vs) rows.push(["f_pop",'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/>',num(pop)]);
     if(all("P1435").some(x=>x.id==="Q9259")||C.P757) rows.push(["f_unesco",CATI.wonder,t("f_yes")]);
-    const ids=[...all("P84").slice(0,2).map(x=>["f_arch",x.id]),...all("P149").slice(0,2).map(x=>["f_style",x.id])];
+    const ms=val("P2067"); if(ms) rows.push(["f_mass",'<path d="M6 7h12l2 13H4z"/><circle cx="12" cy="5" r="2"/>',num(ms)+" "+({Q11570:"kg",Q191118:"t",Q41803:"g"}[String(ms.unit||"").split("/").pop()]||"")]);
+    const ln=val("P2043"); if(ln) rows.push(["f_len",'<path d="M3 12h18M3 8v8M21 8v8"/>',num(ln)+" "+(unit(ln)||({Q174728:"cm",Q174789:"mm"}[String(ln.unit||"").split("/").pop()]||""))]);
+    const tu=v=>({Q573:t("u_day"),Q23387:t("u_week"),Q5151:t("u_month"),Q577:t("f_yrs"),Q1092296:t("f_yrs")}[String(v.unit||"").split("/").pop()]||"");
+    const gs=val("P3063"); if(gs) rows.push(["f_gest",'<circle cx="12" cy="12" r="9"/><path d="M12 7v5h4"/>',num(gs)+" "+tu(gs)]);
+    const sp=val("P2052"); if(sp) rows.push(["f_speed",'<path d="M4 15a8 8 0 1 1 16 0M12 15l4-5"/>',num(sp)+" "+({Q180154:"km/h",Q182429:"m/s"}[String(sp.unit||"").split("/").pop()]||"")]);
+    const wg=val("P2050"); if(wg) rows.push(["f_wing",'<path d="M2 12c4-6 8-6 10 0 2-6 6-6 10 0"/>',num(wg)+" "+(unit(wg)||({Q174728:"cm"}[String(wg.unit||"").split("/").pop()]||""))]);
+    const lt=val("P7725"); if(lt) rows.push(["f_litter",'<circle cx="8" cy="9" r="2.5"/><circle cx="16" cy="9" r="2.5"/><circle cx="12" cy="16" r="2.5"/>',num(lt)]);
+    const lf=val("P2250"); if(lf) rows.push(["f_life",'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',num(lf)+" "+(tu(lf)||t("f_yrs"))]);
+    const ids=[...all("P84").slice(0,2).map(x=>["f_arch",x.id]),...all("P149").slice(0,2).map(x=>["f_style",x.id]),...(val("P141")?.id?[["f_iucn",val("P141").id]]:[]),...all("P1034").slice(0,3).map(x=>["f_food",x.id]),...all("P2974").slice(0,3).map(x=>["f_hab",x.id])];
     if(ids.length){ try{ const d=(await (await fetch(`https://www.wikidata.org/w/api.php?action=wbgetentities&format=json&origin=*&ids=${[...new Set(ids.map(x=>x[1]))].join("|")}&props=labels&languages=${WL(LANG)}|en&languagefallback=1`)).json()).entities||{};
       const by={}; ids.forEach(([k,id])=>{ const l=d[id]?.labels?.[WL(LANG)]?.value||d[id]?.labels?.en?.value; if(l) (by[k]=by[k]||[]).push(LANG==="uzk"?cyr(l):l); });
+      if(by.f_iucn) rows.unshift(["f_iucn",'<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/>',by.f_iucn[0]]);
+      if(by.f_food) rows.push(["f_food",'<path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M17 21V3c-2.2 1.6-3 4.6-3 8h3"/>',by.f_food.join(", ")]);
+      if(by.f_hab) rows.push(["f_hab",'<path d="M12 22v-5M12 2l6 8h-3l4 6H5l4-6H6z"/>',by.f_hab.join(", ")]);
       if(by.f_arch) rows.push(["f_arch",'<path d="M3 21h18M6 21V10l6-6 6 6v11M10 21v-6h4v6"/>',by.f_arch.join(", ")]); if(by.f_style) rows.push(["f_style",CATI.muzey,by.f_style.join(", ")]); }catch(x){} }
     const web=val("P856"); if(web&&/^https?:\/\//.test(web)) rows.push(["f_web",'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',`<a href="${esc(web)}" target="_blank" rel="noopener">${esc(web.replace(/^https?:\/\/(www\.)?/,"").replace(/\/$/,"").slice(0,32))} ↗</a>`,1]);
     if(p.lat!=null) rows.push(["f_coord",'<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',`${(+p.lat).toFixed(4)}, ${(+p.lon).toFixed(4)}`]);
@@ -952,7 +1009,7 @@ async function fillDesc(p){
   const el=$("#pdesc"); if(el&&$("#detail").classList.contains("on")&&$("#detail h1")?.textContent===pN(p)) el.textContent=txt;
 }
 let PDW=null;
-function closePlace(){ const D=$("#detail"); if(!D.classList.contains("on")) return; D.classList.remove("on"); galStop(); if(PDW){ const dt=(Date.now()-PDW.t)/1000; learn(PDW.id,dt>90?3:dt>30?1.5:dt>12?0.5:dt<4?-0.6:0); PDW=null; } if(cur!=="watch"){ mPause(); ambStop(); } }
+function closePlace(){ const D=$("#detail"); if(!D.classList.contains("on")) return; D.classList.remove("on"); galStop(); if(TTSA){ TTSA.pause(); TTSA=null; ttsOff(); } if(PDW){ const dt=(Date.now()-PDW.t)/1000; learn(PDW.id,dt>90?3:dt>30?1.5:dt>12?0.5:dt<4?-0.6:0); PDW=null; } if(cur!=="watch"){ mPause(); ambStop(); } }
 
 /* ================= OLAM GID (AI chat) ================= */
 const GID_URL="https://olam-gid.behruzbekhasanboyev31.workers.dev";
@@ -1038,7 +1095,7 @@ async function ai(prompt,place){
   const r=await fetch(GID_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:[{role:"user",text:prompt}],lang:LANG,place:place||"",user:reqUser()})});
   return (await r.json()).text||"";
 }
-const LIST=()=>PLACES.filter(p=>!p.dyn).map(p=>`${p.id}=${(p.nt||p.t).replace(/_/g," ")}`).join("; ");
+const LIST=()=>PLACES.filter(p=>!p.dyn&&!p.animal).map(p=>`${p.id}=${(p.nt||p.t).replace(/_/g," ")}`).join("; ");
 const cleanId=s=>String(s||"").toLowerCase().replace(/[^a-z0-9]/g,"");
 const idsFrom=x=>{ const out=[]; (String(x).toLowerCase().match(/[a-z0-9]+/g)||[]).forEach(w=>{ if(byId(w)&&!out.includes(w)) out.push(w); }); return out; };
 let AIP=null, AIPP=null;
@@ -1115,7 +1172,7 @@ const shuffle=a=>{ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random
 function openQuiz(){ QZ.score=0; QZ.n=0; $("#quiz").classList.add("on"); qNext(); }
 function closeQuiz(){ $("#quiz").classList.remove("on"); clearTimeout(QZ.t); }
 function qNext(){
-  const pool=PLACES.filter(p=>p.img&&(!p.dyn||p.cat));
+  const pool=PLACES.filter(p=>p.img&&(!p.dyn||p.cat)&&!p.animal);
   if(pool.length<4){ $("#quiz").innerHTML=`<button class="ovx" onclick="closeQuiz()">${ICON.down}</button><div class="empty">${t("img_load")}</div>`; clearTimeout(QZ.t); QZ.t=setTimeout(()=>{ if($("#quiz").classList.contains("on")) qNext(); },1500); return; }
   const p=pool[Math.floor(Math.random()*pool.length)]; QZ.p=p; QZ.done=false; QZ.n++;
   const opts=shuffle([p,...shuffle(pool.filter(x=>x.id!==p.id)).slice(0,3)]);
@@ -1139,7 +1196,7 @@ function qAns(id,btn){
 function render(v,arg){ ({home:renderHome,explore:renderExplore,profile:renderProfile,watch:()=>renderWatch(arg)})[v](); }
 function go(v,arg){
   if(cur==="watch"&&v!=="watch") wStop();
-  cur=v; closePlace(); closeMap(); closeQuiz(); closeSettings(); closeCats(); closeAdd(); closeSheet(); closeTrips();
+  cur=v; closeArticle(); closePlace(); closeMap(); closeQuiz(); closeSettings(); closeCats(); closeAdd(); closeSheet(); closeTrips();
   document.querySelectorAll(".view").forEach(x=>x.classList.toggle("on",x.id===v));
   document.body.dataset.v=v; closeCountry(); document.querySelectorAll(".nav button,.tlinks button").forEach(b=>b.classList.toggle("on",b.dataset.v===(arg==="saved"?"saved":v)));
   render(v,v==="watch"?arg:undefined);
@@ -1245,7 +1302,7 @@ let CURD=null;   // qo'lda tanlangan joylar — takrorlanmasin
 function catDup(c){ if(!CURD) CURD={t:new Set(PLACES.filter(p=>!p.dyn).map(p=>(p.nt||p.t).replace(/_/g," ").toLowerCase())),g:PLACES.filter(p=>!p.dyn&&p.lat!=null)};
   if(c[2]&&CURD.t.has(c[2].toLowerCase())) return true;
   const k=Math.cos(c[6]*Math.PI/180); return CURD.g.some(p=>{ const dx=(p.lon-c[7])*k, dy=p.lat-c[6]; return dx*dx+dy*dy<1.6e-5; }); }   // ~450 m
-function catReset(){ for(let i=PLACES.length-1;i>=0;i--){ const p=PLACES[i]; if(p.cat&&!saved.has(p.id)){ delete IDX[p.id]; PLACES.splice(i,1); } } WC.n=0; }
+function catReset(){ for(let i=PLACES.length-1;i>=0;i--){ const p=PLACES[i]; if((p.cat||(p.animal&&p.dyn))&&!saved.has(p.id)){ delete IDX[p.id]; PLACES.splice(i,1); } } WC.n=0; }
 function catTxt(){ return WC.busy?t("ctry_load"):t("cat_st",{n:WC.n}); }
 function catUI(){ const N=PLACES.filter(p=>!p.dyn||p.cat).length; const h=$("#hN"); if(h) h.textContent=N+"+"; const s=$("#wcst"); if(s) s.textContent=catTxt(); }
 async function catLoad(){
@@ -1260,6 +1317,51 @@ async function catLoad(){
 }
 // avvalgi versiya qurilmaga yozgan katalogni tozalash
 try{ idb().then(db=>{ try{ db.transaction("kv","readwrite").objectStore("kv").clear(); }catch(e){} }).catch(()=>{}); }catch(e){}
+
+/* ================= AJOYIB JONZOTLAR: sut emizuvchilar, qushlar, baliqlar, sudralib yuruvchilar... ================= */
+// [id, guruh, Wikipedia (en) nomi, o'zbekcha nomi, qayerda ko'rish mumkin (ilovadagi joylar)]
+const GRPS=["mam","bird","fish","rep","amph","ins","sea"];
+const ANIMALS=[["snowleopard","mam","Snow leopard","Qor qoploni",["pamir","chimgan"]],["giantpanda","mam","Giant panda","Katta panda",["panda"]],["lion","mam","Lion","Sher",["serengeti","masaimara","kruger","ngorongoro"]],
+ ["elephant","mam","African bush elephant","Afrika savanna fili",["kruger","okavango","serengeti"]],["giraffe","mam","Giraffe","Jirafa",["serengeti","masaimara","kruger"]],["cheetah","mam","Cheetah","Gepard",["masaimara","serengeti"]],
+ ["gorilla","mam","Mountain gorilla","Tog' gorillasi",[]],["orangutan","mam","Bornean orangutan","Orangutan",["singaporezoo"]],["tiger","mam","Bengal tiger","Bengal yo'lbarsi",[]],["polarbear","mam","Polar bear","Oq ayiq",[]],
+ ["bluewhale","mam","Blue whale","Ko'k kit",[]],["humpback","mam","Humpback whale","Dumbali kit",["kamchatka"]],["dolphin","mam","Common bottlenose dolphin","Afalina delfini",["loroparque","oceanografic"]],
+ ["kangaroo","mam","Red kangaroo","Qizil kenguru",["uluru"]],["koala","mam","Koala","Koala",["tarongazoo"]],["bison","mam","American bison","Amerika bizoni",["yellowstone"]],["grizzly","mam","Grizzly bear","Grizli ayig'i",["yellowstone","banff"]],
+ ["arcticfox","mam","Arctic fox","Qutb tulkisi",["jokulsarlon"]],["reindeer","mam","Reindeer","Shimol bug'usi",[]],["saiga","mam","Saiga antelope","Sayg'oq",[]],["camel","mam","Bactrian camel","Ikki o'rkachli tuya",["aydarkul","nuratau"]],
+ ["przewalski","mam","Przewalski's horse","Prjevalskiy oti",[]],["markhor","mam","Markhor","Morxo'r",[]],["jaguar","mam","Jaguar","Yaguar",["amazon"]],["sloth","mam","Brown-throated sloth","Yalqov",["amazon"]],
+ ["redpanda","mam","Red panda","Qizil panda",[]],["macaque","mam","Japanese macaque","Yapon makakasi",[]],["hippo","mam","Hippopotamus","Begemot",["okavango","victoria"]],["zebra","mam","Plains zebra","Zebra",["ngorongoro","serengeti","masaimara"]],
+ ["wolf","mam","Wolf","Bo'ri",["yellowstone"]],["moose","mam","Moose","Los",["banff"]],["lemur","mam","Ring-tailed lemur","Halqadum lemur",["baobabs"]],["chimp","mam","Chimpanzee","Shimpanze",[]],["oryx","mam","Arabian oryx","Arab oriksi",[]],
+ ["narwhal","mam","Narwhal","Narval",[]],["okapi","mam","Okapi","Okapi",[]],["platypus","mam","Platypus","O'rdakburun",[]],["tasdevil","mam","Tasmanian devil","Tasmaniya iblisi",[]],["quokka","mam","Quokka","Kvokka",[]],
+ ["penguin","bird","Emperor penguin","Imperator pingvini",["antarctica"]],["kiwi","bird","Kiwi (bird)","Kivi qushi",["milford"]],["baldeagle","bird","Bald eagle","Oqbosh burgut",["yellowstone"]],["goldeneagle","bird","Golden eagle","Berkut",[]],
+ ["macaw","bird","Scarlet macaw","Qizil ara to'tisi",["amazon"]],["flamingo","bird","Flamingo","Flamingo",["uyuni"]],["peafowl","bird","Indian peafowl","Tovus",[]],["snowyowl","bird","Snowy owl","Oq boyo'g'li",[]],
+ ["puffin","bird","Atlantic puffin","Atlantika tupigi",["faroe"]],["hummingbird","bird","Ruby-throated hummingbird","Kolibri",[]],["shoebill","bird","Shoebill","Kitboshli laylak",[]],["condor","bird","Andean condor","And kondori",["torres"]],["quetzal","bird","Resplendent quetzal","Ketsal",[]],
+ ["whiteshark","fish","Great white shark","Oq akula",[]],["whaleshark","fish","Whale shark","Kit akulasi",["maldives","georgiaaq"]],["manta","fish","Giant oceanic manta ray","Gigant manta skati",["maldives"]],["clownfish","fish","Ocellaris clownfish","Masxaraboz baliq",["barrierreef"]],
+ ["mandarinfish","fish","Mandarinfish","Mandarin baliq",[]],["lionfish","fish","Red lionfish","Sher baliq",[]],["seahorse","fish","Seahorse","Dengiz oti",[]],["sturgeon","fish","Beluga (sturgeon)","Beluga baliq",[]],
+ ["komododragon","rep","Komodo dragon","Komodo varani",["komodo"]],["tortoise","rep","Galápagos tortoise","Galapagos toshbaqasi",["galapagos"]],["seaturtle","rep","Green sea turtle","Yashil dengiz toshbaqasi",["barrierreef","galapagos","seychelles"]],
+ ["cobra","rep","King cobra","Qirol kobra",[]],["chameleon","rep","Panther chameleon","Pantera xameleon",[]],["crocodile","rep","Saltwater crocodile","Sho'r suv timsohi",[]],
+ ["dartfrog","amph","Poison dart frog","Zaharli daraxt qurbaqasi",["amazon"]],["axolotl","amph","Axolotl","Aksolotl",[]],["redeyefrog","amph","Agalychnis callidryas","Qizil ko'zli qurbaqa",[]],
+ ["monarch","ins","Monarch butterfly","Monarx kapalagi",[]],["honeybee","ins","Western honey bee","Asalari",[]],["firefly","ins","Firefly","Yaltiroq qo'ng'iz",[]],["morpho","ins","Morpho","Morfo kapalagi",["amazon"]],
+ ["octopus","sea","Common octopus","Sakkizoyoq",[]],["jellyfish","sea","Jellyfish","Meduza",[]],["mantisshrimp","sea","Mantis shrimp","Mantis qisqichbaqasi",[]],["coral","sea","Coral","Marjon",["barrierreef","maldives"]],["giantsquid","sea","Giant squid","Gigant kalmar",[]]];
+const GRPT={mam:"tabiat",bird:"tabiat",fish:"dengiz",rep:"tabiat",amph:"tabiat",ins:"tabiat",sea:"dengiz"};
+ANIMALS.forEach(([k,grp,en,uz,see])=>{ const id="a_"+k; if(IDX[id]) return; const p={id,t:en.replace(/ /g,"_"),nt:en,q:en,n:uz,c:"",cc:"",reg:"",tags:["hayvon"],grp,best:"—",s:"",g:PAL2[hash(id)%PAL2.length],animal:1,see}; PLACES.push(p); IDX[id]=p; });
+const grpName=p=>t("g_"+(p.grp||"mam"));
+const AN={g:"all",n:60};
+function animalsRow(){ const l=PLACES.filter(p=>p.animal&&p.img); if(l.length<4) return ""; const d=Math.floor(Date.now()/864e5);
+  const pick=l.slice().sort((a,b)=>(LRN.l[b.id]||0)-(LRN.l[a.id]||0)||(hash(a.id+":"+d)%97)-(hash(b.id+":"+d)%97)).slice(0,14);
+  return `<div class="sec"><h2>${t("an_h")}<small>${t("an_sub")}</small></h2><span onclick="openAnimals()">${t("all")} · ${PLACES.filter(p=>p.animal).length}</span></div><div class="hs">${pick.map(p=>cardH(p)).join("")}</div>`; }
+function openAnimals(g){ const O=ensureCtryView(); if(!O.classList.contains("on")) O.scrollTop=0; O.classList.add("on"); CT.code="__an"; if(g) AN.g=g;
+  const all=PLACES.filter(p=>p.animal), l=AN.g==="all"?all:all.filter(p=>p.grp===AN.g);
+  O.innerHTML=`<button class="ovx" onclick="closeCountry()">${ICON.down}</button><div class="seth"><h1>${t("an_h")}</h1><p class="sp">${t("an_sub")} · ${all.length}</p></div>
+   <div class="chips" style="padding:4px 0 14px"><button class="chip ${AN.g==="all"?"on":""}" onclick="AN.n=60;openAnimals('all')">${t("all")} · ${all.length}</button>${GRPS.filter(g=>all.some(p=>p.grp===g)).map(g=>`<button class="chip ${AN.g===g?"on":""}" onclick="AN.n=60;openAnimals('${g}')">${t("g_"+g)} · ${all.filter(p=>p.grp===g).length}</button>`).join("")}</div>
+   <div class="grid2" style="padding:0">${l.slice(0,AN.n).map(gcard).join("")}</div>${l.length>AN.n?`<button class="pill o2 wide" style="margin-top:16px" onclick="AN.n+=60;openAnimals()">${t("ctry_more")} · ${l.length-AN.n}</button>`:""}<div class="foot"></div>`; }
+// GitHub'da yig'ilgan minglab turlar (assets/catalog/life/<til>.json)
+async function lifeLoad(){ const lang=catLang(); try{ let r=await fetch("assets/catalog/life/"+lang+".json"); if(!r.ok&&lang!=="en") r=await fetch("assets/catalog/life/en.json"); if(!r.ok) return; const d=await r.json(); if(lang!==catLang()) return;
+  const have=new Set(PLACES.filter(p=>p.animal).map(p=>p.nt.toLowerCase()));
+  for(const [qid,grp,label,en,loc,desc,file,sl] of d.items||[]){ const id="q"+qid; if(IDX[id]||(en&&have.has(en.toLowerCase()))) continue;
+    const wl=loc?lang:"en", title=loc||en;
+    const p={id,t:(en||label).replace(/ /g,"_"),nt:en||label,q:en||label,n:LANG==="uzk"?cyr(label):label,c:"",cc:"",reg:"",tags:["hayvon"],grp,best:"—",s:desc?desc.charAt(0).toUpperCase()+desc.slice(1):"",g:PAL2[hash(id)%PAL2.length],animal:1,dyn:1,wd:1,keep:0,wl,sl,see:[],
+      img:"https://commons.wikimedia.org/wiki/Special:FilePath/"+encodeURIComponent(file.replace(/ /g,"_"))+"?width=960",wt:{en,[lang]:loc||undefined},wurl:title?`https://${wl}.wikipedia.org/wiki/`+encodeURIComponent(title.replace(/ /g,"_")):""};
+    PLACES.push(p); IDX[id]=p; } refresh(); }catch(e){} }
+setTimeout(lifeLoad,1500);
 
 /* ================= SAYT REJIMI ================= */
 const HB={i:0,timer:null,pool:null};
@@ -1315,6 +1417,7 @@ function renderHomeSite(){ setTimeout(fillAIPicks,0);
    <div class="sec"><div><span class="slabel">${catIcon("wonder")}${clean(t("won_chip"))}</span><h2>${t("won_h")}</h2><small>${t("won_sub")}</small></div><span onclick="X.tag='wonder';X.q='';X.reg='all';go('explore')">${t("all")} →</span></div>
    <div id="wond">${wondersHTML()}</div>
    ${recsHTML()}
+   ${animalsRow()}
    <div class="sec"><div><span class="slabel">${t("for_you_f")}</span><h2>${t("best_h")}</h2></div><span onclick="go('explore')">${t("all")} →</span></div>
    <div class="grid2">${list.filter(p=>p.id!==hero.id).slice(7,19).map(gcard).join("")}</div>
    <div class="sec"><div><span class="slabel">${catIcon("globe")}OLAM</span><h2>${clean(t("world_h"))}</h2><small>${t("world_sub")}</small></div><span onclick="go('explore');setTimeout(()=>$('#xq')?.focus(),60)">${t("search_b")} →</span></div>

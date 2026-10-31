@@ -106,3 +106,32 @@ for(const [li, lang] of LANGS.entries()){
   console.log(lang, "bosh ro'yxat:", out.length);
 }
 console.log("davlat sahifalaridagi jami joylar:", full);
+
+// 5) JONZOTLAR: eng mashhur turlar (sut emizuvchilar, qushlar, baliqlar, sudralib yuruvchilar, amfibiyalar, hasharotlar, dengiz jonzotlari)
+//    assets/catalog/life/<til>.json: [qid,guruh,nom,en_maqola,mahalliy_maqola,tavsif,rasm,sitelinks]
+try{
+  const GROUPS = [["mam","Q7377"],["bird","Q5113"],["fish","Q127282"],["fish","Q25371"],["rep","Q10811"],["amph","Q10908"],["ins","Q1390"],["sea","Q25326"],["sea","Q25364"],["sea","Q1057"],["sea","Q25441"]];
+  const life = new Map();
+  for(const [grp, cls] of GROUPS){
+    if(Date.now()-T0 > 125*60000) break;
+    try{
+      const b = await sparql(`SELECT ?item ?img ?sl WHERE { ?item wdt:P105 wd:Q7432 ; wdt:P171+ wd:${cls} ; wdt:P18 ?img ; wikibase:sitelinks ?sl . FILTER(?sl >= 25) } ORDER BY DESC(?sl) LIMIT 700`);
+      let n = 0; for(const r of b){ const id = r.item.value.split("/").pop(); if(life.has(id)) continue; const file = decodeURIComponent(r.img.value.split("FilePath/")[1]||""); if(!file || /\.(svg|png|gif|tif|tiff|webm|ogv|pdf)$/i.test(file)) continue; life.set(id, [id, grp, file, +r.sl.value]); n++; }
+      console.log(mins()+"m life", grp, cls, n);
+    }catch(e){ console.log("life XATO", grp, cls, e.message); }
+    await sleep(500);
+  }
+  const lids = [...life.keys()].filter(id => !meta[id]);
+  for(let i=0; i<lids.length; i+=50){ const chunk = lids.slice(i, i+50);
+    try{ const d = await get(`https://www.wikidata.org/w/api.php?action=wbgetentities&format=json&maxlag=5&ids=${chunk.join("|")}&props=labels|descriptions|sitelinks&languages=${LANGS.join("|")}&languagefallback=1&sitefilter=${sites.join("|")}`);
+      for(const [k, e] of Object.entries(d.entities || {})) meta[k] = { l: LANGS.map(l => e.labels?.[l]?.value || ""), d: LANGS.map(l => e.descriptions?.[l]?.value || ""), w: LANGS.map(l => e.sitelinks?.[l+"wiki"]?.title || "") };
+    }catch(e){ console.log("life meta XATO", e.message); } await sleep(150); }
+  mkdirSync("assets/catalog/life", { recursive: true });
+  for(const [li, lang] of LANGS.entries()){
+    const out = []; for(const [id, grp, file, sl] of life.values()){ const m = meta[id]; if(!m) continue; const label = m.l[li] || m.l[EN]; if(!label) continue;
+      out.push([id, grp, label, m.w[EN], lang==="en" ? "" : m.w[li], m.d[li], file, sl]); }
+    out.sort((a,b) => b[7]-a[7]);
+    writeFileSync(`assets/catalog/life/${lang}.json`, JSON.stringify({ v: 1, ts: new Date().toISOString().slice(0,10), items: out }));
+    console.log(lang, "jonzotlar:", out.length);
+  }
+}catch(e){ console.log("life bo'limi XATO", e.message); }
