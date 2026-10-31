@@ -119,7 +119,7 @@ const BADIMG=/logo|map|plan\b|flag|coat_of|seal|sign|stamp|scheme|diagram|satell
 async function loadHeroes(){
   await commonsUrls(PLACES.map(p=>IMG[p.id]?.[0]).filter(Boolean));
   PLACES.forEach(p=>{ const u=CTH[IMG[p.id]?.[0]]; if(u){ p.img=u.replace("/1280px-","/960px-"); p.hq=1; } });
-  applyUI(); refresh();
+  applyUI(); refresh(); if(SITE&&!document.querySelector("#shero .bgl.on")){ HB.pool=null; setTimeout(heroNext,200); }
 }
 
 /* ===== Musiqa: minus (Mixkit) + o'z qo'shiqlaringiz (telefondan) ===== */
@@ -159,18 +159,29 @@ function closeSheet(){ $("#sh").classList.remove("on"); }
 /* ===== Ovozli gid (telefon ovozi bilan o'qish) ===== */
 const TTSL={uz:"uz-UZ",uzk:"uz-UZ",ru:"ru-RU",en:"en-US",tr:"tr-TR",kk:"kk-KZ",ky:"ky-KG",tg:"tg-TJ",ar:"ar-SA",zh:"zh-CN"};
 let TTSWARN=false;
-function speak(text,btn){
-  if(!("speechSynthesis" in window)){ toast(t("tts_no")); return; }
-  const S=speechSynthesis; if(S.speaking||S.pending){ S.cancel(); document.querySelectorAll(".spk.on").forEach(b=>b.classList.remove("on")); if(btn&&btn.dataset.sp==="1"){ btn.dataset.sp=""; return; } }
-  const lc=TTSL[LANG]||"en-US"; const vs=S.getVoices(); const two=lc.slice(0,2);
-  let v=vs.find(x=>x.lang.replace("_","-").toLowerCase()===lc.toLowerCase())||vs.find(x=>x.lang.toLowerCase().startsWith(two));
-  const u=new SpeechSynthesisUtterance(String(text).replace(/[*#_]/g,"").slice(0,3000));
-  if(!v&&vs.length){ v=(LANG==="uz")?(vs.find(x=>/^tr/i.test(x.lang))||vs.find(x=>/^ru/i.test(x.lang))):(vs.find(x=>/^ru/i.test(x.lang))||vs.find(x=>/^tr/i.test(x.lang))); if(!TTSWARN){ TTSWARN=true; toast(t("tts_fb")); } }
-  if(v){ u.voice=v; u.lang=v.lang; } else u.lang=lc;
-  u.rate=0.95; const vol=BGM.volume; BGM.volume=0.15; AMB.g&&(AMB.g.gain.value=0.08);
-  u.onend=u.onerror=()=>{ BGM.volume=vol; AMB.g&&(AMB.g.gain.value=0.3); if(btn){ btn.classList.remove("on"); btn.dataset.sp=""; } };
-  if(btn){ btn.classList.add("on"); btn.dataset.sp="1"; }
-  S.speak(u);
+let TTSA=null;
+function ttsOff(){ document.querySelectorAll(".spk.on").forEach(b=>{ b.classList.remove("on"); b.dataset.sp=""; }); BGM.volume=0.55; }
+async function speak(text,btn){
+  // to'xtatish
+  if(TTSA){ TTSA.pause(); TTSA=null; const was=btn&&btn.dataset.sp==="1"; ttsOff(); if(was) return; }
+  try{ if(speechSynthesis.speaking||speechSynthesis.pending){ speechSynthesis.cancel(); const was=btn&&btn.dataset.sp==="1"; ttsOff(); if(was) return; } }catch(e){}
+  const txt=String(text||"").replace(EMO,"").replace(/[*#_«»"]/g,"").replace(/\s+/g," ").trim().slice(0,2500); if(!txt) return;
+  if(btn){ btn.classList.add("on"); btn.dataset.sp="1"; } BGM.volume=0.12;
+  // 1) tabiiy ovoz (server orqali, masalan Azure Speech) — tilga mos
+  try{ const ac=new AbortController(); const to=setTimeout(()=>ac.abort(),12000);
+    const r=await fetch(GID_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({mode:"tts",lang:LANG,text:txt}),signal:ac.signal}); clearTimeout(to);
+    const ct=r.headers.get("content-type")||""; let src=null;
+    if(r.ok&&ct.startsWith("audio/")) src=URL.createObjectURL(await r.blob());
+    else if(r.ok&&ct.includes("json")){ const d=await r.json(); if(d.audio) src=(String(d.audio).startsWith("data:")?"":"data:audio/mpeg;base64,")+d.audio; }
+    if(src&&btn?.dataset.sp!==""){ TTSA=new Audio(src); TTSA.onended=TTSA.onerror=()=>{ TTSA=null; ttsOff(); }; await TTSA.play(); return; }
+  }catch(e){}
+  if(btn&&btn.dataset.sp!=="1") return;
+  // 2) qurilma ovozi — faqat aynan shu tildagi ovoz bo'lsa (boshqa til ovozi g'alati o'qiydi)
+  if(!("speechSynthesis" in window)){ ttsOff(); toast(t("tts_no")); return; }
+  const S=speechSynthesis, lc=TTSL[LANG]||"en-US", two=lc.slice(0,2).toLowerCase(), vs=S.getVoices();
+  const v=vs.find(x=>x.lang.replace("_","-").toLowerCase()===lc.toLowerCase())||vs.find(x=>x.lang.toLowerCase().startsWith(two));
+  if(!v){ ttsOff(); toast(t("tts_nolang")); return; }
+  const u=new SpeechSynthesisUtterance(txt); u.voice=v; u.lang=v.lang; u.rate=0.95; u.onend=u.onerror=()=>ttsOff(); S.speak(u);
 }
 try{ speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices(); }catch(e){}
 
@@ -182,7 +193,8 @@ function ambNoise(C,brown){ const len=C.sampleRate*4, buf=C.createBuffer(1,len,C
   for(let i=0;i<len;i++){ const w=Math.random()*2-1; if(brown){ last=(last+0.02*w)/1.02; d[i]=last*3.5; } else d[i]=w*0.6; } const s=C.createBufferSource(); s.buffer=buf; s.loop=true; return s; }
 function ambStop(){ clearInterval(AMB.iv); AMB.iv=null; const C=AMB.ctx, old=AMB.nodes, g=AMB.g; AMB.nodes=[]; AMB.kind=null; AMB.g=null;
   if(C&&g){ try{ g.gain.cancelScheduledValues(C.currentTime); g.gain.setValueAtTime(g.gain.value,C.currentTime); g.gain.linearRampToValueAtTime(0,C.currentTime+0.8); }catch(e){} setTimeout(()=>old.forEach(n=>{ try{ n.stop(); }catch(e){} }),900); } }
-function ambStart(kind){
+function ambStart(kind){ return ambStop(); }
+function ambStartOld(kind){
   if(!SET.amb||!kind){ ambStop(); return; } if(AMB.kind===kind) return; ambStop();
   try{ const C=AMB.ctx||(AMB.ctx=new (window.AudioContext||window.webkitAudioContext)()); if(C.state==="suspended") C.resume();
     const g=C.createGain(); g.gain.value=0; g.connect(C.destination); g.gain.linearRampToValueAtTime(0.3,C.currentTime+1.5); AMB.g=g; AMB.kind=kind;
@@ -230,6 +242,7 @@ async function cmSend(id){ const inp=$("#cmq"); const x=(inp?.value||"").trim();
 /* ================= KO'RINISH YORDAMCHILARI ================= */
 const grad = p=>`linear-gradient(140deg,${p.g[0]},${p.g[1]})`;
 const big = u=>u&&!u.startsWith("data:")?u.replace(/\/\d+px-/,"/1280px-").replace(/([?&]width=)\d+/,"$11280"):u;
+const hq = u=>(innerWidth*(devicePixelRatio||1)>1500)?huge(u):big(u);
 const huge = u=>u&&!u.startsWith("data:")?u.replace(/\/\d+px-/,"/1920px-").replace(/([?&]width=)\d+/,"$11920"):u;
 const FB = "if(!this.dataset.f&&/1280px-/.test(this.src)){this.dataset.f=1;this.src=this.src.replace('/1280px-','/960px-')}else{this.remove()}";
 const img = (p,lg)=>p.img?`<img src="${lg?big(p.img):p.img}" alt="" loading="lazy" decoding="async" onerror="${FB}">`:"";
@@ -274,8 +287,23 @@ if(U){ if(OLDC[U.country]) U.country=OLDC[U.country]; if(!COUNTRIES[U.country]) 
 const saved = new Set(ls.get("olam_saved",[])), liked = new Set(ls.get("olam_liked",[]));
 const keep = ()=>{ ls.set("olam_saved",[...saved]); ls.set("olam_liked",[...liked]); };
 let cur = "home";
-const LRN = ls.get("olam_learn",{t:{},r:{},v:{}});
-function learn(id,w){ const p=byId(id); if(!p) return; p.tags.forEach(x=>LRN.t[x]=(LRN.t[x]||0)+w); LRN.r[p.reg]=(LRN.r[p.reg]||0)+w; if(w>0) LRN.v[id]=(LRN.v[id]||0)+1; ls.set("olam_learn",LRN); }
+/* ===== Tavsiya tizimi (YouTube/Instagram uslubida): har bir harakatdan o'rganadi ===== */
+const LRN = Object.assign({t:{},r:{},v:{},c:{},k:{},h:[],l:{},d:0}, ls.get("olam_learn",{}));
+(function decay(){ const day=Math.floor(Date.now()/864e5); if(!LRN.d){ LRN.d=day; return; } const n=day-LRN.d; if(n<=0) return; const f=Math.pow(0.97,Math.min(n,60));
+  ["t","r","c","k","l"].forEach(o=>{ for(const x in LRN[o]){ LRN[o][x]*=f; if(Math.abs(LRN[o][x])<0.05) delete LRN[o][x]; } }); LRN.d=day; })();
+function learn(id,w){ const p=byId(id); if(!p) return; p.tags.forEach(x=>LRN.t[x]=(LRN.t[x]||0)+w); LRN.r[p.reg]=(LRN.r[p.reg]||0)+w;
+  (p.cc||"").split("/").filter(Boolean).forEach(c=>LRN.c[c]=(LRN.c[c]||0)+w); if(p.cls) LRN.k[p.cls]=(LRN.k[p.cls]||0)+w;
+  LRN.l[id]=(LRN.l[id]||0)+w;   // shu joyga munosabat (yoqdi/yoqmadi)
+  if(w>0){ LRN.v[id]=(LRN.v[id]||0)+1; LRN.h=[id,...LRN.h.filter(x=>x!==id)].slice(0,40); }
+  const lk=Object.keys(LRN.l); if(lk.length>400) lk.sort((a,b)=>Math.abs(LRN.l[a])-Math.abs(LRN.l[b])).slice(0,lk.length-400).forEach(x=>delete LRN.l[x]);
+  const vk=Object.keys(LRN.v); if(vk.length>800) vk.slice(0,vk.length-800).forEach(x=>delete LRN.v[x]);
+  ls.set("olam_learn",LRN); }
+// eng yoqqan joylar (saqlangan, yoqtirilgan, uzoq ko'rilgan)
+function lovedIds(n=3){ const sc={}; for(const id in LRN.l) if(LRN.l[id]>0) sc[id]=LRN.l[id]; saved.forEach(id=>sc[id]=(sc[id]||0)+5); liked.forEach(id=>sc[id]=(sc[id]||0)+4);
+  return Object.entries(sc).filter(([id])=>byId(id)).sort((a,b)=>b[1]-a[1]).slice(0,n).map(e=>e[0]); }
+function similar(id,n=12){ const a=byId(id); if(!a) return []; const ac=(a.cc||"").split("/");
+  return PLACES.filter(p=>p.id!==id&&(!p.dyn||p.keep)).map(p=>[p,p.tags.filter(x=>a.tags.includes(x)).length*3+(p.cls&&p.cls===a.cls?3:0)+((p.cc||"").split("/").some(c=>ac.includes(c))?2:0)+(p.reg===a.reg?1:0)-((LRN.v[p.id]||0)*0.8)+(hash(p.id+a.id)%10)/10])
+    .filter(x=>x[1]>=4).sort((a,b)=>b[1]-a[1]).slice(0,n).map(x=>x[0]); }
 function taste(){ const w={}; TAGS.forEach(k=>w[k]=(U?.interests?.includes(k)?6:0)+Math.max(0,LRN.t[k]||0)); return w; }
 function topTags(n=3){ return Object.entries(taste()).filter(e=>e[1]>0).sort((a,b)=>b[1]-a[1]).slice(0,n).map(e=>e[0]); }
 const optTxt=(k,v)=>v!==""&&v!=null?tl(k)[+v]:"";
@@ -285,8 +313,13 @@ function score(p,w,tot){
   let s=p.tags.reduce((a,x)=>a+(w[x]||0)/tot,0)*10;
   s+=(U?.regions?.includes(p.reg)?2:0)+Math.min(2,(LRN.r[p.reg]||0)/10)+(U?.dream===p.id?100:0);
   s-=Math.min(2,(LRN.v[p.id]||0)*0.3);
+  // davlat va joy turiga qiziqish (o'rganilgan)
+  const cs=(p.cc||"").split("/"); let cw=0; cs.forEach(c=>cw=Math.max(cw,LRN.c[c]||0)); s+=Math.max(-2,Math.min(3,cw/6));
+  if(p.cls&&LRN.k[p.cls]) s+=Math.max(-2,Math.min(2.5,LRN.k[p.cls]/5));
+  if(LRN.l[p.id]<0) s+=Math.max(-4,LRN.l[p.id]);   // o'tkazib yuborilganlar pastga
   s+=p.cat?Math.min(1.5,Math.log10(1+(p.sl||1))*0.6):(p.dyn?0:1.2);
-  return s+(hash(p.id)%10)/20;
+  // har kuni biroz yangilik (exploration)
+  return s+(hash(p.id+":"+Math.floor(Date.now()/864e5))%100)/60;
 }
 const wondersOf = id=>Object.keys(WONDERS).filter(k=>WONDERS[k].ids.includes(id));
 let WCUR="new7";
@@ -322,7 +355,14 @@ async function worldNear(lat,lon){
   const wl=WL(LANG); const d=await (await fetch(WAPI+"&generator=geosearch&ggsradius=10000&ggslimit=40&ggscoord="+lat+"|"+lon+WP(wl!=="en"?wl:""))).json();
   return Object.values(d.query?.pages||{}).map(x=>dynFrom(x,"en")).filter(Boolean);
 }
-const forYou = ()=>{ const w=taste(), tot=Object.values(w).reduce((a,b)=>a+b,0)||1; return PLACES.filter(p=>!p.dyn||p.keep).map(p=>[p,score(p,w,tot)]).sort((a,b)=>b[1]-a[1]).map(x=>x[0]); };
+let FYC=null;
+const forYou = ()=>{ const key=PLACES.length+"|"+JSON.stringify(LRN.t).length+"|"+Object.keys(LRN.l).length+"|"+saved.size+"|"+(U?.interests||[]).join();
+  if(FYC&&FYC.k===key&&Date.now()-FYC.ts<4000) return FYC.l.slice();
+  const w=taste(), tot=Object.values(w).reduce((a,b)=>a+b,0)||1; const sorted=PLACES.filter(p=>!p.dyn||p.keep).map(p=>[p,score(p,w,tot)]).sort((a,b)=>b[1]-a[1]).map(x=>x[0]);
+  // xilma-xillik: ketma-ket bir xil davlat/turdagi joylar ko'p bo'lmasin (lentaning boshi)
+  const head=sorted.slice(0,240), rest=sorted.slice(240), out=[];
+  while(head.length){ let k=head.findIndex(p=>{ const c=(p.cc||p.reg), t0=p.tags[0]; const a=out[out.length-1], b=out[out.length-2]; return !(a&&(a.cc||a.reg)===c&&b&&(b.cc||b.reg)===c)&&!(a&&a.tags[0]===t0&&b&&b.tags[0]===t0); }); if(k<0||k>8) k=0; out.push(head.splice(k,1)[0]); }
+  FYC={k:key,ts:Date.now(),l:out.concat(rest)}; return FYC.l.slice(); };
 
 /* ================= WIKIPEDIA (koordinata, rasm) ================= */
 async function loadAll(){
@@ -381,7 +421,7 @@ async function loadVideo(p){
   if(!SET.video) return null;
   if(p.video!==undefined) return p.video;
   p.video=null;
-  let pv=VID[p.id]||[]; if(SITE){ const land=pv.filter(x=>/_1920_1080_/.test(x)); if(land.length) pv=land; } if(pv.length){ p.vlist=pv.map(pexels); p.video=p.vlist[Math.floor(Math.random()*pv.length)]; return p.video; }
+  let pv=VID[p.id]||[]; { const wide=innerWidth>innerHeight; const pick=pv.filter(x=>/_1920_1080_/.test(x)===wide); if(pick.length) pv=pick; } if(pv.length){ p.vlist=pv.map(pexels); p.video=p.vlist[Math.floor(Math.random()*pv.length)]; return p.video; }
   try{
     const u="https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrnamespace=6&gsrlimit=10&gsrsearch="+encodeURIComponent("filetype:video "+p.q)+"&prop=videoinfo&viprop=url|derivatives";
     const d=await (await fetch(u)).json();
@@ -400,7 +440,7 @@ function obBg(){
   const pool=PLACES.filter(p=>VID[p.id]?.length&&p.img); const all=pool.length?pool:PLACES;
   const p=all[(obI++*7)%all.length]; const a=$("#obA"), b=$("#obB"), v=$("#obV");
   const [on,off]=a.classList.contains("on")?[b,a]:[a,b];
-  on.style.backgroundImage=p.img?`url("${big(p.img)}"), ${grad(p)}`:grad(p); on.classList.add("on"); off.classList.remove("on");
+  on.style.backgroundImage=p.img?`url("${big(p.img)}"), ${grad(p)}`:grad(p); on.classList.remove("kb"); void on.offsetWidth; on.classList.add("on","kb"); off.classList.remove("on"); setTimeout(()=>{ if(!off.classList.contains("on")) off.classList.remove("kb"); },1800);
   const cap=$("#obCap"); if(cap) cap.textContent=pN(p)+" · "+pCountry(p);
   if(v&&SET.video&&VID[p.id]?.length){ v.style.opacity=0; setTimeout(()=>{ v.src=pexels(VID[p.id][0]); v.play().catch(()=>{}); },350); v.onplaying=()=>{ v.style.opacity=1; }; }
 }
@@ -491,6 +531,7 @@ function renderHome(){ if(SITE) return renderHomeSite(); setTimeout(fillAIPicks,
    <div class="cats">${cats}</div>
    <div class="sec"><h2>${t("won_h")}<small>${t("won_sub")}</small></h2><span onclick="X.tag='wonder';X.q='';X.reg='all';go('explore')">${t("all")}</span></div>
    <div id="wond">${wondersHTML()}</div>
+   ${recsHTML()}
    <div class="sec"><h2>${t("best_h")}<small>${PR[topTags(1)[0]]||t("based")}</small></h2><span onclick="go('explore')">${t("all")}</span></div>
    <div class="grid2">${popular.map(gcard).join("")}</div>
    ${near.length?`<div class="sec"><h2>${t("near_h")}<small>${t("near_sub",{c:esc(cname(U?.country||"UZ"))})}</small></h2></div>
@@ -500,6 +541,10 @@ function renderHome(){ if(SITE) return renderHomeSite(); setTimeout(fillAIPicks,
    ${["yevropa","osiyo","amerika","afrika","okeaniya","uz"].map(r=>{ const l=list.filter(p=>p.reg===r).slice(0,14); return `<div class="sec" style="padding-top:8px"><h2 style="font-size:16px">${R[r]}</h2><span onclick="X.reg='${r}';X.tag='all';go('explore')">${PLACES.filter(p=>p.reg===r).length} ${t("places")}</span></div><div class="hs">${l.map(p=>cardH(p,"sm")).join("")}</div>`; }).join("")}
    <div class="foot"></div>`;
 }
+function recsHTML(){ let h=""; const lv=lovedIds(2);
+  lv.forEach(id=>{ const a=byId(id), l=similar(id,12); if(l.length>=3) h+=`<div class="sec"><h2>${t("sim_h",{p:esc(pN(a))})}<small>${t("sim_sub")}</small></h2><span onclick="openPlace('${id}')">${t("all")}</span></div><div class="hs">${l.map(p=>cardH(p)).join("")}</div>`; });
+  const rv=LRN.h.map(byId).filter(Boolean).slice(0,12); if(rv.length>=3) h+=`<div class="sec"><h2>${t("recent_h")}<small>${t("recent_sub")}</small></h2></div><div class="hs">${rv.map(p=>cardH(p,"sm")).join("")}</div>`;
+  return h; }
 function openMood(k){ LRN.t[k]=(LRN.t[k]||0)+1; ls.set("olam_learn",LRN); X.tag=k; X.q=""; X.reg="all"; go("explore"); }
 
 /* ================= KATEGORIYALAR ================= */
@@ -657,7 +702,6 @@ function renderSettings(){
    <div class="seth"><h1>${t("set_h")}</h1></div>
    <div class="sgrp"><div class="sl">${t("s_lang")}</div><div class="langs">${LANGS.map(([k,n,f])=>`<button class="${LANG===k?"on":""}" onclick="setLang('${k}');renderSettings()">${n}</button>`).join("")}</div></div>
    <div class="sgrp"><div class="sl">${t("s_music")}</div>${seg("music",[[true,t("on")],[false,t("off")]])}<button class="pill o2 wide" style="margin-top:8px" onclick="openMusic()">${t("music_h")} · ${t("m_mine")}</button></div>
-   <div class="sgrp"><div class="sl">${t("s_amb")}</div>${seg("amb",[[true,t("on")],[false,t("off")]])}<p class="sp" style="margin:8px 0 0">${t("amb_t")}</p></div>
    <div class="sgrp"><div class="sl">${t("s_notif")}</div><div class="seg"><button class="${SET.notif?"on":""}" onclick="notifToggle(true)">${t("on")}</button><button class="${SET.notif?"":"on"}" onclick="notifToggle(false)">${t("off")}</button></div><p class="sp" style="margin:8px 0 0">${t("notif_t")}</p></div>
    <div class="sgrp"><div class="sl">${t("s_off")}</div><p class="sp" style="margin:0">${t("off_t")}</p></div>
    <div class="sgrp"><div class="sl">${t("s_video")}</div>${seg("video",[[true,t("v_on")],[false,t("v_off")]])}</div>
@@ -678,10 +722,11 @@ function setOpt(k,v){ SET[k]=v; saveSet();
   if(k==="theme") applyTheme(); if(k==="amb"&&!v) ambStop(); if(k==="music"){ v?mPlay():mPause(); } if(k==="video"){ PLACES.forEach(p=>{ p.video=undefined; }); }
   renderSettings(); }
 const curUI=()=>SITE?(SET.sui||"glass"):(SET.ui||"white");
+try{ if(/Chrome\//.test(navigator.userAgent)&&!/Edg\/|OPR\//.test(navigator.userAgent)) document.documentElement.classList.add("lgref"); }catch(e){}
 function applyUI(){ const R=document.documentElement; R.dataset.ui=curUI();
   if(curUI()==="glass"){ const p=dailyPlace()||PLACES.find(x=>x.img); const u=p&&p.img?big(p.img):""; R.style.setProperty("--uibg",u?`url("${u}")`:"none"); } }
 function uiPick(v){ SET[SITE?"sui":"ui"]=v; saveSet(); applyUI(); applyTheme(); }
-function applyTheme(){ const dark=(SITE&&curUI()==="glass")||SET.theme==="dark"||(SET.theme==="auto"&&matchMedia("(prefers-color-scheme: dark)").matches); document.documentElement.dataset.theme=dark?"dark":"light"; document.querySelector('meta[name=theme-color]')?.setAttribute("content",dark?"#0e1622":"#f4f8fd"); }
+function applyTheme(){ const dark=SET.theme==="dark"||(SET.theme==="auto"&&matchMedia("(prefers-color-scheme: dark)").matches); document.documentElement.dataset.theme=dark?"dark":"light"; document.querySelector('meta[name=theme-color]')?.setAttribute("content",dark?"#0e1622":"#f4f8fd"); }
 try{ matchMedia("(prefers-color-scheme: dark)").addEventListener("change",applyTheme); }catch(e){}
 function setLang(k){ if(k===LANG) return; const oldCat=catLang(); LANG=k; if(oldCat!==catLang()||k==="uzk"||oldCat==="uz"){ catReset(); setTimeout(()=>catLoad(),400); } SET.lang=k; saveSet(); lzLoad(); applyLang(); toast(t("lang_set"));
   if(!$("#ob").classList.contains("on")){ render(cur==="watch"?"home":cur); if(cur==="watch") go("home"); }
@@ -701,7 +746,8 @@ function renderWatch(startId){
   W.list=forYou(); if(startId){ const i=W.list.findIndex(p=>p.id===startId); if(i>=0) W.list.unshift(...W.list.splice(i,1)); else if(byId(startId)) W.list.unshift(byId(startId)); } W.i=0;
   $("#watch").innerHTML=`<div class="layer" id="la"></div><div class="layer" id="lb"></div><video id="wv" playsinline muted loop></video><div class="wshade"></div>
    <div class="wbar"><i id="wbi"></i></div>
-   <div class="wtop"><div class="brand">OLAM</div><div class="wnext" id="wn"></div><button class="ib" onclick="openMusic()" id="wm" aria-label="Music"></button></div>
+   <div class="wtop"><div class="brand">OLAM</div><div class="wnext" id="wn"></div><button class="ib ${SET.vsound?"on":""}" id="wvs" onclick="vSound()" aria-label="Video">${SET.vsound?ICON.sound:ICON.mute}</button><button class="ib" onclick="openMusic()" id="wm" aria-label="Music"></button></div>
+   <button class="wnav wpv" onclick="wGo(-1)" aria-label="prev"><svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg></button><button class="wnav wnx" onclick="wGo(1)" aria-label="next"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button>
    <div class="wtap" id="wtap"></div><div class="paused" id="wp"><div>${ICON.pause}</div></div><div class="hint" id="wh">${t("hint")}</div>
    <div class="wtxt" id="wt"></div><div class="wfact" id="wf"></div>
    <div class="wside"><button class="spk" onclick="const p=W.list[W.i];speak(pN(p)+'. '+pS(p)+' '+(pDesc(p)||''),this)" aria-label="${esc(t("listen"))}">${ICON.sound}</button><button onclick="wFact()" aria-label="AI">${ICON.spark}</button><button id="wl" onclick="wLike()">${ICON.heart}</button><button class="sv" id="ws" onclick="wSave()">${ICON.save}</button>
@@ -717,7 +763,7 @@ function wShow(){
   const p=W.list[W.i]; const a=$("#la"), b=$("#lb"); if(!a) return; W.shown=Date.now(); clearInterval(W.gt);
   const v=$("#wv"); v.classList.remove("on"); $("#watch")?.classList.remove("vfit"); v.pause(); v.removeAttribute("src"); v.load();
   const put=u=>{ const A=$("#la"),B=$("#lb"); if(!A) return; const [on,off]=A.classList.contains("on")?[B,A]:[A,B]; on.style.backgroundImage=u?`url("${u}"), ${grad(p)}`:grad(p); on.classList.remove("kb"); void on.offsetWidth; on.classList.add("on","kb"); off.classList.remove("on"); setTimeout(()=>off.classList.remove("kb"),1300); };
-  if(p.img){ const im=new Image(); im.onload=()=>put(big(p.img)); im.onerror=()=>put(p.img); im.src=big(p.img); } else put(null);
+  if(p.img){ const u=hq(p.img); const im=new Image(); im.onload=()=>put(u); im.onerror=()=>{ const b=big(p.img); const i2=new Image(); i2.onload=()=>put(b); i2.onerror=()=>put(p.img); i2.src=b; }; im.src=u; } else put(null);
   $("#wf")?.classList.remove("on");
   const tx=$("#wt"); tx.classList.remove("in"); void tx.offsetWidth; const d=dist(p);
   tx.innerHTML=`<div class="kicker">${esc(pC(p))}${d!=null?" · "+km(d):""}</div><h2>${esc(pN(p))}</h2><p>${esc(pS(p))}</p>`; tx.classList.add("in");
@@ -725,16 +771,17 @@ function wShow(){
   W.dur=SPD(); wTimer(W.dur); ambStart(ambKind(p)); if(window.speechSynthesis?.speaking) speechSynthesis.cancel();
   const id=p.id;
   loadVideo(p).then(src=>{ if(W.list[W.i]?.id!==id||cur!=="watch") return;
-    if(!src){ // video yo'q: galereya rasmlari almashib turadi
-      loadGallery(p).then(g=>{ if(W.list[W.i]?.id!==id||g.length<2) return; let k=0; clearInterval(W.gt); W.gt=setInterval(()=>{ if(W.paused||W.list[W.i]?.id!==id) return; k=(k+1)%g.length; const im=new Image(); im.onload=()=>put(g[k]); im.src=g[k]; },Math.max(3000,W.dur/3)); });
-      return; }
-    v.src=src; v.muted=true;
+    const slides=()=>loadGallery(p).then(g=>{ if(W.list[W.i]?.id!==id||g.length<2) return; let k=0; clearInterval(W.gt); W.gt=setInterval(()=>{ if(W.paused||W.list[W.i]?.id!==id) return; k=(k+1)%g.length; const u=hq(g[k]); const im=new Image(); im.onload=()=>put(u); im.onerror=()=>{ const i2=new Image(); i2.onload=()=>put(g[k]); i2.src=g[k]; }; im.src=u; },Math.max(3000,W.dur/3)); });
+    if(!src){ slides(); return; }   // video yo'q: rasmlar almashib turadi
+    v.src=src; v.muted=!SET.vsound; v.volume=1;
     v.onloadedmetadata=()=>{ if(v.duration>14) v.currentTime=Math.random()*(v.duration-12); };
-    v.onplaying=()=>{ if(W.list[W.i]?.id!==id||v.classList.contains("on")) return; $("#watch")?.classList.toggle("vfit",v.videoHeight>v.videoWidth*1.1&&innerWidth>innerHeight*1.1); v.classList.add("on"); W.dur=Math.max(SPD()-2000,Math.min(SPD()+2000,(v.duration||10)*1000)); wTimer(W.dur); };
+    v.onplaying=()=>{ if(W.list[W.i]?.id!==id||v.classList.contains("on")) return; { const va=v.videoWidth/Math.max(1,v.videoHeight), sa=innerWidth/innerHeight; if((va<0.85&&sa>1.1)||(va>1.25&&sa<0.9)){ v.pause(); v.removeAttribute("src"); v.load(); slides(); return; } } v.classList.add("on"); vDuck(v); W.dur=Math.max(SPD()-2000,Math.min(SPD()+2000,(v.duration||10)*1000)); wTimer(W.dur); };
     v.onerror=()=>{ if(p.vlist&&p.vlist.length>1){ p.vlist=p.vlist.filter(x=>x!==v.src); p.video=p.vlist[0]; } };
-    if(!W.paused) v.play().catch(()=>{}); });
+    if(!W.paused) v.play().catch(()=>{ v.muted=true; v.play().catch(()=>{}); }); });
   const n=W.list[(W.i+1)%W.list.length]; const wn=$("#wn"); if(wn) wn.innerHTML=`${t("next_l")} <b>${esc(pN(n))}</b>`; if(n.img){ const im=new Image(); im.src=big(n.img); } loadVideo(n);
 }
+function vHasAudio(v){ return !!(v.mozHasAudio||(v.webkitAudioDecodedByteCount>0)||(v.audioTracks&&v.audioTracks.length)); }
+function vDuck(v){ setTimeout(()=>{ if(!v.paused&&!v.muted&&vHasAudio(v)) BGM.volume=0.12; else BGM.volume=0.55; },1200); }
 function wTimer(ms){ clearTimeout(W.t); const bar=$("#wbi"); if(!bar) return; W.start=Date.now(); W.left=ms;
   bar.style.transition="none"; bar.style.width="0"; void bar.offsetWidth; if(W.paused) return;
   bar.style.transition=`width ${ms}ms linear`; bar.style.width="100%"; W.t=setTimeout(()=>wGo(1),ms); }
@@ -742,7 +789,10 @@ function wGo(d){ const dt=Date.now()-(W.shown||0), sid=W.list[W.i]?.id; if(sid) 
 function wPause(){ const bar=$("#wbi"), v=$("#wv"); if(!bar) return; W.paused=!W.paused; $("#wp").classList.toggle("on",W.paused);
   if(W.paused){ clearTimeout(W.t); const done=Date.now()-W.start; W.left=Math.max(500,W.left-done); bar.style.width=getComputedStyle(bar).width; bar.style.transition="none"; v.pause(); }
   else { bar.style.transition=`width ${W.left}ms linear`; bar.style.width="100%"; W.start=Date.now(); W.t=setTimeout(()=>wGo(1),W.left); if(v.getAttribute("src")) v.play().catch(()=>{}); } }
-function wStop(){ ambStop(); try{ speechSynthesis.cancel(); }catch(e){} clearTimeout(W.t); clearInterval(W.gt); const v=$("#wv"); if(v) v.pause(); mPause(); }
+function vSound(){ SET.vsound=!SET.vsound; saveSet(); const v=$("#wv"); if(v){ v.muted=!SET.vsound; if(SET.vsound) v.play().catch(()=>{}); vDuck(v); } const b=$("#wvs"); if(b){ b.innerHTML=SET.vsound?ICON.sound:ICON.mute; b.classList.toggle("on",SET.vsound); }
+  document.querySelectorAll("#gal video").forEach(x=>x.muted=!SET.vsound); }
+let WWH=0; document.addEventListener("wheel",e=>{ if(cur!=="watch"||$("#detail").classList.contains("on")||$("#chat").classList.contains("on")||Date.now()-WWH<700||Math.abs(e.deltaY)<25) return; WWH=Date.now(); wGo(e.deltaY>0?1:-1); },{passive:true});
+function wStop(){ ambStop(); BGM.volume=0.55; try{ speechSynthesis.cancel(); }catch(e){} clearTimeout(W.t); clearInterval(W.gt); const v=$("#wv"); if(v) v.pause(); mPause(); }
 function wLike(){ const id=W.list[W.i].id; liked.has(id)?liked.delete(id):(liked.add(id),learn(id,3)); keep(); $("#wl").classList.toggle("on",liked.has(id)); }
 function wSave(){ save(W.list[W.i].id); $("#ws").classList.toggle("on",saved.has(W.list[W.i].id)); }
 document.addEventListener("keydown",e=>{ if(cur!=="watch"||$("#detail").classList.contains("on")||$("#chat").classList.contains("on")) return;
@@ -751,12 +801,15 @@ document.addEventListener("visibilitychange",()=>{ if(document.hidden&&cur==="wa
 
 /* ================= JOY SAHIFASI ================= */
 async function openPlace(id){
-  const p=byId(id), DD=$("#detail"); if(!p) return; dynKeep(p); learn(id,1);
+  const p=byId(id), DD=$("#detail"); if(!p) return; dynKeep(p); learn(id,1); if(PDW&&PDW.id!==id){ const dt=(Date.now()-PDW.t)/1000; learn(PDW.id,dt>90?3:dt>30?1.5:dt>12?0.5:0); } PDW={id,t:Date.now()};
   if(cur==="watch"&&!W.paused) wPause();
   const others=PLACES.filter(x=>x.id!==id&&(!x.dyn||x.keep)).map(x=>({x,s:x.tags.filter(y=>p.tags.includes(y)).length*2+(x.reg===p.reg?1:0)+score(x)/10})).sort((a,b)=>b.s-a.s).slice(0,10).map(o=>o.x);
   const C=CAT(), R=REGN(), WN=tl("won"), desc=pDesc(p);
-  DD.innerHTML=`<div class="dg"><div class="gal" id="gal">${ph(p,"","",true)}</div>
-     <button class="x" onclick="closePlace()">${ICON.down}</button><div class="cnt" id="gc" style="display:none"></div></div>
+  DD.innerHTML=`<div class="dg"><div class="gal" id="gal"><div class="gs ph act" style="background:${grad(p)}">${img(p,true)}</div></div>
+     <button class="x" onclick="closePlace()">${ICON.down}</button>
+     <div class="gtop"><div class="cnt" id="gc" style="display:none"></div><button class="gsnd ${SET.music?"on":""}" id="gsnd" onclick="placeSound()" aria-label="Music">${SET.music?ICON.music:ICON.mute}</button></div>
+     <button class="gnav gp" onclick="galStep(-1)" aria-label="prev"><svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg></button><button class="gnav gn" onclick="galStep(1)" aria-label="next"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button>
+     <div class="gdots" id="gdots"></div></div>
    <div class="dt">${p.user?`<div class="wbadge">${t("ap_user")}</div>`:""}${wondersOf(p.id).map(w=>`<div class="wbadge">${WN[w][0]}</div>`).join("")}<div class="kicker">${p.tags.map(x=>C[x]?clean(C[x]):"").filter(Boolean).join(" · ")}</div><h1>${esc(pN(p))}</h1><div class="loc"><span>${PIN}${esc(pC(p))}</span><span class="r">${rate(p)}</span></div></div>
    <div class="db">
      <div class="row"><button class="pill g" onclick="closePlace();go('watch','${p.id}')">${ICON.play} ${t("b_watch")}</button>
@@ -768,12 +821,13 @@ async function openPlace(id){
      <div class="aibar">${tl("aiq").map((q,i)=>`<button onclick="aiAsk('${p.id}',${i})">${ICON.spark}${esc(clean(q[0]))}</button>`).join("")}</div>
      <div class="tagline">${esc(pS(p))}</div>
      <div class="facts"><div>${t("best_time")}<b>${bestTxt(p.best)}</b></div><div>${t("from_you")}<b>${km(dist(p))}</b></div><div>${t("region")}<b>${clean(R[p.reg])}</b></div></div>
-     <div id="pvid"></div>
      <div class="sgrp wxb" id="wx"><div class="sl">${t("wx_h")}</div><div class="sp">…</div></div><div class="sgrp" id="fx"></div>
      <div class="gmap"><a class="pill gm" href="${gmapsUrl(p)}" target="_blank" rel="noopener">${ICON.pin}<span>${t("gm_open")}</span></a><a class="pill gm g2" href="${gdirUrl(p)}" target="_blank" rel="noopener">${ICON.route}<span>${t("gm_dir")}</span></a></div>
      <a class="pill o2 wide" style="margin-top:8px" href="${panoUrl(p)}" target="_blank" rel="noopener">${ICON.eye}<span>${clean(t("pano"))} · Google Maps</span></a>
      <div class="sec" style="padding:14px 0 8px"><h2>${t("about_h")}</h2><span class="spk" onclick="speak(pN(byId('${p.id}'))+'. '+($('#pdesc')?.textContent||''),this)">${t("listen")}</span></div>
      <div class="wiki" id="pdesc">${desc?esc(desc):t("translating")}</div>
+     <div class="wiki more" id="pmore"></div>
+     <div class="sgrp pfacts" id="pfacts"><div class="sl">${t("f_h")}</div><div class="pfg"><div class="sp">…</div></div></div>
      ${p.wurl?`<div class="wiki"><small><a href="${p.wurl}" target="_blank" rel="noopener">${t("more_wiki")} ↗</a></small></div>`:""}
      <button class="pill o2" style="width:100%;margin-top:12px" onclick="openChat('${p.id}');chatSend(t('explain_q',{p:pN(byId('${p.id}'))}))">${t("explain")}</button>
    </div>
@@ -781,18 +835,108 @@ async function openPlace(id){
    ${others.map(o=>{ const s=pS(o); return `<div class="rec" onclick="openPlace('${o.id}')">${ph(o)}<div><b>${esc(pN(o))}</b><small>${esc(pCountry(o))}<br>${esc(s.length>60?s.slice(0,58)+"…":s)}</small></div></div>`; }).join("")}
    <div class="foot"></div>`;
   DD.classList.add("on"); DD.scrollTop=0;
-  if(!desc) fillDesc(p); loadWx(p); loadFx(p); loadPVids(p);
-  const g=await loadGallery(p);
-  if(g.length>1&&DD.classList.contains("on")&&$("#gal")&&pN(p)===$("#detail h1")?.textContent){
-    $("#gal").innerHTML=g.map((u,i)=>`<div class="ph" style="background:${grad(p)}"><img src="${big(u)}" alt="" ${i?'loading="lazy"':""} decoding="async" onerror="${FB}"></div>`).join("");
-    const gc=$("#gc"); gc.style.display=""; gc.textContent=`1 / ${g.length}`;
-    $("#gal").onscroll=e=>{ gc.textContent=`${Math.round(Math.abs(e.target.scrollLeft)/e.target.clientWidth)+1} / ${g.length}`; };
-  }
+  if(!desc) fillDesc(p); loadWx(p); loadFx(p); placeSoundStart(p); loadFacts(p); loadMore(p);
+  galBuild(p);
 }
-async function loadPVids(p){ const box=$("#pvid"); if(!box||!SET.video) return; const id=p.id;
-  await loadVideo(p); const l=[...new Set((VID[p.id]||[]).map(pexels).concat(p.vlist||[]))].slice(0,3);
-  if(!l.length||$("#detail h1")?.textContent!==pN(p)||!$("#pvid")) return;
-  $("#pvid").innerHTML=`<div class="sl" style="margin-top:18px">${t("videos_h")} · ${l.length}</div><div class="pvids">${l.map(u=>`<video src="${u}" muted playsinline loop preload="metadata" controls onmouseenter="this.play().catch(()=>{})" onmouseleave="this.pause()"></video>`).join("")}</div>`; }
+/* ===== Galereya: 1-video → rasmlar → qolgan videolar; avtomatik, silliq, strelka/nuqta/surish ===== */
+let G=null;
+const galOpen=id=>$("#detail").classList.contains("on")&&G&&G.p===id&&$("#gal");
+async function galBuild(p){
+  if(G) clearTimeout(G.timer); const id=p.id; G={p:id,slides:[],i:0,timer:null,hold:0};
+  let g=[], vids=[];
+  try{ [g]=await Promise.all([loadGallery(p), SET.video?loadVideo(p):Promise.resolve(null)]); }catch(e){}
+  if(!galOpen(id)) return;
+  if(SET.video){ const wide=$("#gal").clientWidth>=$("#gal").clientHeight; vids=(VID[p.id]||[]).filter(x=>/_1920_1080_/.test(x)===wide).map(pexels).slice(0,3); }
+  const imgs=(g&&g.length?g:(p.img?[big(p.img)]:[]));
+  const slides=[...(vids[0]?[{v:vids[0]}]:[]),...imgs.map(u=>({i:hq(u)})),...vids.slice(1).map(u=>({v:u}))];
+  if(!slides.length) return;
+  G.slides=slides; const bg=p.img?big(p.img):"";
+  const el=$("#gal");
+  el.innerHTML=slides.map((x,k)=>x.v
+    ?`<div class="gs vs" style="--bgimg:url('${bg}')"><video src="${x.v}" muted playsinline preload="${k===0?"auto":"metadata"}" ${slides.length===1?"loop":""} onloadedmetadata="galFit(this)"></video></div>`
+    :`<div class="gs ph" style="background:${grad(p)};--bgimg:url('${x.i}')"><img src="${x.i}" alt="" ${k>1?'loading="lazy"':""} decoding="async" onload="galFit(this)" onerror="if(!this.dataset.h&&/1920px-|width=1920/.test(this.src)){this.dataset.h=1;this.src=this.src.replace('/1920px-','/1280px-').replace('width=1920','width=1280')}else{${FB}}"></div>`).join("");
+  $("#gdots").innerHTML=slides.length>1?slides.map((x,k)=>`<button class="${x.v?"v":""}" onclick="galStep(${k},1)" aria-label="${k+1}"></button>`).join(""):"";
+  $("#detail .dg").classList.toggle("multi",slides.length>1);
+  const hold=()=>{ G.hold=Date.now()+9000; };
+  el.onpointerdown=hold; el.onwheel=hold; el.ontouchstart=hold;
+  let st; el.onscroll=()=>{ clearTimeout(st); st=setTimeout(()=>{ const k=Math.round(Math.abs(el.scrollLeft)/el.clientWidth); if(k!==G.i) galActive(k); },90); };
+  el.scrollLeft=0; galActive(0);
+}
+function galFit(m){ const box=m.parentNode; if(!box) return; const w=m.videoWidth||m.naturalWidth, h=m.videoHeight||m.naturalHeight; if(!w||!h) return;
+  const a=w/h, c=box.clientWidth/Math.max(1,box.clientHeight); box.classList.toggle("fit",a<c*0.72||a>c*1.45); }
+function galActive(k){ if(!G||!$("#gal")) return; const n=G.slides.length; G.i=k;
+  const el=$("#gal"); [...el.children].forEach((c,j)=>{ c.classList.toggle("act",j===k); const v=c.querySelector("video"); if(v){ if(j===k){ v.currentTime=0; v.muted=!SET.vsound; v.play().catch(()=>{ v.muted=true; v.play().catch(()=>{}); }); vDuck(v); } else v.pause(); } });
+  const gc=$("#gc"); if(gc){ gc.style.display=n>1?"":"none"; gc.textContent=`${k+1} / ${n}`; }
+  document.querySelectorAll("#gdots button").forEach((b,j)=>b.classList.toggle("on",j===k));
+  clearTimeout(G.timer); if(n<2) return;
+  const cur=el.children[k]?.querySelector("video");
+  const next=()=>{ if(!galOpen(G.p)) return; if(Date.now()<G.hold){ G.timer=setTimeout(next,G.hold-Date.now()); return; } galGo(G.i+1); };
+  if(cur){ cur.onended=()=>{ clearTimeout(G.timer); next(); }; G.timer=setTimeout(next,22000); }
+  else G.timer=setTimeout(next,5200);
+}
+function galGo(k){ const el=$("#gal"); if(!el||!G) return; const n=G.slides.length; k=((k%n)+n)%n;
+  el.scrollTo({left:k*el.clientWidth*(document.documentElement.dir==="rtl"?-1:1),behavior:matchMedia("(prefers-reduced-motion:reduce)").matches?"auto":"smooth"}); galActive(k); }
+function galStep(d,abs){ if(!G) return; G.hold=Date.now()+9000; galGo(abs?d:G.i+d); }
+function galStop(){ BGM.volume=0.55; if(G) clearTimeout(G.timer); document.querySelectorAll("#gal video").forEach(v=>v.pause()); }
+document.addEventListener("keydown",e=>{ if(!$("#detail").classList.contains("on")||$("#chat").classList.contains("on")) return; if(e.key==="ArrowRight") galStep(1); if(e.key==="ArrowLeft") galStep(-1); if(e.key==="Escape") closePlace(); });
+/* ===== Joy musiqasi: joy turiga mos kuy + tabiat ovozi ===== */
+const PTRACK={dengiz:13,dam:13,sharshara:607,tabiat:607,park:607,zoo:607,tog:617,qor:617,sahro:617,tarix:443,islom:443,ibodat:443,saroy:443,muzey:839,kutub:839,shahar:953,zamon:953,stadion:953,kosmos:1087,taom:1025};
+function placeSoundStart(p){ if(cur==="watch") return; ambStart(ambKind(p)); if(!SET.music) return;
+  const id=PTRACK[p.tags.find(x=>PTRACK[x])]||94; if(SET.mlist==="minus"||!M.q.length){ const k=M.q.findIndex(x=>String(x.id)===String(id)); if(k>=0&&String(M.cur)!==String(id)){ M.i=k; mTrack(); } }
+  mPlay(); }
+function placeSound(){ SET.music=!SET.music; saveSet(); if(SET.music){ const p=byId(G?.p); if(p) placeSoundStart(p); else mPlay(); } else mPause(); const b=$("#gsnd"); if(b){ b.innerHTML=SET.music?ICON.music:ICON.mute; b.classList.toggle("on",SET.music); } }
+/* ===== Batafsil ma'lumot: Wikidata faktlari va Wikipedia'dan to'liq tavsif ===== */
+const stillOpen=p=>$("#detail").classList.contains("on")&&$("#detail h1")?.textContent===pN(p);
+async function qidOf(p){ if(p.wd) return p.id.slice(1); if(p.qid) return p.qid;
+  try{ const d=await (await fetch(`https://${p.wl||"en"}.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1&prop=pageprops&ppprop=wikibase_item&titles=`+encodeURIComponent((p.nt||p.t).replace(/_/g," ")))).json();
+    p.qid=Object.values(d.query?.pages||{})[0]?.pageprops?.wikibase_item||null; }catch(e){ p.qid=null; } return p.qid; }
+async function loadFacts(p){
+  const box=$("#pfacts"); if(!box) return; const fail=()=>{ if(stillOpen(p)) $("#pfacts")?.remove(); };
+  try{
+    const qid=await qidOf(p); if(!qid) return fail();
+    const e=(await (await fetch(`https://www.wikidata.org/w/api.php?action=wbgetentities&format=json&origin=*&ids=${qid}&props=claims`)).json()).entities?.[qid]; if(!e) return fail();
+    const C=e.claims||{}, val=pid=>C[pid]?.find(x=>x.rank!=="deprecated")?.mainsnak?.datavalue?.value, all=pid=>(C[pid]||[]).map(x=>x.mainsnak?.datavalue?.value).filter(Boolean);
+    let nf; try{ nf=new Intl.NumberFormat(LOC[LANG]); }catch(x){ nf=new Intl.NumberFormat("en"); }
+    const num=v=>nf.format(Math.round(+String(v.amount).replace("+","")*10)/10);
+    const unit=v=>({Q11573:"m",Q712226:"km²",Q35852:"ga",Q25343:"m²",Q828224:"km",Q3710:"ft"})[String(v.unit||"").split("/").pop()]||"";
+    const rows=[];
+    const inc=C.P571?.[0]?.mainsnak?.datavalue?.value; if(inc?.time){ const m=/^([+-])0*(\d+)/.exec(inc.time); if(m){ const y=+m[2], neg=m[1]==="-", pr=inc.precision;
+      rows.push(["f_built",CATI.tarix,pr<=7?t("f_cent",{c:Math.ceil(y/100)})+(neg?" "+t("f_bce"):""):(neg?t("f_bc",{y}):t("f_year",{y}))]); } }
+    const el=val("P2044"); if(el) rows.push(["f_elev",CATI.tog,num(el)+" "+(unit(el)||"m")]);
+    const hg=val("P2048"); if(hg) rows.push(["f_height",CATI.zamon,num(hg)+" "+(unit(hg)||"m")]);
+    const ar=val("P2046"); if(ar) rows.push(["f_area",'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/>',num(ar)+" "+(unit(ar)||"km²")]);
+    const vs=val("P1174"); if(vs) rows.push(["f_visit",'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/>',num(vs)]);
+    const pop=val("P1082"); if(pop&&!vs) rows.push(["f_pop",'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/>',num(pop)]);
+    if(all("P1435").some(x=>x.id==="Q9259")||C.P757) rows.push(["f_unesco",CATI.wonder,t("f_yes")]);
+    const ids=[...all("P84").slice(0,2).map(x=>["f_arch",x.id]),...all("P149").slice(0,2).map(x=>["f_style",x.id])];
+    if(ids.length){ try{ const d=(await (await fetch(`https://www.wikidata.org/w/api.php?action=wbgetentities&format=json&origin=*&ids=${[...new Set(ids.map(x=>x[1]))].join("|")}&props=labels&languages=${WL(LANG)}|en&languagefallback=1`)).json()).entities||{};
+      const by={}; ids.forEach(([k,id])=>{ const l=d[id]?.labels?.[WL(LANG)]?.value||d[id]?.labels?.en?.value; if(l) (by[k]=by[k]||[]).push(LANG==="uzk"?cyr(l):l); });
+      if(by.f_arch) rows.push(["f_arch",'<path d="M3 21h18M6 21V10l6-6 6 6v11M10 21v-6h4v6"/>',by.f_arch.join(", ")]); if(by.f_style) rows.push(["f_style",CATI.muzey,by.f_style.join(", ")]); }catch(x){} }
+    const web=val("P856"); if(web&&/^https?:\/\//.test(web)) rows.push(["f_web",'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',`<a href="${esc(web)}" target="_blank" rel="noopener">${esc(web.replace(/^https?:\/\/(www\.)?/,"").replace(/\/$/,"").slice(0,32))} ↗</a>`,1]);
+    if(p.lat!=null) rows.push(["f_coord",'<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',`${(+p.lat).toFixed(4)}, ${(+p.lon).toFixed(4)}`]);
+    if(!stillOpen(p)) return; if(rows.length<2) return fail();
+    $("#pfacts .pfg").innerHTML=rows.map(([k,ic,v,raw])=>`<div class="pf"><i>${SV(ic)}</i><div><small>${t(k)}</small><b>${raw?v:esc(v)}</b></div></div>`).join("");
+  }catch(x){ fail(); }
+}
+async function loadMore(p){
+  const lang=LANG, wl=WL(lang)==="uzk"?"uz":WL(lang); let txt="";
+  try{ const qid=await qidOf(p); let title=p.wt?.[wl]||null;
+    if(!title&&qid){ const d=await (await fetch(`https://www.wikidata.org/w/api.php?action=wbgetentities&format=json&origin=*&ids=${qid}&props=sitelinks&sitefilter=${wl}wiki|enwiki`)).json(); const sl=d.entities?.[qid]?.sitelinks||{}; title=sl[wl+"wiki"]?.title||null; if(!p.wt) p.wt={}; p.wt.en=p.wt.en||sl.enwiki?.title; }
+    const ext=async(l,ti)=>{ const d=await (await fetch(`https://${l}.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1&prop=extracts&exintro=1&explaintext=1${l==="zh"?"&variant=zh-cn":""}&titles=`+encodeURIComponent(ti))).json(); return Object.values(d.query?.pages||{})[0]?.extract||""; };
+    if(title) txt=await ext(wl,title);
+    if(txt.length<350&&p.wt?.en&&wl!=="en"){ const en=await ext("en",p.wt.en); if(en.length>txt.length+200){ try{ const tr=await aiTranslate(en.slice(0,2200)); if(tr) txt=tr; }catch(x){} } }
+  }catch(x){}
+  if(lang!==LANG||!stillOpen(p)) return; const box=$("#pmore"); if(!box) return;
+  const short=($("#pdesc")?.textContent||"").trim(); txt=txt.trim(); if(LANG==="uzk") txt=cyr(txt);
+  if(!txt||txt.length<short.length+60||short.includes(txt.slice(0,80))){ box.remove(); return; }
+  box.innerHTML=txt.split(/\n+/).filter(Boolean).slice(0,6).map(x=>`<p>${esc(x)}</p>`).join("");
+}
+async function ctryLoad(code){ const lang=catLang(), key=code+"|"+lang+"|s"; if(CTC[key]) return CTC[key];
+  try{ const r=await fetch("assets/catalog/c/"+code+".json"); if(r.ok){ const d=await r.json(); const L=d.langs||[], li=L.indexOf(lang), en=L.indexOf("en"); const out=[];
+      for(const it of d.items||[]){ const [qid,file,lat,lon,cls,sl,reg,ls,ds,ws]=it; const label=(li>=0&&ls[li])||ls[en]||ls.find(Boolean); if(!label) continue;
+        out.push(mkPlace([qid,label,ws[en]||"",lang==="en"?"":(li>=0?ws[li]:"")||"",(li>=0?ds[li]:"")||"",file,lat,lon,cls,sl,code,reg],lang,false)); }
+      if(out.length){ CTC[key]=out; return out; } } }catch(e){}
+  return wdLoad(code); }
 async function fillDesc(p){
   const lang=LANG; let txt="";
   try{ // mahalliy Wikipedia
@@ -806,7 +950,8 @@ async function fillDesc(p){
   if(lang!==LANG) return; LZ[p.id]=LZ[p.id]||{}; LZ[p.id].x=txt; ls.set("olam_lz_"+LANG,LZ);
   const el=$("#pdesc"); if(el&&$("#detail").classList.contains("on")&&$("#detail h1")?.textContent===pN(p)) el.textContent=txt;
 }
-function closePlace(){ $("#detail").classList.remove("on"); }
+let PDW=null;
+function closePlace(){ const D=$("#detail"); if(!D.classList.contains("on")) return; D.classList.remove("on"); galStop(); if(PDW){ const dt=(Date.now()-PDW.t)/1000; learn(PDW.id,dt>90?3:dt>30?1.5:dt>12?0.5:dt<4?-0.6:0); PDW=null; } if(cur!=="watch"){ mPause(); ambStop(); } }
 
 /* ================= OLAM GID (AI chat) ================= */
 const GID_URL="https://olam-gid.behruzbekhasanboyev31.workers.dev";
@@ -827,24 +972,64 @@ function openChat(id){
 function closeChat(){ $("#chat").classList.remove("on"); }
 function drawMsgs(){
   const box=$("#msgs"); if(!box) return; const p=CH.place?byId(CH.place):null; const name=U?.name||t("friend");
-  box.innerHTML=`<div class="m a">${esc(p?t("hi_p",{name,p:pN(p)}):t("hi_g",{name}))}</div>`+CH.msgs.map((m,i)=>`<div class="m ${m.role==="user"?"u":"a"}">${esc(m.text)}${m.role!=="user"?`<button class="spk mspk" onclick="speak(CH.msgs[${i}].text,this)" aria-label="${esc(t("listen"))}">${ICON.sound}</button>`:""}</div>`+(m.role!=="user"?placeCards(m.text):"")).join("")+(CH.busy?`<div class="m a t">${t("typing")}</div>`:"");
+  box.innerHTML=`<div class="m a">${esc(p?t("hi_p",{name,p:pN(p)}):t("hi_g",{name}))}</div>`+CH.msgs.map((m,i)=>`<div class="m ${m.role==="user"?"u":"a"}">${esc(m.text)}${m.role!=="user"?`<button class="spk mspk" onclick="speak(CH.msgs[${i}].text,this)" aria-label="${esc(t("listen"))}">${ICON.sound}</button>`:""}</div>`+(m.role!=="user"?(m.cards?.length?cardStrip(m.cards):placeCards(m.text)):"")).join("")+(CH.busy?`<div class="m a t">${t("typing")}</div>`:"");
   box.scrollTop=box.scrollHeight;
 }
 function placeCards(text){ const low=" "+String(text).toLowerCase()+" "; const out=[];
   for(const p of PLACES){ if(p.dyn&&!p.keep) continue; const ns=[pN(p),p.n,(p.nt||p.t).replace(/_/g," ").replace(/\s*\(.*?\)/g,""),LZ[p.id]?.n].filter(x=>x&&x.length>=4).map(x=>x.toLowerCase());
-    if(ns.some(n=>low.includes(n))&&!out.includes(p)) out.push(p); if(out.length>=4) break; }
-  return out.length?`<div class="pcards">${out.map(p=>`<div class="pcard" onclick="closeChat();openPlace('${p.id}')">${ph(p)}<div><b>${esc(pN(p))}</b><small>${t("open_app")}</small></div></div>`).join("")}</div>`:""; }
+    if(ns.some(n=>low.includes(n))&&!out.includes(p)) out.push(p); if(out.length>=6) break; }
+  return out.length?`<div class="pcards">${out.map(p=>`<div class="pcard" onclick="chatPlace('${p.id}')">${ph(p)}<div><b>${esc(pN(p))}</b><small>${t("open_app")}</small></div></div>`).join("")}</div>`:""; }
 const reqUser=()=>({name:U?.name,country:cname(U?.country||"UZ"),interests:userCtx()});
+function chatPlace(id){ if(!SITE||innerWidth<760) closeChat(); openPlace(id); }
+function cardStrip(ids){ const ps=ids.map(byId).filter(Boolean); if(!ps.length) return "";
+  return `<div class="ccards">${ps.map(p=>`<button class="ccard" onclick="chatPlace('${p.id}')">${ph(p,"cci")}<span class="cct"><b>${esc(pN(p))}</b><small>${PIN}${esc(pCountry(p))}</small></span></button>`).join("")}</div>`; }
+/* Savoldan maqsadni aniqlash: davlat + joy turi → ilovadagi joylar */
+const NORM=s=>String(s||"").toLowerCase().replace(/[ʻʼ'’`‘]/g,"").replace(/ё/g,"е");
+const INTENTS=[
+ [/ko.?l(lar|i|ni)?\b|kol(lar)?\b|lake|озер|göl|көл|湖|بحير/,p=>p.cls==="Q23397"||p.cls==="Q131681"||/lake|озеро|ko.?l|göl|reservoir/i.test(p.t+" "+p.n)],
+ [/orol|island|остров|\bada(lar)?\b|арал|岛|جزير/,p=>p.cls==="Q23442"||/island|остров|orol/i.test(p.t+" "+p.n)],
+ [/sharshara|waterfall|водопад|şelale|сарқырама|шаршара|瀑布|شلال/,p=>p.tags.includes("sharshara")],
+ [/tog|mountain|гор[аы]|\bdağ|тау|тоо|кӯҳ|山|جبل/,p=>p.tags.includes("tog")],
+ [/plyaj|beach|пляж|sahil|dengiz|sea\b|мор[ея]|deniz|海|شاطئ|بحر/,p=>p.tags.includes("dengiz")],
+ [/muzey|museum|музе|müze|博物馆|متحف/,p=>p.tags.includes("muzey")],
+ [/restoran|kafe|restaurant|cafe|café|ресторан|кафе|lokanta|餐厅|مطعم/,p=>p.tags.includes("taom")],
+ [/basseyn|akvapark|aquapark|water ?park|pool|бассейн|аквапарк|havuz|kurort|resort|курорт|泳池|مسبح/,p=>p.tags.includes("dam")],
+ [/bog|park|garden|сад|парк|bahçe|бақ|公园|حديقة/,p=>p.tags.includes("park")],
+ [/masjid|mosque|мечет|cami|мешіт|清真寺|مسجد/,p=>p.tags.includes("islom")],
+ [/qasr|saroy|castle|palace|замок|дворец|saray|kale|сарай|宫|قصر/,p=>p.tags.includes("saroy")],
+ [/hayvonot|zoo|зоопарк|hayvanat|动物园|حديقة حيوان/,p=>p.tags.includes("zoo")],
+ [/sahro|kanyon|desert|canyon|пустын|каньон|çöl|沙漠|صحراء/,p=>p.tags.includes("sahro")],
+ [/tarix|qadimiy|historic|ancient|истор|древн|tarih|antik|古|تاريخ/,p=>p.tags.includes("tarix")],
+ [/tabiat|nature|природ|doğa|табиғат|自然|طبيعة/,p=>p.tags.includes("tabiat")],
+ [/shahar|city|город|şehir|қала|шаар|城市|مدينة/,p=>p.tags.includes("shahar")]];
+let CNAMES=null;
+function countryIn(q){ if(!CNAMES||CNAMES.l!==LANG){ const dn=l=>{ try{ return new Intl.DisplayNames([l],{type:"region"}); }catch(e){ return null; } }; const D=[dn(LOC[LANG]||"en"),dn("en"),dn("ru"),dn("uz"),dn("tr")];
+    const extra={US:["aqsh","amerika qoshma","usa","сша","америк"],GB:["angliya","buyuk britaniya","англи","uk"],AE:["baa","дубай","dubay","dubai","оаэ"],KR:["koreya","корея"],CZ:["chexiya","чехия"],NL:["gollandiya","голланд"],TR:["turkiya","turkey","туркия"]};
+    CNAMES={l:LANG,a:(ALLC||CTRY).map(c=>{ const iso=c[0]; const ns=new Set([cname(iso),...D.map(d=>d?.of(iso)),UZC[iso],...(extra[iso]||[])].filter(Boolean).map(NORM).filter(x=>x.length>=3)); return [iso,[...ns]]; })}; }
+  const n=NORM(q); let best=null,bl=0; for(const [iso,ns] of CNAMES.a) for(const x of ns){ const stem=x.length>5?x.slice(0,x.length-1):x; if(n.includes(stem)&&stem.length>bl){ best=iso; bl=stem.length; } } return best; }
+async function findPlaces(q){
+  const n=NORM(q); const iso=countryIn(q); const fs=INTENTS.filter(([re])=>re.test(n)).map(x=>x[1]); if(!iso&&!fs.length) return null;
+  const ok=p=>(!iso||(p.cc||"").split("/").includes(iso))&&(!fs.length||fs.some(f=>f(p)));
+  let pool=PLACES.filter(p=>(!p.dyn||p.keep)&&ok(p));
+  if(iso&&pool.length<10){ try{ const deep=await ctryLoad(iso); pool=[...new Set([...pool,...deep.filter(ok)])]; }catch(e){} }
+  const w=taste(), tot=Object.values(w).reduce((a,b)=>a+b,0)||1;
+  return pool.map(p=>[p,(p.sl||40)+score(p,w,tot)*3]).sort((a,b)=>b[1]-a[1]).slice(0,10).map(x=>x[0]);
+}
 async function chatSend(text){
   text=(text||"").trim(); if(!text||CH.busy) return;
   const inp=$("#cq"); if(inp) inp.value="";
   CH.msgs.push({role:"user",text}); CH.busy=true; drawMsgs(); if(CH.place) learn(CH.place,2);
-  let ans;
+  let ans, found=null;
+  try{ found=await findPlaces(text); }catch(e){}
   try{ const p=CH.place?byId(CH.place):null;
-    const r=await fetch(GID_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:CH.msgs.slice(-10),lang:LANG,place:p?`${pN(p)} (${p.n}, ${pC(p)})`:"",user:reqUser()})});
+    const msgs=CH.msgs.slice(-10).map(m=>({role:m.role,text:m.text}));
+    const style="\n\n[Style: reply in the user's language, warm and friendly, with fitting emojis 🌍✨, short paragraphs or a short list, exact place names.]";
+    const ctx=found&&found.length?`\n[Places found in the OLAM app for this request (they are shown to the user as cards): ${found.map(x=>pN(x)+" ("+pCountry(x)+")").join("; ")}. Describe each one in one line with an emoji, in the same order. Do not invent other places.]`:"";
+    msgs[msgs.length-1].text+=ctx+style;
+    const r=await fetch(GID_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:msgs,lang:LANG,place:p?`${pN(p)} (${p.n}, ${pC(p)})`:"",user:reqUser()})});
     ans=(await r.json()).text||t("no_ans");
-  }catch(e){ ans=t("net_err"); }
-  CH.msgs.push({role:"model",text:ans}); CH.busy=false; drawMsgs();
+  }catch(e){ ans=found&&found.length?t("found",{n:found.length}):t("net_err"); }
+  CH.msgs.push({role:"model",text:ans,cards:found&&found.length?found.map(x=>x.id):null}); CH.busy=false; drawMsgs();
 }
 
 /* ================= AI HAMMA JOYDA ================= */
@@ -1015,7 +1200,7 @@ function mkPlace(c,lang,cat){
     s:desc?desc.charAt(0).toUpperCase()+desc.slice(1):cname(code),g:PAL2[hash(id)%PAL2.length],lat,lon,dyn:1,wd:1,wl,sl,
     img:"https://commons.wikimedia.org/wiki/Special:FilePath/"+encodeURIComponent(file.replace(/ /g,"_"))+"?width=960",
     wt:{en,[lang]:loc||undefined},wurl:title?`https://${wl}.wikipedia.org/wiki/`+encodeURIComponent(title.replace(/ /g,"_")):"https://www.wikidata.org/wiki/"+qid};
-  if(cat){ p.keep=1; p.cat=1; }
+  p.cls=cls; if(cat){ p.keep=1; p.cat=1; }
   PLACES.push(p); IDX[id]=p; return p;
 }
 function wdPlace(r,code,reg,lang){ const c=wdCompact(r,code,reg); return c?mkPlace(c,lang,false):null; }
@@ -1034,7 +1219,7 @@ async function openCountry(code){
   const O=ensureCtryView(); O.classList.add("on"); O.scrollTop=0; CT.code=code; CT.tag=(U?.interests||[]).length?"fit":"all"; CT.n=60; CT.list=[];
   const own=PLACES.filter(p=>!p.dyn&&(p.cc||"").split("/").includes(code));
   O.innerHTML=`<button class="ovx" onclick="openCountries()">${ICON.down}</button><div class="seth"><h1>${esc(cname(code))}</h1><p class="sp" id="ctn">${t("ctry_load")}</p></div><div id="ctb">${own.length?`<div class="grid2" style="padding:0">${own.map(gcard).join("")}</div>`:""}<div class="empty">${t("ctry_load")}</div></div>`;
-  let l=[]; try{ l=await wdLoad(code); }catch(e){ if(CT.code===code) $("#ctb").innerHTML=(own.length?`<div class="grid2" style="padding:0">${own.map(gcard).join("")}</div>`:"")+`<div class="empty">${t("ctry_fail")}</div>`; return; }
+  let l=[]; try{ l=await ctryLoad(code); }catch(e){ if(CT.code===code) $("#ctb").innerHTML=(own.length?`<div class="grid2" style="padding:0">${own.map(gcard).join("")}</div>`:"")+`<div class="empty">${t("ctry_fail")}</div>`; return; }
   if(CT.code!==code) return;
   const ids=new Set(own.map(p=>p.id)), ownT=new Set(own.map(p=>(p.nt||p.t).replace(/_/g," ").toLowerCase()));
   CT.list=[...own,...l.filter(p=>!ids.has(p.id)&&!ownT.has((p.wt?.en||"").toLowerCase()))]; renderCountry();
@@ -1077,15 +1262,20 @@ try{ idb().then(db=>{ try{ db.transaction("kv","readwrite").objectStore("kv").cl
 
 /* ================= SAYT REJIMI ================= */
 const HB={i:0,timer:null,pool:null};
-function heroPool(){ if(HB.pool&&HB.pool.length) return HB.pool; const d=dailyPlace(); const v=PLACES.filter(p=>!p.dyn&&p.img&&(VID[p.id]||[]).some(x=>/_1920_1080_/.test(x)));
-  const rest=PLACES.filter(p=>!p.dyn&&p.img&&!v.includes(p)).sort((a,b)=>score(b)-score(a)).slice(0,12);
-  HB.pool=[...(d&&d.img?[d]:[]),...shuffle(v),...rest].filter((p,i,a)=>a.indexOf(p)===i); return HB.pool; }
-function heroNext(){ const H=$("#shero"); if(!H||cur!=="home") return; const pool=heroPool(); if(!pool.length) return; const p=pool[HB.i++%pool.length];
+// fon uchun dunyodagi eng chiroyli manzaralar (qo'lda tanlangan)
+const HERO_BEST=["santorini","moraine","halong","banff","lauterbrunnen","matterhorn","borabora","maldives","geiranger","lofoten","jiuzhaigou","zhangjiajie","faroe","peritomoreno","torres","uyuni","iguazu","plitvice","hallstatt","bled","amalfi","cinqueterre","dolomites","milford","whitehaven","seychelles","machu","fuji","kyoto","cappadocia","tigersnest","guilin","phiphi","elnido","yosemite","antelope","monumentvalley","horseshoe","victoria","uluru","jokulsarlon","skogafoss","como","neuschwanstein","pamukkale","bigalmaty","kaindy","iskanderkul","charvak","registan"];
+function heroPool(){ if(HB.pool&&HB.pool.length) return HB.pool; const best=HERO_BEST.map(byId).filter(p=>p&&p.img); const rest=shuffle(best.slice(6)); HB.pool=[...shuffle(best.slice(0,6)),...rest]; return HB.pool; }
+function heroNext(){ const H=$("#shero"); if(!H||cur!=="home") return; const pool=heroPool(); if(!pool.length){ clearTimeout(HB.rt); HB.rt=setTimeout(heroNext,900); return; } const p=pool[HB.i++%pool.length];
   const a=$("#hbA"), b=$("#hbB"), v=$("#hbV"); const [on,off]=a.classList.contains("on")?[b,a]:[a,b];
-  const u=huge(p.img); const im=new Image(); im.onload=()=>{ on.style.backgroundImage=`url("${u}")`; on.classList.add("on"); off.classList.remove("on"); }; im.onerror=()=>{ on.style.backgroundImage=`url("${big(p.img)}"), ${grad(p)}`; on.classList.add("on"); off.classList.remove("on"); }; im.src=u;
-  const cap=$("#hcap"); if(cap){ cap.textContent=pN(p)+" · "+pCountry(p); cap.onclick=()=>openPlace(p.id); cap.style.cursor="pointer"; }
-  const land=(VID[p.id]||[]).filter(x=>/_1920_1080_/.test(x));
-  if(v){ v.classList.remove("on"); if(SET.video&&land.length&&!matchMedia("(prefers-reduced-motion:reduce)").matches){ setTimeout(()=>{ v.src=pexels(land[Math.floor(Math.random()*land.length)]); v.play().catch(()=>{}); },400); v.onplaying=()=>v.classList.add("on"); } else { v.pause(); v.removeAttribute("src"); } } }
+  const land=(VID[p.id]||[]).filter(x=>/_1920_1080_/.test(x)===(innerWidth>innerHeight));
+  const useV=v&&SET.video&&land.length&&!matchMedia("(prefers-reduced-motion:reduce)").matches;
+  const show=url=>{ on.style.backgroundImage=url; on.classList.remove("kb"); void on.offsetWidth; on.classList.add("on","kb"); off.classList.remove("on"); setTimeout(()=>{ if(!off.classList.contains("on")) off.classList.remove("kb"); },1800);
+    const cap=$("#hcap"); if(cap){ cap.textContent=pN(p)+" · "+pCountry(p); cap.onclick=()=>openPlace(p.id); cap.style.cursor="pointer"; } };
+  const swapVideo=()=>{ if(!v) return; if(!useV){ if(v.classList.contains("on")){ v.classList.remove("on"); setTimeout(()=>{ if(!v.classList.contains("on")){ v.pause(); v.removeAttribute("src"); } },1300); } return; }
+    const go=()=>{ v.onplaying=()=>{ v.classList.add("on"); }; v.src=pexels(land[Math.floor(Math.random()*land.length)]); v.play().catch(()=>{}); };
+    if(v.classList.contains("on")){ v.classList.remove("on"); setTimeout(go,1250); } else go(); };
+  const u=huge(p.img); const im=new Image(); im.decoding="async";
+  im.onload=()=>{ show(`url("${u}")`); swapVideo(); }; im.onerror=()=>{ show(`url("${big(p.img)}"), ${grad(p)}`); swapVideo(); }; im.src=u; }
 function heroSearch(q){ q=(q||"").trim(); X.q=q; X.tag="all"; X.reg="all"; go("explore"); }
 function renderHomeSite(){ setTimeout(fillAIPicks,0);
   const H=$("#home"), C=CAT(), R=REGN(), PR=PER(), N=PLACES.filter(p=>!p.dyn||p.cat).length;
@@ -1123,6 +1313,7 @@ function renderHomeSite(){ setTimeout(fillAIPicks,0);
    <div class="cats">${cats}</div>
    <div class="sec"><div><span class="slabel">${catIcon("wonder")}${clean(t("won_chip"))}</span><h2>${t("won_h")}</h2><small>${t("won_sub")}</small></div><span onclick="X.tag='wonder';X.q='';X.reg='all';go('explore')">${t("all")} →</span></div>
    <div id="wond">${wondersHTML()}</div>
+   ${recsHTML()}
    <div class="sec"><div><span class="slabel">${t("for_you_f")}</span><h2>${t("best_h")}</h2></div><span onclick="go('explore')">${t("all")} →</span></div>
    <div class="grid2">${list.filter(p=>p.id!==hero.id).slice(7,19).map(gcard).join("")}</div>
    <div class="sec"><div><span class="slabel">${catIcon("globe")}OLAM</span><h2>${clean(t("world_h"))}</h2><small>${t("world_sub")}</small></div><span onclick="go('explore');setTimeout(()=>$('#xq')?.focus(),60)">${t("search_b")} →</span></div>
