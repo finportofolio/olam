@@ -1460,16 +1460,18 @@ const LIFEG={ld:{},counts:{},total:0};
 async function lifeGroup(g){ if(!LIFE||LIFEG.ld[g]) return; LIFEG.ld[g]=1; const lang=catLang();
   try{ let r=await fetch(`assets/catalog/${COLDATA}/${lang}/${g}.json`); if(!r.ok&&lang!=="en") r=await fetch(`assets/catalog/${COLDATA}/en/${g}.json`); if(!r.ok) return; const d=await r.json(); if(lang!==catLang()) return; lifeAdd(d.items||[],lang); refresh(); }catch(e){ LIFEG.ld[g]=0; } }
 function lifeAdd(items,lang){ const have=new Set(PLACES.filter(p=>p.animal&&!p.dyn).map(p=>p.nt.toLowerCase()));
-  for(const [qid,grp,label,en,loc,desc,file,sl,logo] of items){ if(!GRPS.includes(grp)) continue; const id="q"+qid; if(IDX[id]||(en&&have.has(en.toLowerCase()))) continue;
+  for(let [qid,grp,label,en,loc,desc,file,sl,logo] of items){ if(!GRPS.includes(grp)) continue; const id="q"+qid; if(IDX[id]||(en&&have.has(en.toLowerCase()))) continue;
     const wl=loc?lang:"en", title=loc||en;
+    if(/^[A-Z][a-z]+ [a-z]+$/.test(label)&&en&&!/^[A-Z][a-z]+ [a-z]+$/.test(en)) label=en.replace(/\s*\(.*?\)\s*/g,"");   // lotincha nom o'rniga tushunarli nom
     const p={id,t:(en||label).replace(/ /g,"_"),nt:en||label,q:en||label,n:LANG==="uzk"?cyr(label):label,c:"",cc:"",reg:"",tags:["hayvon"],grp,best:"—",s:desc?desc.charAt(0).toUpperCase()+desc.slice(1):"",g:PAL2[hash(id)%PAL2.length],animal:1,dyn:1,wd:1,keep:0,wl,sl,see:[],
       img:file?"https://commons.wikimedia.org/wiki/Special:FilePath/"+encodeURIComponent(file.replace(/ /g,"_"))+"?width=960":undefined,logo:logo?1:0,person:COL==="odam"?1:0,wt:{en,[lang]:loc||undefined},wurl:title?`https://${wl}.wikipedia.org/wiki/`+encodeURIComponent(title.replace(/ /g,"_")):""};
     PLACES.push(p); IDX[id]=p; } }
 async function lifeLoad(){ if(!LIFE) return; const lang=catLang(); try{ let r=await fetch(`assets/catalog/${COLDATA}/${lang}.json`); if(!r.ok&&lang!=="en") r=await fetch(`assets/catalog/${COLDATA}/en.json`); if(!r.ok) return; const d=await r.json(); if(lang!==catLang()) return;
   LIFEG.ld={}; LIFEG.counts=Object.fromEntries(Object.entries(d.counts||{}).filter(([g])=>GRPS.includes(g))); LIFEG.total=Object.values(LIFEG.counts).reduce((a,b)=>a+b,0)||d.total||0; lifeAdd(d.items||[],lang); refresh(); tryQP(); return;
   const have=new Set(PLACES.filter(p=>p.animal).map(p=>p.nt.toLowerCase()));
-  for(const [qid,grp,label,en,loc,desc,file,sl] of d.items||[]){ const id="q"+qid; if(IDX[id]||(en&&have.has(en.toLowerCase()))) continue;
+  for(let [qid,grp,label,en,loc,desc,file,sl] of d.items||[]){ const id="q"+qid; if(IDX[id]||(en&&have.has(en.toLowerCase()))) continue;
     const wl=loc?lang:"en", title=loc||en;
+    if(/^[A-Z][a-z]+ [a-z]+$/.test(label)&&en&&!/^[A-Z][a-z]+ [a-z]+$/.test(en)) label=en.replace(/\s*\(.*?\)\s*/g,"");   // lotincha nom o'rniga tushunarli nom
     const p={id,t:(en||label).replace(/ /g,"_"),nt:en||label,q:en||label,n:LANG==="uzk"?cyr(label):label,c:"",cc:"",reg:"",tags:["hayvon"],grp,best:"—",s:desc?desc.charAt(0).toUpperCase()+desc.slice(1):"",g:PAL2[hash(id)%PAL2.length],animal:1,dyn:1,wd:1,keep:0,wl,sl,see:[],
       img:"https://commons.wikimedia.org/wiki/Special:FilePath/"+encodeURIComponent(file.replace(/ /g,"_"))+"?width=960",wt:{en,[lang]:loc||undefined},wurl:title?`https://${wl}.wikipedia.org/wiki/`+encodeURIComponent(title.replace(/ /g,"_")):""};
     PLACES.push(p); IDX[id]=p; } refresh(); }catch(e){} }
