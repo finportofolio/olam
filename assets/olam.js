@@ -656,9 +656,9 @@ const matchX=p=>LIFE?(X.tag==="all"||p.grp===X.tag):(X.tag==="all"||(X.tag==="wo
 function renderExplore(){
   const C=CAT(), R=REGN();
   if(LIFE){ const all=PLACES.filter(p=>p.animal);
-    $("#explore").innerHTML=`<div class="xhead"><h1>${t("exp_h")}</h1><label class="search">${ICON.search}<input id="xq" placeholder="${esc(t("life_ph"))}" value="${esc(X.q)}" oninput="X.q=this.value;renderMas()"></label></div>
-     <div class="chips"><button class="chip ${X.tag==="all"?"on":""}" onclick="X.tag='all';renderExplore()">${t("all")} · ${all.length}</button>${GRPS.filter(g=>all.some(p=>p.grp===g)).map(g=>`<button class="chip ${X.tag===g?"on":""}" onclick="X.tag='${g}';renderExplore()">${t("g_"+g)} · ${all.filter(p=>p.grp===g).length}</button>`).join("")}</div>
-     <div id="mas"></div><div id="wres"></div><div class="foot"></div>`; renderMas(); return; }
+    $("#explore").innerHTML=`<div class="xhead"><h1>${t("exp_h")}</h1><label class="search">${ICON.search}<input id="xq" placeholder="${esc(t("life_ph"))}" value="${esc(X.q)}" oninput="X.q=this.value;renderMas();if(this.value.trim().length>=2)GRPS.forEach(lifeGroup)"></label></div>
+     <div class="chips"><button class="chip ${X.tag==="all"?"on":""}" onclick="X.tag='all';renderExplore()">${t("all")} · ${Math.max(all.length,LIFEG.total||0)}</button>${GRPS.filter(g=>all.some(p=>p.grp===g)||LIFEG.counts[g]).map(g=>`<button class="chip ${X.tag===g?"on":""}" onclick="X.tag='${g}';renderExplore()">${t("g_"+g)} · ${Math.max(all.filter(p=>p.grp===g).length,LIFEG.counts[g]||0)}</button>`).join("")}</div>
+     <div id="mas"></div><div id="wres"></div><div class="foot"></div>`; renderMas(); if(X.tag!=="all") lifeGroup(X.tag); return; }
   $("#explore").innerHTML=`<div class="xhead"><div class="row" style="justify-content:space-between;align-items:center;margin-bottom:14px"><h1 style="margin:0">${t("exp_h")}</h1><div class="row"><button class="pill o2" onclick="openCats()" aria-label="${esc(t("cats_all"))}">${ICON.filter}</button><button class="pill g" onclick="openAdd()">＋</button></div></div><label class="search">${ICON.search}<input id="xq" placeholder="${esc(t("exp_ph"))}" value="${esc(X.q)}" oninput="X.q=this.value;renderMas()"></label></div>
    <div class="chips"><button class="chip ${X.tag==="all"?"on":""}" onclick="X.tag='all';renderExplore()">${t("all")}</button><button class="chip ${X.tag==="wonder"?"on":""}" onclick="X.tag='wonder';renderExplore()">${t("won_chip")}</button>${TAGS.map(k=>`<button class="chip ${X.tag===k?"on":""}" onclick="X.tag='${k}';renderExplore()">${C[k]}</button>`).join("")}</div>
    <div class="chips" style="padding-top:0"><button class="chip ${X.reg==="all"?"on":""}" onclick="X.reg='all';renderExplore()">${t("whole")}</button>${REGS.map(k=>`<button class="chip ${X.reg===k?"on":""}" onclick="X.reg='${k}';renderExplore()">${R[k]}</button>`).join("")}</div>
@@ -1400,10 +1400,20 @@ function animalsRow(){ return ""; const l=PLACES.filter(p=>p.animal&&p.img); if(
 function openAnimals(g){ const O=ensureCtryView(); if(!O.classList.contains("on")) O.scrollTop=0; O.classList.add("on"); CT.code="__an"; if(g) AN.g=g;
   const all=PLACES.filter(p=>p.animal), l=AN.g==="all"?all:all.filter(p=>p.grp===AN.g);
   O.innerHTML=`<button class="ovx" onclick="closeCountry()">${ICON.down}</button><div class="seth"><h1>${t("an_h")}</h1><p class="sp">${t("an_sub")} · ${all.length}</p></div>
-   <div class="chips" style="padding:4px 0 14px"><button class="chip ${AN.g==="all"?"on":""}" onclick="AN.n=60;openAnimals('all')">${t("all")} · ${all.length}</button>${GRPS.filter(g=>all.some(p=>p.grp===g)).map(g=>`<button class="chip ${AN.g===g?"on":""}" onclick="AN.n=60;openAnimals('${g}')">${t("g_"+g)} · ${all.filter(p=>p.grp===g).length}</button>`).join("")}</div>
+   <div class="chips" style="padding:4px 0 14px"><button class="chip ${AN.g==="all"?"on":""}" onclick="AN.n=60;openAnimals('all')">${t("all")} · ${all.length}</button>${GRPS.filter(g=>all.some(p=>p.grp===g)||LIFEG.counts[g]).map(g=>`<button class="chip ${AN.g===g?"on":""}" onclick="AN.n=60;openAnimals('${g}')">${t("g_"+g)} · ${all.filter(p=>p.grp===g).length}</button>`).join("")}</div>
    <div class="grid2" style="padding:0">${l.slice(0,AN.n).map(gcard).join("")}</div>${l.length>AN.n?`<button class="pill o2 wide" style="margin-top:16px" onclick="AN.n+=60;openAnimals()">${t("ctry_more")} · ${l.length-AN.n}</button>`:""}<div class="foot"></div>`; }
 // GitHub'da yig'ilgan minglab turlar (assets/catalog/life/<til>.json)
+const LIFEG={ld:{},counts:{},total:0};
+async function lifeGroup(g){ if(!LIFE||LIFEG.ld[g]) return; LIFEG.ld[g]=1; const lang=catLang();
+  try{ let r=await fetch(`assets/catalog/life/${lang}/${g}.json`); if(!r.ok&&lang!=="en") r=await fetch(`assets/catalog/life/en/${g}.json`); if(!r.ok) return; const d=await r.json(); if(lang!==catLang()) return; lifeAdd(d.items||[],lang); refresh(); }catch(e){ LIFEG.ld[g]=0; } }
+function lifeAdd(items,lang){ const have=new Set(PLACES.filter(p=>p.animal&&!p.dyn).map(p=>p.nt.toLowerCase()));
+  for(const [qid,grp,label,en,loc,desc,file,sl] of items){ const id="q"+qid; if(IDX[id]||(en&&have.has(en.toLowerCase()))) continue;
+    const wl=loc?lang:"en", title=loc||en;
+    const p={id,t:(en||label).replace(/ /g,"_"),nt:en||label,q:en||label,n:LANG==="uzk"?cyr(label):label,c:"",cc:"",reg:"",tags:["hayvon"],grp,best:"—",s:desc?desc.charAt(0).toUpperCase()+desc.slice(1):"",g:PAL2[hash(id)%PAL2.length],animal:1,dyn:1,wd:1,keep:0,wl,sl,see:[],
+      img:"https://commons.wikimedia.org/wiki/Special:FilePath/"+encodeURIComponent(file.replace(/ /g,"_"))+"?width=960",wt:{en,[lang]:loc||undefined},wurl:title?`https://${wl}.wikipedia.org/wiki/`+encodeURIComponent(title.replace(/ /g,"_")):""};
+    PLACES.push(p); IDX[id]=p; } }
 async function lifeLoad(){ if(!LIFE) return; const lang=catLang(); try{ let r=await fetch("assets/catalog/life/"+lang+".json"); if(!r.ok&&lang!=="en") r=await fetch("assets/catalog/life/en.json"); if(!r.ok) return; const d=await r.json(); if(lang!==catLang()) return;
+  LIFEG.ld={}; LIFEG.counts=d.counts||{}; LIFEG.total=d.total||0; lifeAdd(d.items||[],lang); refresh(); return;
   const have=new Set(PLACES.filter(p=>p.animal).map(p=>p.nt.toLowerCase()));
   for(const [qid,grp,label,en,loc,desc,file,sl] of d.items||[]){ const id="q"+qid; if(IDX[id]||(en&&have.has(en.toLowerCase()))) continue;
     const wl=loc?lang:"en", title=loc||en;
@@ -1416,9 +1426,9 @@ setTimeout(lifeLoad,1500);
 function grpCover(g){ const l=PLACES.filter(p=>p.animal&&p.grp===g&&p.img); return l.sort((a,b)=>(b.sl||99)-(a.sl||99))[0]||PLACES.find(p=>p.animal&&p.grp===g); }
 function renderLife(){
   const H=$("#home"), all=PLACES.filter(p=>p.animal), list=forYou(), d=dailyPlace(), name=esc(U?.name||t("friend"));
-  const groups=GRPS.filter(g=>all.some(p=>p.grp===g));
+  const groups=GRPS.filter(g=>all.some(p=>p.grp===g)||LIFEG.counts[g]);
   const chips=groups.map(g=>{ const p=grpCover(g); return p?`<button class="dchip" onclick="X.tag='${g}';X.q='';go('explore')">${ph(p)}<span>${t("g_"+g)}</span></button>`:""; }).join("");
-  const rows=groups.map(g=>{ const l=list.filter(p=>p.grp===g&&p.img).slice(0,14); return l.length>=3?`<div class="sec"><h2>${t("g_"+g)}<small>${all.filter(p=>p.grp===g).length} ${t("life_n")}</small></h2><span onclick="X.tag='${g}';X.q='';go('explore')">${t("all")}</span></div><div class="hs">${l.map(p=>cardH(p)).join("")}</div>`:""; }).join("");
+  const rows=groups.map(g=>{ const l=list.filter(p=>p.grp===g&&p.img).slice(0,14); return l.length>=3?`<div class="sec"><h2>${t("g_"+g)}<small>${Math.max(all.filter(p=>p.grp===g).length,LIFEG.counts[g]||0)} ${t("life_n")}</small></h2><span onclick="X.tag='${g}';X.q='';go('explore')">${t("all")}</span></div><div class="hs">${l.map(p=>cardH(p)).join("")}</div>`:""; }).join("");
   const top=list.filter(p=>p.img).slice(0,12);
   const dayCard=d?`<div class="feat ph" style="background:${grad(d)}" onclick="openPlace('${d.id}')">${d.img?`<img src="${hq(d.img)}" alt="" onerror="this.src='${big(d.img)}';this.onerror=null">`:""}<div class="badge">${t("life_day")}</div>
      <div class="fi"><h1>${esc(pN(d))}</h1><p>${esc(pS(d)||grpName(d))}</p><div class="row"><button class="pill g" onclick="event.stopPropagation();openPlace('${d.id}')">${t("details")}</button><button class="pill o" onclick="event.stopPropagation();openArticle('${d.id}')">${t("art_btn")}</button></div></div></div>`:"";
@@ -1430,10 +1440,10 @@ function renderLife(){
           <div class="hbtns"><button class="hbtn" onclick="go('watch')">${t("watch_now")}<span class="arw">${ICON.arrow}</span></button><button class="hbtn gl" onclick="openQuiz()">${t("quiz_h")}</button></div></div>
          <div class="hpanel"><form class="hsearch" onsubmit="event.preventDefault();X.q=this.q.value;X.tag='all';go('explore')">${ICON.search}<input name="q" placeholder="${esc(t("life_ph"))}" autocomplete="off"><button>${t("search_b")}</button></form>
           <div class="hchips">${groups.slice(0,8).map(g=>`<button onclick="X.tag='${g}';X.q='';go('explore')">${t("g_"+g)}</button>`).join("")}</div></div></div>
-        <div class="hfoot"><div class="hstat"><i>${CATI.zoo?SV(CATI.zoo):""}</i><b id="hN">${all.length}+</b><small>${t("life_n")}</small></div><div class="hstat"><i>${SV(CATI.tabiat)}</i><b>${groups.length}</b><small>${t("life_g")}</small></div><div class="hstat"><i>${ICON.spark}</i><b>AI</b><small>${t("t_ai")}</small></div>
+        <div class="hfoot"><div class="hstat"><i>${CATI.zoo?SV(CATI.zoo):""}</i><b id="hN">${Math.max(all.length,LIFEG.total||0)}+</b><small>${t("life_n")}</small></div><div class="hstat"><i>${SV(CATI.tabiat)}</i><b>${groups.length}</b><small>${t("life_g")}</small></div><div class="hstat"><i>${ICON.spark}</i><b>AI</b><small>${t("t_ai")}</small></div>
          ${d?`<div class="hday" onclick="openPlace('${d.id}')"><div><small>${t("life_day")}</small><b>${esc(pN(d))}</b></div><span class="arw">${ICON.arrow}</span></div>`:""}</div></section><div id="hbody"></div>`;
       HB.pool=null; clearInterval(HB.timer); heroNext(); HB.timer=setInterval(()=>{ if(!document.hidden) heroNext(); },10000); }
-    $("#hN")&&($("#hN").textContent=all.length+"+");
+    $("#hN")&&($("#hN").textContent=Math.max(all.length,LIFEG.total||0)+"+");
     $("#hbody").innerHTML=`<div class="sec"><div><span class="slabel">${t("life_g")}</span><h2>${t("life_sub2")}</h2></div></div><div class="dchips">${chips}</div>
       <div class="sec"><div><span class="slabel">${t("life_day")}</span><h2>${d?esc(pN(d)):""}</h2></div></div><div class="sfeat"><div style="grid-column:1/-1">${dayCard}</div></div>
       ${recsHTML()}<div class="sec"><div><span class="slabel">${t("for_you_f")}</span><h2>${t("best_h")}</h2></div><span onclick="X.tag='all';go('explore')">${t("all")} →</span></div><div class="grid2">${top.map(gcard).join("")}</div>
