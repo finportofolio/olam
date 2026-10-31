@@ -2,7 +2,7 @@
 // Har bir mustaqil davlatdan diqqatga sazovor joylar (turi bo'yicha + barcha meros obyektlari) Wikidata'dan olinadi.
 // Oldingi natija saqlanadi va ustiga qo'shiladi; vaqt tugasa davomi keyingi ishda (MORE_FILE).
 // Natija: assets/catalog/<til>.json (bosh ro'yxat) va assets/catalog/c/<ISO>.json (davlat sahifasi, 9 tilda)
-import { existsSync, mkdirSync } from "node:fs";
+import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { LANGS, EN, sparql, qidOfUri, fileOf, fetchMeta, GONE, readJSON, writeJSON, unpackMeta, packMeta, more, elapsed, mins, sleep, hash, BUDGET, FRESH } from "./lib.mjs";
 const DIR = "assets/catalog";
 
@@ -12,7 +12,8 @@ const COMMON = ["Q16970", "Q44539", "Q12280", "Q22698", "Q27686", "Q11315", "Q10
 const POP = new Set(["UZ", "KZ", "KG", "TJ", "TM", "TR", "AE", "SA", "AZ", "GE", "AM", "RU", "CN", "JP", "KR", "IN", "TH", "VN", "ID", "MY", "SG", "PH", "NP", "LK", "MV", "PK", "IR", "JO", "OM", "QA", "MN", "KH", "LA", "BT", "EG", "MA", "TN", "ZA", "KE", "TZ", "FR", "IT", "ES", "DE", "GB", "PT", "GR", "NL", "CH", "AT", "CZ", "PL", "HU", "HR", "NO", "SE", "FI", "DK", "IS", "IE", "BE", "UA", "US", "CA", "MX", "CU", "BR", "AR", "PE", "CL", "CO", "EC", "BO", "AU", "NZ"]);             // asosiy sayyohlik davlatlari
 const BIG = new Set(["FR", "IT", "ES", "DE", "GB", "US", "RU", "CN", "JP", "IN", "PL", "CZ", "AT", "CH", "NL", "BE", "PT", "GR", "SE", "NO", "FI", "DK", "CA", "BR", "MX", "AU", "UA", "HU", "TR", "IR"]);             // juda katta davlatlar
 const BADIMG = /logo|map|plan\b|flag|coat_of|seal|sign|stamp|scheme|diagram|satellite|satview|nasa|esa\d|location|route|montage|collage|locator|emblem/i;
-const FULL = iso => POP.has(iso) ? (BIG.has(iso) ? 20000 : 12000) : 5000;   // davlat sahifasi
+const FULL = iso => POP.has(iso) ? (BIG.has(iso) ? 60000 : 25000) : 8000;   // davlat sahifasi
+const PART = 5000;                                                            // davlat sahifasi fayli bo'lagi
 const TOP  = iso => POP.has(iso) ? (BIG.has(iso) ? 120 : 80) : 20;           // bosh ro'yxat
 const HMIN = iso => BIG.has(iso) ? 3 : POP.has(iso) ? 2 : 1;                 // meros obyektlari uchun min. sitelinks
 
@@ -35,7 +36,8 @@ console.log("davlatlar:", countries.length);
 // 0) oldingi natija: c/<ISO>.json → qatorlar va nomlar
 const byC = {}, meta = {};   // byC[iso] = [[qid,file,lat,lon,cls,sl,reg], ...]
 if(!FRESH) for(const [iso] of countries){ const d = readJSON(`${DIR}/c/${iso}.json`); if(!d) continue;
-  byC[iso] = (d.items||[]).map(([qid,file,lat,lon,cls,sl,reg,l,de,w]) => { meta[qid] = unpackMeta(l, de, w); return [qid,file,lat,lon,cls,sl,reg]; }); }
+  let rows = d.items || []; for(let p = 2; p <= (d.parts||1); p++) rows = rows.concat(readJSON(`${DIR}/c/${iso}.${p}.json`)?.items || []);
+  byC[iso] = rows.map(([qid,file,lat,lon,cls,sl,reg,l,de,w]) => { meta[qid] = unpackMeta(l, de, w); return [qid,file,lat,lon,cls,sl,reg]; }); }
 for(const [iso, rows] of Object.entries(st.pend)){ const have = new Set((byC[iso]||[]).map(x => x[0])); byC[iso] = [...(byC[iso]||[]), ...rows.filter(x => !have.has(x[0]))]; }
 console.log("oldingi joylar:", Object.values(byC).reduce((a,l) => a+l.length, 0));
 
@@ -117,7 +119,9 @@ for(const [iso, list] of Object.entries(byC)){
   const rows = list.filter(x => meta[x[0]] && meta[x[0]].l.some(Boolean)).map(x => [...x, ...packMeta(meta[x[0]])]);
   const p = list.filter(x => !meta[x[0]] && !GONE.has(x[0])); if(p.length) pend[iso] = p;
   full += rows.length;
-  if(rows.length || !existsSync(`${DIR}/c/${iso}.json`)) writeJSON(`${DIR}/c/${iso}.json`, { v: 3, langs: LANGS, items: rows });
+  if(rows.length || !existsSync(`${DIR}/c/${iso}.json`)){ const n = Math.max(1, Math.ceil(rows.length/PART));
+    for(let p = 0; p < n; p++) writeJSON(`${DIR}/c/${iso}${p ? "."+(p+1) : ""}.json`, { v: 3, langs: LANGS, part: p+1, parts: n, total: rows.length, items: rows.slice(p*PART, (p+1)*PART) });
+    for(let p = n+1; existsSync(`${DIR}/c/${iso}.${p}.json`); p++) rmSync(`${DIR}/c/${iso}.${p}.json`); }
 }
 for(const [li, lang] of LANGS.entries()){
   const out = [];
