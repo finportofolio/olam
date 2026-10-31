@@ -33,7 +33,8 @@ jobs:
       - name: Build knowledge catalog
         run: node scripts/build-bilim.mjs
       - name: Check output
-        run: node -e 'const d=require("./assets/catalog/bilim/en.json"); if(d.items.length<500){ console.error("too few: "+d.items.length); process.exit(1); } console.log("items:", d.total)'
+        run: |
+          node -e 'const d=require("./assets/catalog/bilim/en.json"); if(d.items.length<500){ console.error("too few: "+d.items.length); process.exit(1); } console.log("items:", d.total)'
       - name: Commit catalog
         run: |
           git config user.name "github-actions[bot]"
