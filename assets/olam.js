@@ -221,6 +221,9 @@ async function dailyNotify(force){ try{ if(!SET.notif||Notification.permission!=
   if(reg) reg.showNotification(t("daily"),{body,icon:"icon-192.png",badge:"icon-192.png",tag:"daily",data:{id:p.id}}); else new Notification(t("daily"),{body}); }catch(e){} }
 if("serviceWorker" in navigator&&location.protocol==="https:"){ navigator.serviceWorker.register("sw.js").catch(()=>{}); navigator.serviceWorker.addEventListener?.("message",e=>{ if(e.data?.open&&byId(e.data.open)) openPlace(e.data.open); }); }
 const QP=new URLSearchParams(location.search).get("p");
+const BASE_TITLE=document.title; let QPdone=false;
+function tryQP(){ if(QP&&!QPdone&&byId(QP)){ QPdone=true; openPlace(QP); } }
+function placeUrl(id){ return location.origin+location.pathname+"?p="+encodeURIComponent(id); }
 window.addEventListener("offline",()=>toast(t("offline")));
 
 /* ===== Izohlar (videolar va joylar uchun) ===== */
@@ -810,7 +813,7 @@ document.addEventListener("visibilitychange",()=>{ if(document.hidden&&cur==="wa
 
 /* ================= JOY SAHIFASI ================= */
 async function openPlace(id){
-  const p=byId(id), DD=$("#detail"); if(!p) return; dynKeep(p); learn(id,1); if(PDW&&PDW.id!==id){ const dt=(Date.now()-PDW.t)/1000; learn(PDW.id,dt>90?3:dt>30?1.5:dt>12?0.5:0); } PDW={id,t:Date.now()};
+  const p=byId(id), DD=$("#detail"); if(!p) return; dynKeep(p); learn(id,1); document.title=pN(p)+" — "+(LIFE?t("life_brand"):"OLAM"); try{ history.replaceState(null,"",placeUrl(id)); }catch(e){} if(PDW&&PDW.id!==id){ const dt=(Date.now()-PDW.t)/1000; learn(PDW.id,dt>90?3:dt>30?1.5:dt>12?0.5:0); } PDW={id,t:Date.now()};
   if(cur==="watch"&&!W.paused) wPause();
   const others=p.animal?shuffle(PLACES.filter(x=>x.animal&&x.id!==id&&x.grp===p.grp&&x.img)).slice(0,10):PLACES.filter(x=>x.id!==id&&(!x.dyn||x.keep)&&!x.animal).map(x=>({x,s:x.tags.filter(y=>p.tags.includes(y)).length*2+(x.reg===p.reg?1:0)+score(x)/10})).sort((a,b)=>b.s-a.s).slice(0,10).map(o=>o.x);
   const C=CAT(), R=REGN(), WN=tl("won"), desc=pDesc(p);
@@ -829,6 +832,7 @@ async function openPlace(id){
      <button class="pill o2" style="width:100%;margin-top:8px" onclick="openComments('${p.id}')">${ICON.chat}<span>${clean(t("cm_btn"))}</span></button>
      ${p.animal?"":`<div class="aibar">${tl("aiq").map((q,i)=>`<button onclick="aiAsk('${p.id}',${i})">${ICON.spark}${esc(clean(q[0]))}</button>`).join("")}</div>`}
      <div class="tagline">${esc(pS(p))}</div>
+     <div id="ptours"></div>
      <div class="hook" id="phook"><div class="artsk"><i></i><i></i><i></i></div></div>
      ${p.animal?"":`     <div class="facts"><div>${t("best_time")}<b>${bestTxt(p.best)}</b></div><div>${t("from_you")}<b>${km(dist(p))}</b></div><div>${t("region")}<b>${clean(R[p.reg])}</b></div></div>
      <div class="sgrp wxb" id="wx"><div class="sl">\${t("wx_h")}</div><div class="sp">…</div></div><div class="sgrp" id="fx"></div>
@@ -846,7 +850,7 @@ async function openPlace(id){
    ${others.map(o=>{ const s=pS(o); return `<div class="rec" onclick="openPlace('${o.id}')">${ph(o)}<div><b>${esc(pN(o))}</b><small>${esc(pCountry(o))}<br>${esc(s.length>60?s.slice(0,58)+"…":s)}</small></div></div>`; }).join("")}
    <div class="foot"></div>`;
   DD.classList.add("on"); DD.scrollTop=0;
-  if(!desc) fillDesc(p); loadWx(p); loadFx(p); placeSoundStart(p); loadFacts(p); loadMore(p); loadHook(p);
+  if(!desc) fillDesc(p); loadWx(p); loadFx(p); placeSoundStart(p); loadFacts(p); loadMore(p); loadHook(p); loadTours(p);
   galBuild(p);
 }
 /* ===== Galereya: 1-video → rasmlar → qolgan videolar; avtomatik, silliq, strelka/nuqta/surish ===== */
@@ -943,6 +947,17 @@ async function artGuide(p){ const key=p.id+"|"+LANG; const A=ART[key]||{}; if(A.
 function artGuideRender(g){ const box=$("#artg"); if(!box) return; const parts=String(g).split(/^##\s*/m).map(x=>x.trim()).filter(Boolean);
   box.innerHTML=`<div class="artgd"><h2>${t("art_guide")}</h2>${parts.map(x=>{ const [h,...r]=x.split("\n"); return r.length?`<h3>${esc(h.replace(/[*#]/g,""))}</h3>${r.join("\n").split(/\n+/).filter(Boolean).map(q=>`<p>${esc(q.replace(/\*\*/g,"").replace(/^[-*]\s*/,"• "))}</p>`).join("")}`:`<p>${esc(h)}</p>`; }).join("")}<p class="sp">${t("art_ai")}</p></div>`; }
 document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&$("#artv")?.classList.contains("on")) closeArticle(); });
+
+/* ===== Hamkor turagentliklar: "Bu yerga turlar" (assets/partners.json) ===== */
+let PARTNERS=null;
+async function partners(){ if(PARTNERS) return PARTNERS; try{ const r=await fetch("assets/partners.json",{cache:"no-cache"}); PARTNERS=(await r.json()).agencies||[]; }catch(e){ PARTNERS=[]; } return PARTNERS; }
+async function loadTours(p){ if(LIFE||p.animal) return; const ag=await partners(); if(!ag.length||!stillOpen(p)) return;
+  const cc=(p.cc||"").split("/").filter(Boolean); const hit=x=>(x.for||[]).some(f=>f===p.id||cc.includes(f)||p.tags.includes(f));
+  const list=[]; ag.forEach(a=>(a.tours||[]).filter(hit).forEach(tr=>list.push([a,tr]))); if(!list.length) return;
+  const msg=tr=>encodeURIComponent(t("tour_msg",{t:tr.title})); const box=$("#ptours"); if(!box) return;
+  box.innerHTML=`<div class="sl" style="margin-top:18px">${catIcon("globe")} ${t("tour_h")}</div><div class="tours">${list.slice(0,6).map(([a,tr])=>`<div class="tour"><div class="tourh"><b>${esc(tr.title)}</b><span class="hb">${t("tour_partner")}</span></div>
+     <small>${esc(a.name)}${tr.days?` · ${t("tour_days",{n:tr.days})}`:""}${tr.price?` · <b>${esc(tr.price)}</b>`:""}</small>
+     <div class="row">${a.telegram?`<a class="pill g" target="_blank" rel="noopener" href="https://t.me/${encodeURIComponent(a.telegram)}?text=${msg(tr)}" onclick="learn('${p.id}',1)">Telegram</a>`:""}${a.whatsapp?`<a class="pill o2" target="_blank" rel="noopener" href="https://wa.me/${encodeURIComponent(a.whatsapp)}?text=${msg(tr)}">WhatsApp</a>`:""}${a.phone?`<a class="pill o2" href="tel:${esc(a.phone)}">${esc(a.phone)}</a>`:""}</div></div>`).join("")}</div>`; }
 
 /* ===== Qiziqtiruvchi blok: nega kelishadi, qachon, bilasizmi, tarix sanalarda ===== */
 const HOOK={};
@@ -1044,7 +1059,7 @@ async function fillDesc(p){
   const el=$("#pdesc"); if(el&&$("#detail").classList.contains("on")&&$("#detail h1")?.textContent===pN(p)) el.textContent=txt;
 }
 let PDW=null;
-function closePlace(){ const D=$("#detail"); if(!D.classList.contains("on")) return; D.classList.remove("on"); galStop(); if(TTSA){ TTSA.pause(); TTSA=null; ttsOff(); } if(PDW){ const dt=(Date.now()-PDW.t)/1000; learn(PDW.id,dt>90?3:dt>30?1.5:dt>12?0.5:dt<4?-0.6:0); PDW=null; } if(cur!=="watch"){ mPause(); ambStop(); } }
+function closePlace(){ const D=$("#detail"); if(!D.classList.contains("on")) return; D.classList.remove("on"); document.title=BASE_TITLE; try{ history.replaceState(null,"",location.pathname); }catch(e){} galStop(); if(TTSA){ TTSA.pause(); TTSA=null; ttsOff(); } if(PDW){ const dt=(Date.now()-PDW.t)/1000; learn(PDW.id,dt>90?3:dt>30?1.5:dt>12?0.5:dt<4?-0.6:0); PDW=null; } if(cur!=="watch"){ mPause(); ambStop(); } }
 
 /* ================= OLAM GID (AI chat) ================= */
 const GID_URL="https://olam-gid.behruzbekhasanboyev31.workers.dev";
@@ -1254,7 +1269,7 @@ function go(v,arg){
 }
 function save(id){ saved.has(id)?saved.delete(id):(saved.add(id),learn(id,4)); keep(); toast(saved.has(id)?t("added"):t("removed")); }
 async function share(id){ const p=byId(id), text=t("share_t",{p:pN(p),c:pCountry(p),s:pS(p)});
-  try{ if(navigator.share){ await navigator.share({title:pN(p),text,url:location.href.split("#")[0]}); return; } await navigator.clipboard.writeText(text); toast(t("copied")); }catch(e){} }
+  const url=placeUrl(id); try{ if(navigator.share){ await navigator.share({title:pN(p),text,url}); return; } await navigator.clipboard.writeText(text+"\n"+url); toast(t("copied")); }catch(e){} }
 function toast(x){ const el=$("#toast"); el.textContent=x; el.classList.add("on"); clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove("on"),2000); }
 
 /* ================= DAVLATLAR (Wikidata — har bir davlatdagi barcha diqqatga sazovor joylar) ================= */
@@ -1362,7 +1377,7 @@ async function catLoad(){
       if(Array.isArray(d.countries)&&d.countries.length){ const known=new Set(CTRY.map(x=>x[0])); ALLC=[...CTRY,...d.countries.filter(x=>!known.has(x[0]))]; }
       (d.items||[]).forEach(c=>{ if(!catDup(c)) mkPlace(c,lang,true); }); } }
   }catch(e){}
-  WC.busy=false; WC.n=PLACES.filter(p=>p.cat).length; refresh(); catUI();
+  WC.busy=false; WC.n=PLACES.filter(p=>p.cat).length; refresh(); catUI(); tryQP();
 }
 // avvalgi versiya qurilmaga yozgan katalogni tozalash
 try{ idb().then(db=>{ try{ db.transaction("kv","readwrite").objectStore("kv").clear(); }catch(e){} }).catch(()=>{}); }catch(e){}
@@ -1413,7 +1428,7 @@ function lifeAdd(items,lang){ const have=new Set(PLACES.filter(p=>p.animal&&!p.d
       img:"https://commons.wikimedia.org/wiki/Special:FilePath/"+encodeURIComponent(file.replace(/ /g,"_"))+"?width=960",wt:{en,[lang]:loc||undefined},wurl:title?`https://${wl}.wikipedia.org/wiki/`+encodeURIComponent(title.replace(/ /g,"_")):""};
     PLACES.push(p); IDX[id]=p; } }
 async function lifeLoad(){ if(!LIFE) return; const lang=catLang(); try{ let r=await fetch("assets/catalog/life/"+lang+".json"); if(!r.ok&&lang!=="en") r=await fetch("assets/catalog/life/en.json"); if(!r.ok) return; const d=await r.json(); if(lang!==catLang()) return;
-  LIFEG.ld={}; LIFEG.counts=d.counts||{}; LIFEG.total=d.total||0; lifeAdd(d.items||[],lang); refresh(); return;
+  LIFEG.ld={}; LIFEG.counts=d.counts||{}; LIFEG.total=d.total||0; lifeAdd(d.items||[],lang); refresh(); tryQP(); return;
   const have=new Set(PLACES.filter(p=>p.animal).map(p=>p.nt.toLowerCase()));
   for(const [qid,grp,label,en,loc,desc,file,sl] of d.items||[]){ const id="q"+qid; if(IDX[id]||(en&&have.has(en.toLowerCase()))) continue;
     const wl=loc?lang:"en", title=loc||en;
@@ -1540,6 +1555,6 @@ if(!SITE&&(!U||U.lat==null)&&!ls.get("olam_locask",false)){ ls.set("olam_locask"
 if(U) go("home"); else startOb();
 if(SITE) siteInit();
 setTimeout(()=>catLoad(),600);
-loadHeroes(); loadAll(); mQueue(); loadCommunity(); setTimeout(()=>dailyNotify(false),4000); if(QP&&byId(QP)) setTimeout(()=>openPlace(QP),300);
+loadHeroes(); loadAll(); mQueue(); loadCommunity(); setTimeout(()=>dailyNotify(false),4000); setTimeout(tryQP,300);
 if(!(LANG==="uz"||LANG==="uzk")){ wikiNames().then(aiTaglines); }
 
