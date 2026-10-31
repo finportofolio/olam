@@ -159,6 +159,7 @@ function closeSheet(){ $("#sh").classList.remove("on"); }
 /* ===== Ovozli gid (telefon ovozi bilan o'qish) ===== */
 const TTSL={uz:"uz-UZ",uzk:"uz-UZ",ru:"ru-RU",en:"en-US",tr:"tr-TR",kk:"kk-KZ",ky:"ky-KG",tg:"tg-TJ",ar:"ar-SA",zh:"zh-CN"};
 let TTSWARN=false;
+const TTS_URL="https://olam-tts.behruzbekhasanboyev31.workers.dev";   // worker/olam-tts.js
 let TTSA=null;
 function ttsOff(){ document.querySelectorAll(".spk.on").forEach(b=>{ b.classList.remove("on"); b.dataset.sp=""; }); BGM.volume=0.55; }
 async function speak(text,btn){
@@ -169,7 +170,7 @@ async function speak(text,btn){
   if(btn){ btn.classList.add("on"); btn.dataset.sp="1"; } BGM.volume=0.12;
   // 1) tabiiy ovoz (server orqali, masalan Azure Speech) — tilga mos
   try{ const ac=new AbortController(); const to=setTimeout(()=>ac.abort(),12000);
-    const r=await fetch(GID_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({mode:"tts",lang:LANG,text:txt}),signal:ac.signal}); clearTimeout(to);
+    const r=await fetch(TTS_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({lang:LANG,text:txt}),signal:ac.signal}); clearTimeout(to);
     const ct=r.headers.get("content-type")||""; let src=null;
     if(r.ok&&ct.startsWith("audio/")) src=URL.createObjectURL(await r.blob());
     else if(r.ok&&ct.includes("json")){ const d=await r.json(); if(d.audio) src=(String(d.audio).startsWith("data:")?"":"data:audio/mpeg;base64,")+d.audio; }
