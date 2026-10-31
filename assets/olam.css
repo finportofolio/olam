@@ -1086,3 +1086,13 @@ body.site .sapp{background:linear-gradient(135deg,#1c46d6 0%,#2b6cf3 45%,#69bdff
 .hook{display:flex;flex-wrap:wrap}
 .hk{flex:1 1 240px;min-width:0}
 .hk-time,.hook .artsk,.hkai{flex-basis:100%}
+/* hamkor turlar */
+.tours{display:grid;gap:10px}
+.tour{padding:14px;border-radius:20px;background:var(--card);border:1px solid var(--line)}
+.tourh{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.tourh b{font-size:15px}
+.hb{flex:0 0 auto;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;background:#fff1c7;color:#6b4a00}
+.tour small{display:block;color:var(--mute);margin:4px 0 10px}
+.tour small b{color:var(--text)}
+.tour .row{flex-wrap:wrap}.tour .pill{padding:9px 14px;font-size:13px}
+[data-ui=glass] .tour{background:var(--gl);box-shadow:var(--gls)}
