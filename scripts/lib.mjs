@@ -19,7 +19,7 @@ export function more(why){ writeFileSync(MORE_FILE, why+"\n", { flag: "a" }); co
 export const readJSON = p => { try{ return JSON.parse(readFileSync(p, "utf8")); }catch(e){ return null; } };
 export const writeJSON = (p, d) => writeFileSync(p, JSON.stringify(d));
 
-export async function get(url, accept, ms=90000){
+export async function get(url, accept, ms=90000, slowMax=2){
   let slow = 0;   // og'ir so'rov vaqti tugashi: bir marta qayta urinamiz, keyin yuqoriroq chegara bilan (ladder)
   for(let a=0; a<6; a++){
     try{
@@ -31,16 +31,18 @@ export async function get(url, accept, ms=90000){
       const ra = +(r.headers.get("retry-after")||0);
       if(r.status===429){ console.log("ko'p so'rov (429), kutilmoqda", ra||10, "s"); await sleep(Math.max(ra*1000, 10000*(a+1))); continue; }
       if(r.status>=500){ const t = await r.text().catch(()=>"");
-        if(/TimeoutException|timeout/i.test(t)){ if(++slow >= 2) throw new Error("timeout"); }
+        if(/TimeoutException|timeout/i.test(t)){ if(++slow >= slowMax) throw new Error("timeout"); }
         await sleep(Math.max(ra*1000, 5000*(a+1))); continue; }
       throw new Error(r.status+" "+(await r.text()).slice(0,160).replace(/\s+/g," "));
     }catch(e){
-      if(e.name === "AbortError"){ if(++slow >= 2) throw new Error("timeout"); continue; }
+      if(e.name === "AbortError"){ if(++slow >= slowMax) throw new Error("timeout"); continue; }
       if(a===5 || /^4\d\d |^timeout$/.test(e.message)) throw e; await sleep(3000*(a+1)); }
   }
   throw new Error("failed");
 }
 export const sparql = q => get("https://query.wikidata.org/sparql?format=json&query="+encodeURIComponent(q), "application/sparql-results+json", 75000).then(d => d.results.bindings);
+// og'ir bo'lishi mumkin bo'lgan so'rov: vaqti tugasa qayta urinmaydi (chaqiruvchi uni bo'laklarga bo'ladi)
+export const sparql1 = q => get("https://query.wikidata.org/sparql?format=json&query="+encodeURIComponent(q), "application/sparql-results+json", 75000, 1).then(d => d.results.bindings);
 export const qidOfUri = u => (u||"").split("/").pop();
 export const fileOf = u => { try{ return decodeURIComponent((u||"").split("FilePath/")[1]||""); }catch(e){ return ""; } };
 
