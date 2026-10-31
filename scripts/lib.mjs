@@ -93,7 +93,8 @@ export function loadGroups(dir){
 }
 
 export function writeGroups(dir, items, meta, { part = 4000, top = 8000 } = {}){
-  const rows = [...items.values()].filter(x => meta[x[0]] && meta[x[0]].l.some(Boolean)).sort((a,b) => b[3]-a[3]);
+  const SVC = /^(Wikipedia|Wikidata|Template|Category|Module|Help|Portal|Draft):/;   // xizmat sahifalari
+  const rows = [...items.values()].filter(x => meta[x[0]] && meta[x[0]].l.some(Boolean) && !SVC.test(meta[x[0]].l[EN] || "")).sort((a,b) => b[3]-a[3]);
   const groups = {}; for(const x of rows) (groups[x[1]] = groups[x[1]] || []).push(x);
   rmSync(dir+"/g", { recursive: true, force: true }); mkdirSync(dir+"/g", { recursive: true });
   const parts = {};
