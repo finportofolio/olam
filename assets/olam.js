@@ -661,7 +661,7 @@ function renderSettings(){
    <div class="sgrp"><div class="sl">${t("s_notif")}</div><div class="seg"><button class="${SET.notif?"on":""}" onclick="notifToggle(true)">${t("on")}</button><button class="${SET.notif?"":"on"}" onclick="notifToggle(false)">${t("off")}</button></div><p class="sp" style="margin:8px 0 0">${t("notif_t")}</p></div>
    <div class="sgrp"><div class="sl">${t("s_off")}</div><p class="sp" style="margin:0">${t("off_t")}</p></div>
    <div class="sgrp"><div class="sl">${t("s_video")}</div>${seg("video",[[true,t("v_on")],[false,t("v_off")]])}</div>
-   <div class="sgrp"><div class="sl">${t("cat_h")}</div><p class="sp" id="wcst">${catTxt()}</p><p class="sp">${t("cat_t")}</p><button class="pill o2 wide" onclick="catLoad(true);setTimeout(catUI,300)">${ICON.route}<span>${t("cat_re")}</span></button></div>
+   <div class="sgrp"><div class="sl">${t("cat_h")}</div><p class="sp" id="wcst">${catTxt()}</p><p class="sp" style="margin:0">${t("cat_t")}</p></div>
    <div class="sgrp"><div class="sl">${t("s_ui")}</div><div class="uipick">${[["white",t("ui_white")],["glass",t("ui_glass")]].map(([v,l])=>`<button class="${curUI()===v?"on":""} u-${v}" onclick="uiPick('${v}');renderSettings()"><i><b></b><b></b><b></b></i>${l}</button>`).join("")}</div><p class="sp" style="margin:10px 0 0">${t("ui_t")}</p></div>
    <div class="sgrp"><div class="sl">${t("s_theme")}</div>${seg("theme",[["auto",t("th_auto")],["light",t("th_light")],["dark",t("th_dark")]])}</div>
    <div class="sgrp"><div class="sl">${t("s_units")}</div>${seg("unit",[["km",t("u_km")],["mi",t("u_mi")]])}</div>
@@ -1048,57 +1048,32 @@ function renderCountry(){ const C=CAT(); const all=CT.list; if(!$("#ctb")) retur
    ${l.length>CT.n?`<button class="pill o2 wide" style="margin-top:16px" onclick="CT.n+=60;renderCountry()">${t("ctry_more")} · ${l.length-CT.n}</button>`:""}<div class="foot"></div>`; }
 
 
-/* ================= DUNYO KATALOGI — har bir davlatdan eng mashhur joylar (~3000 ta) =================
-   Birinchi ochilishda fonda Wikidata'dan yuklanadi, qurilmada (IndexedDB) saqlanadi, 60 kunda yangilanadi. */
-const WC={busy:false,done:0,total:0,n:0};
-async function kvGet(k){ try{ const db=await idb(); return await new Promise(res=>{ const q=db.transaction("kv").objectStore("kv").get(k); q.onsuccess=()=>res(q.result?.v); q.onerror=()=>res(undefined); }); }catch(e){ return undefined; } }
-async function kvSet(k,v){ try{ const db=await idb(); const tx=db.transaction("kv","readwrite"); tx.objectStore("kv").put({k,v}); await new Promise(r=>{ tx.oncomplete=r; tx.onerror=r; }); }catch(e){} }
+/* ================= DUNYO KATALOGI — ilovaga oldindan qo'shilgan ~3000+ joy =================
+   Joylar GitHub'da har oy yig'iladi (scripts/build-catalog.mjs) va assets/catalog/<til>.json sifatida
+   ilova bilan birga keladi. Foydalanuvchi qurilmasida alohida saqlanmaydi. */
+const WC={busy:false,n:0};
 const catLang=()=>{ const l=WL(LANG); return l==="uzk"?"uz":l; };
-async function sparql(q){ const r=await fetch("https://query.wikidata.org/sparql?format=json&query="+encodeURIComponent(q),{headers:{Accept:"application/sparql-results+json"}}); if(!r.ok) throw new Error("wdqs "+r.status); return (await r.json()).results?.bindings||[]; }
 let ALLC=null;   // barcha mustaqil davlatlar: [ISO, QID, mintaqa]
-async function allCountries(){ if(ALLC) return ALLC; let c=await kvGet("ctry");
-  if(!c||Date.now()-c.ts>90*864e5){ try{ const b=await sparql(`SELECT ?c ?iso ?coord WHERE { ?c wdt:P31 wd:Q3624078 ; wdt:P297 ?iso . OPTIONAL { ?c wdt:P625 ?coord } FILTER NOT EXISTS { ?c wdt:P576 ?e } }`);
-      const seen=new Set(), l=[]; b.forEach(r=>{ const iso=r.iso.value.toUpperCase(); if(seen.has(iso)) return; seen.add(iso); const m=/Point\(([-\d.]+) ([-\d.]+)\)/.exec(r.coord?.value||""); let rg=m?guessReg(+m[2],+m[1]):"osiyo"; if(rg==="uz") rg="osiyo"; l.push([iso,r.c.value.split("/").pop(),rg]); });
-      if(l.length>100){ c={ts:Date.now(),l}; kvSet("ctry",c); } }catch(e){} }
-  const known=new Set(CTRY.map(x=>x[0])); ALLC=[...CTRY,...(c?.l||[]).filter(x=>!known.has(x[0]))]; return ALLC; }
-const WCQ=(qid,lang,lim,big)=>`SELECT ?item ?itemLabel ?itemDescription ?img ?coord ?cls ?sl ?en ?loc WHERE {
- { VALUES ?cls { ${Object.keys(WDT).filter(k=>k!=="Q9259").map(k=>"wd:"+k).join(" ")} } ?item wdt:P31 ?cls . }
- UNION { ?item wdt:P1435 wd:Q9259 . BIND(wd:Q9259 AS ?cls) }
- ?item wdt:P17 wd:${qid} ; wdt:P18 ?img ; wdt:P625 ?coord ; wikibase:sitelinks ?sl .
- FILTER(?sl >= IF(?cls IN (wd:Q16970,wd:Q44539,wd:Q12280,wd:Q22698,wd:Q27686,wd:Q11315), ${big?14:6}, ${big?6:2}))
- OPTIONAL { ?ea schema:about ?item ; schema:isPartOf <https://en.wikipedia.org/> ; schema:name ?en . }
- ${lang!=="en"?`OPTIONAL { ?la schema:about ?item ; schema:isPartOf <https://${lang}.wikipedia.org/> ; schema:name ?loc . }`:""}
- SERVICE wikibase:label { bd:serviceParam wikibase:language "${lang},en,ru" . }
-} ORDER BY DESC(?sl) LIMIT ${lim*4}`;
-let CURD=null;   // tayyor (qo'lda tanlangan) joylar — takrorlanmasin
+async function allCountries(){ return ALLC||CTRY; }
+let CURD=null;   // qo'lda tanlangan joylar — takrorlanmasin
 function catDup(c){ if(!CURD) CURD={t:new Set(PLACES.filter(p=>!p.dyn).map(p=>(p.nt||p.t).replace(/_/g," ").toLowerCase())),g:PLACES.filter(p=>!p.dyn&&p.lat!=null)};
   if(c[2]&&CURD.t.has(c[2].toLowerCase())) return true;
   const k=Math.cos(c[6]*Math.PI/180); return CURD.g.some(p=>{ const dx=(p.lon-c[7])*k, dy=p.lat-c[6]; return dx*dx+dy*dy<1.6e-5; }); }   // ~450 m
 function catReset(){ for(let i=PLACES.length-1;i>=0;i--){ const p=PLACES[i]; if(p.cat&&!saved.has(p.id)){ delete IDX[p.id]; PLACES.splice(i,1); } } WC.n=0; }
-function catTxt(){ return WC.busy?t("cat_ing",{d:WC.done,t:WC.total||"…",n:WC.n}):t("cat_st",{n:WC.n}); }
+function catTxt(){ return WC.busy?t("ctry_load"):t("cat_st",{n:WC.n}); }
 function catUI(){ const N=PLACES.filter(p=>!p.dyn||p.cat).length; const h=$("#hN"); if(h) h.textContent=N+"+"; const s=$("#wcst"); if(s) s.textContent=catTxt(); }
-async function catLoad(force){
-  if(WC.busy||SET.wcat===false) return; WC.busy=true; const lang=catLang(), key="wcat|"+lang;
+async function catLoad(){
+  if(WC.busy) return; WC.busy=true; const lang=catLang();
   try{
-    let st=await kvGet(key); if(!st) st={ts:0,done:{},items:[]}; if(force||Date.now()-st.ts>60*864e5){ st.done={}; }
-    const add=arr=>arr.forEach(c=>{ if(!catDup(c)) mkPlace(c,lang,true); });
-    add(st.items); WC.n=PLACES.filter(p=>p.cat).length; refresh(); catUI();
-    const cs=await allCountries(); WC.total=cs.length; WC.done=cs.filter(c=>st.done[c[0]]).length;
-    const todo=cs.filter(c=>!st.done[c[0]]); if(!todo.length){ WC.busy=false; catUI(); return; }
-    const POP=new Set(CTRY.map(c=>c[0])); let i=0, fails=0;
-    const worker=async()=>{ while(i<todo.length&&fails<12){ if(lang!==catLang()) return; const c=todo[i++]; const big=BIGC.includes(c[0]); const lim=POP.has(c[0])?(big?45:30):10;
-      try{ const b=await sparql(WCQ(c[1],lang,lim,big)); const seen=new Set(), pos=new Set(), out=[];
-        for(const r of b){ const x=wdCompact(r,c[0],c[2]); if(!x||seen.has(x[0])) continue; const g=Math.round(x[6]*300)+","+Math.round(x[7]*300); if(pos.has(g)) continue; seen.add(x[0]); pos.add(g); out.push(x); if(out.length>=lim) break; }
-        st.items=st.items.filter(x=>x[10]!==c[0]).concat(out); st.done[c[0]]=1; add(out); fails=0;
-      }catch(e){ fails++; await new Promise(r=>setTimeout(r,3000*fails)); }
-      WC.done=cs.filter(x=>st.done[x[0]]).length; WC.n=PLACES.filter(p=>p.cat).length;
-      if(WC.done%5===0){ st.ts=Date.now(); kvSet(key,st); refresh(); catUI(); } } };
-    await Promise.all([worker(),worker()]);
-    st.ts=Date.now(); await kvSet(key,st);
-    if(WC.done>=WC.total) toast(t("cat_done",{n:WC.n}));
+    let r=await fetch("assets/catalog/"+lang+".json"); if(!r.ok&&lang!=="en") r=await fetch("assets/catalog/en.json");
+    if(r.ok){ const d=await r.json(); if(lang===catLang()){
+      if(Array.isArray(d.countries)&&d.countries.length){ const known=new Set(CTRY.map(x=>x[0])); ALLC=[...CTRY,...d.countries.filter(x=>!known.has(x[0]))]; }
+      (d.items||[]).forEach(c=>{ if(!catDup(c)) mkPlace(c,lang,true); }); } }
   }catch(e){}
-  WC.busy=false; refresh(); catUI();
+  WC.busy=false; WC.n=PLACES.filter(p=>p.cat).length; refresh(); catUI();
 }
+// avvalgi versiya qurilmaga yozgan katalogni tozalash
+try{ idb().then(db=>{ try{ db.transaction("kv","readwrite").objectStore("kv").clear(); }catch(e){} }).catch(()=>{}); }catch(e){}
 
 /* ================= SAYT REJIMI ================= */
 const HB={i:0,timer:null,pool:null};
@@ -1172,7 +1147,7 @@ if(!U&&SITE) U={name:"",country:"UZ",interests:[],regions:[],dream:null,style:""
 if(!SITE&&(!U||U.lat==null)&&!ls.get("olam_locask",false)){ ls.set("olam_locask",true); setTimeout(()=>locate(()=>{ if($("#ob").classList.contains("on")&&obStep===1) renderOb(); }),1200); }
 if(U) go("home"); else startOb();
 if(SITE) siteInit();
-setTimeout(()=>catLoad(),2500);
+setTimeout(()=>catLoad(),600);
 loadHeroes(); loadAll(); mQueue(); loadCommunity(); setTimeout(()=>dailyNotify(false),4000); if(QP&&byId(QP)) setTimeout(()=>openPlace(QP),300);
 if(!(LANG==="uz"||LANG==="uzk")){ wikiNames().then(aiTaglines); }
 
