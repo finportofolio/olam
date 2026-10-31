@@ -44,13 +44,13 @@ const q = (qid, lim, big) => `SELECT ?item ?img ?coord ?cls ?sl WHERE {
  ?item wdt:P17 wd:${qid} ; wdt:P18 ?img ; wdt:P625 ?coord ; wikibase:sitelinks ?sl .
  FILTER(?sl >= IF(?cls IN (wd:Q16970,wd:Q44539,wd:Q12280,wd:Q22698,wd:Q27686,wd:Q11315), ${big?5:2}, 1))
 } ORDER BY DESC(?sl) LIMIT ${lim*3}`;
-const FULL = iso => POP.has(iso) ? (BIG.has(iso) ? 3000 : 2000) : 600;      // davlat sahifasi
+const FULL = iso => POP.has(iso) ? (BIG.has(iso) ? 6000 : 4000) : 1200;      // davlat sahifasi
 const TOP  = iso => POP.has(iso) ? (BIG.has(iso) ? 120 : 80) : 20;         // bosh ro'yxat
 const byC = {};   // iso → [[qid,file,lat,lon,cls,sl,reg], ...]
 let ci = 0, ok = 0;
 async function worker(){
   while(ci < countries.length){
-    if(Date.now()-T0 > 150*60000){ console.log("vaqt tugadi, to'xtatildi"); return; }
+    if(Date.now()-T0 > 200*60000){ console.log("vaqt tugadi, to'xtatildi"); return; }
     const [iso, qid, reg] = countries[ci++]; const lim = FULL(iso);
     let b = null;
     try{ b = await sparql(q(qid, lim, BIG.has(iso))); }
@@ -77,7 +77,7 @@ console.log("jami joylar:", ids.length);
 const meta = {}; const sites = LANGS.map(l => l+"wiki");
 let mi = 0;
 async function metaWorker(){
-  while(mi < ids.length){ if(Date.now()-T0 > 270*60000) return; const chunk = ids.slice(mi, mi+50); mi += 50; if(mi % 2000 < 50) console.log(mins()+"m meta", mi, "/", ids.length);
+  while(mi < ids.length){ if(Date.now()-T0 > 320*60000) return; const chunk = ids.slice(mi, mi+50); mi += 50; if(mi % 2000 < 50) console.log(mins()+"m meta", mi, "/", ids.length);
     try{ const d = await get(`https://www.wikidata.org/w/api.php?action=wbgetentities&format=json&ids=${chunk.join("|")}&props=labels|descriptions|sitelinks&languages=${LANGS.join("|")}&languagefallback=1&sitefilter=${sites.join("|")}`);
       for(const [k, e] of Object.entries(d.entities || {})) meta[k] = { l: LANGS.map(l => e.labels?.[l]?.value || ""), d: LANGS.map(l => (e.descriptions?.[l]?.value || "").slice(0,120)), w: LANGS.map(l => e.sitelinks?.[l+"wiki"]?.title || "") };
     }catch(e){ console.log("meta XATO", e.message); }
@@ -116,41 +116,4 @@ for(const [li, lang] of LANGS.entries()){
 }
 console.log("davlat sahifalaridagi jami joylar:", full);
 
-// 5) JONZOTLAR: eng mashhur turlar (sut emizuvchilar, qushlar, baliqlar, sudralib yuruvchilar, amfibiyalar, hasharotlar, dengiz jonzotlari)
-//    assets/catalog/life/<til>.json: [qid,guruh,nom,en_maqola,mahalliy_maqola,tavsif,rasm,sitelinks]
-try{
-  // guruhlar ilmiy nomi bo'yicha (QID skriptda topiladi): hayvonlar, o'simliklar, zamburug'lar
-  const GNAMES = [["mam","Mammalia"],["bird","Aves"],["fish","Actinopterygii"],["fish","Chondrichthyes"],["rep","Reptilia"],["amph","Amphibia"],["ins","Insecta"],["spider","Arachnida"],["worm","Annelida"],["worm","Nematoda"],["worm","Platyhelminthes"],
-    ["sea","Mollusca"],["sea","Crustacea"],["sea","Cnidaria"],["sea","Echinodermata"],["plant","Magnoliopsida"],["plant","Liliopsida"],["plant","Pinopsida"],["plant","Polypodiopsida"],["fungi","Agaricomycetes"]];
-  const GROUPS = [];
-  for(const [grp, name] of GNAMES){ try{ const b = await sparql(`SELECT ?c WHERE { ?c wdt:P225 "${name}" ; wdt:P31 wd:Q16521 . } LIMIT 1`); const q = b[0]?.c?.value.split("/").pop(); if(q) GROUPS.push([grp, q]); else console.log("guruh topilmadi:", name); }catch(e){ console.log("guruh XATO", name, e.message); } }
-  console.log("guruhlar:", GROUPS.map(g=>g.join(":")).join(" "));
-  const life = new Map();
-  for(const [grp, cls] of GROUPS){
-    if(Date.now()-T0 > 300*60000) break;
-    try{
-      const minSl = (grp==="ins"||grp==="plant") ? 12 : 6;
-      let b; try{ b = await sparql(`SELECT ?item ?img ?sl WHERE { ?item wdt:P105 wd:Q7432 ; wikibase:sitelinks ?sl . FILTER(?sl >= ${minSl}) ?item wdt:P171+ wd:${cls} ; wdt:P18 ?img . } ORDER BY DESC(?sl) LIMIT 6000`); }
-      catch(e){ b = await sparql(`SELECT ?item ?img ?sl WHERE { ?item wdt:P105 wd:Q7432 ; wikibase:sitelinks ?sl . FILTER(?sl >= ${minSl*2}) ?item wdt:P171+ wd:${cls} ; wdt:P18 ?img . } ORDER BY DESC(?sl) LIMIT 3000`); }
-      let n = 0; for(const r of b){ const id = r.item.value.split("/").pop(); if(life.has(id)) continue; const file = decodeURIComponent(r.img.value.split("FilePath/")[1]||""); if(!file || /\.(svg|png|gif|tif|tiff|webm|ogv|pdf)$/i.test(file)) continue; life.set(id, [id, grp, file, +r.sl.value]); n++; }
-      console.log(mins()+"m life", grp, cls, n);
-    }catch(e){ console.log("life XATO", grp, cls, e.message); }
-    await sleep(500);
-  }
-  const lids = [...life.keys()].filter(id => !meta[id]);
-  for(let i=0; i<lids.length; i+=50){ const chunk = lids.slice(i, i+50);
-    try{ const d = await get(`https://www.wikidata.org/w/api.php?action=wbgetentities&format=json&ids=${chunk.join("|")}&props=labels|descriptions|sitelinks&languages=${LANGS.join("|")}&languagefallback=1&sitefilter=${sites.join("|")}`);
-      for(const [k, e] of Object.entries(d.entities || {})) meta[k] = { l: LANGS.map(l => e.labels?.[l]?.value || ""), d: LANGS.map(l => (e.descriptions?.[l]?.value || "").slice(0,120)), w: LANGS.map(l => e.sitelinks?.[l+"wiki"]?.title || "") };
-    }catch(e){ console.log("life meta XATO", e.message); } await sleep(250); }
-  mkdirSync("assets/catalog/life", { recursive: true });
-  for(const [li, lang] of LANGS.entries()){
-    const out = []; for(const [id, grp, file, sl] of life.values()){ const m = meta[id]; if(!m) continue; const label = m.l[li] || m.l[EN]; if(!label) continue;
-      out.push([id, grp, label, m.w[EN], lang==="en" ? "" : m.w[li], m.d[li], file, sl]); }
-    out.sort((a,b) => b[7]-a[7]);
-    const groups = {}; for(const x of out) (groups[x[1]] = groups[x[1]] || []).push(x);
-    mkdirSync(`assets/catalog/life/${lang}`, { recursive: true });
-    for(const [g, l] of Object.entries(groups)) writeFileSync(`assets/catalog/life/${lang}/${g}.json`, JSON.stringify({ v: 2, items: l }));
-    writeFileSync(`assets/catalog/life/${lang}.json`, JSON.stringify({ v: 2, ts: new Date().toISOString().slice(0,10), total: out.length, counts: Object.fromEntries(Object.entries(groups).map(([g,l])=>[g,l.length])), items: out.slice(0, 8000) }));
-    console.log(lang, "jonzotlar:", out.length);
-  }
-}catch(e){ console.log("life bo'limi XATO", e.message); }
+// 5) Jonzotlar endi alohida: scripts/build-life.mjs (catalog-life.yml)
