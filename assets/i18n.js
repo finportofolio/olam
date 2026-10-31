@@ -146,7 +146,7 @@ const hash = s=>[...s].reduce((a,c)=>(a*31+c.charCodeAt(0))>>>0,7);
 const ls = {get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}}, set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 
 /* ================= SOZLAMALAR ================= */
-const SET = Object.assign({lang:null,mlist:"minus",amb:true,notif:false,music:true,video:true,theme:"auto",unit:"km",speed:2,ui:"white"}, ls.get("olam_set",{}));
+const SET = Object.assign({lang:null,mlist:"minus",amb:true,notif:false,music:true,video:true,theme:"auto",unit:"km",speed:2,ui:"white",vsound:true}, ls.get("olam_set",{}));
 const saveSet = ()=>ls.set("olam_set",SET);
 if(!SET.lang){ const n=(navigator.language||"uz").toLowerCase(); SET.lang = n.startsWith("ru")?"ru":n.startsWith("en")?"en":n.startsWith("tr")?"tr":n.startsWith("kk")?"kk":n.startsWith("ky")?"ky":n.startsWith("tg")?"tg":n.startsWith("ar")?"ar":n.startsWith("zh")?"zh":"uz"; }
 let LANG = SET.lang;
@@ -231,4 +231,37 @@ ky:["Дүйнө каталогу","Түзмөктө дагы {n} жер сакт
 tg:["Феҳристи ҷаҳон","Дар дастгоҳ боз {n} ҷой нигоҳ дошта шуд","Бор шуда истодааст: {d}/{t} кишвар · {n} ҷой","Феҳрист омода: боз {n} ҷой илова шуд","Навсозии феҳрист","Машҳуртарин ҷойҳои ҳар кишвар як бор аз Wikidata бор шуда, офлайн ҳам дастрасанд."],
 ar:["كتالوج العالم","{n} مكانًا إضافيًا محفوظًا على هذا الجهاز","جارٍ التحميل: {d}/{t} دولة · {n} مكان","كتالوج العالم جاهز: أُضيف {n} مكانًا آخر","تحديث الكتالوج","تُحمَّل أشهر أماكن كل دولة من Wikidata مرة واحدة وتبقى متاحة دون اتصال."],
 zh:["世界目录","本设备已保存 {n} 个额外地点","正在加载：{d}/{t} 个国家 · {n} 个地点","世界目录已就绪：新增 {n} 个地点","刷新目录","每个国家最受欢迎的地点会从 Wikidata 加载一次，离线也可查看。"]};
+for(const l in V) K.forEach((k,i)=>I18N[l][k]=V[l][i]);})();
+(()=>{const V={uz:["Ilovada yana {n} ta joy bor","Har bir davlatdagi eng mashhur joylar ilovaga oldindan qo'shilgan va har oy yangilanadi."],
+en:["{n} more places built into the app","The most popular places of every country come built into the app and are updated monthly."],
+ru:["В приложении ещё {n} мест","Самые популярные места каждой страны встроены в приложение и обновляются каждый месяц."],
+tr:["Uygulamada {n} yer daha var","Her ülkenin en popüler yerleri uygulamaya hazır gelir ve her ay güncellenir."],
+kk:["Қосымшада тағы {n} орын бар","Әр елдің ең танымал орындары қосымшаға алдын ала енгізілген және ай сайын жаңартылады."],
+ky:["Тиркемеде дагы {n} жер бар","Ар бир өлкөнүн эң белгилүү жерлери тиркемеге алдын ала кошулган жана ай сайын жаңыртылат."],
+tg:["Дар барнома боз {n} ҷой ҳаст","Машҳуртарин ҷойҳои ҳар кишвар пешакӣ ба барнома илова шудаанд ва ҳар моҳ нав мешаванд."],
+ar:["{n} مكانًا إضافيًا مدمجًا في التطبيق","أشهر أماكن كل دولة مدمجة في التطبيق وتُحدَّث شهريًا."],
+zh:["应用内另有 {n} 个地点","每个国家最受欢迎的地点已内置于应用中，并每月更新。"]};
+for(const l in V){ I18N[l].cat_st=V[l][0]; I18N[l].cat_t=V[l][1]; }})();
+(()=>{const K=["sim_h","sim_sub","recent_h","recent_sub"];
+const V={uz:["{p} sizga yoqdi — o'xshash joylar","Siz yoqtirgan, saqlagan va uzoq ko'rgan joylar asosida","Yaqinda ko'rganlaringiz","Qolgan joyingizdan davom eting"],
+en:["You liked {p} — similar places","Based on what you liked, saved and watched longest","Recently viewed","Pick up where you left off"],
+ru:["Вам понравилось {p} — похожие места","На основе того, что вы лайкали, сохраняли и дольше смотрели","Недавно просмотренные","Продолжите с того места, где остановились"],
+tr:["{p} hoşunuza gitti — benzer yerler","Beğendiğiniz, kaydettiğiniz ve en uzun izlediğiniz yerlere göre","Son görüntülenenler","Kaldığınız yerden devam edin"],
+kk:["{p} ұнады — ұқсас орындар","Ұнатқан, сақтаған және ұзақ көрген орындарыңыз негізінде","Жақында көргендеріңіз","Тоқтаған жерден жалғастырыңыз"],
+ky:["{p} жакты — окшош жерлер","Жактырган, сактаган жана узак көргөн жерлериңиздин негизинде","Жакында көргөндөрүңүз","Токтогон жерден улантыңыз"],
+tg:["{p} ба шумо писанд омад — ҷойҳои монанд","Дар асоси ҷойҳое, ки писандидед, нигоҳ доштед ва дертар тамошо кардед","Ба наздикӣ дидашуда","Аз ҳамон ҷое, ки мондед, давом диҳед"],
+ar:["أعجبك {p} — أماكن مشابهة","بناءً على ما أعجبك وحفظته وشاهدته أطول","شوهدت مؤخرًا","تابع من حيث توقفت"],
+zh:["你喜欢 {p}——相似地点","根据你喜欢、收藏和观看最久的地点","最近浏览","从上次离开的地方继续"]};
+for(const l in V) K.forEach((k,i)=>I18N[l][k]=V[l][i]);})();
+(()=>{const V={uz:"Bu qurilmada o'zbekcha ovoz yo'q. Tabiiy ovoz tez orada ulanadi.",en:"No voice for this language on this device yet.",ru:"На этом устройстве нет голоса для этого языка.",tr:"Bu cihazda bu dil için ses yok.",kk:"Бұл құрылғыда бұл тілдің дауысы жоқ.",ky:"Бул түзмөктө бул тилдин үнү жок.",tg:"Дар ин дастгоҳ овози ин забон нест.",ar:"لا يوجد صوت لهذه اللغة على هذا الجهاز.",zh:"此设备暂无该语言的语音。"}; for(const l in V) I18N[l].tts_nolang=V[l];})();
+(()=>{const K=["f_h","f_built","f_elev","f_height","f_area","f_visit","f_pop","f_unesco","f_yes","f_arch","f_style","f_web","f_coord","f_year","f_bc","f_cent","f_bce"];
+const V={uz:["Ma'lumotlar","Qurilgan / paydo bo'lgan","Dengiz sathidan balandligi","Balandligi","Maydoni","Yillik tashrif buyuruvchilar","Aholisi","UNESCO Jahon merosi","Ha","Me'mor","Me'moriy uslub","Rasmiy sayt","Koordinatalar","{y}-yil","mil. avv. {y}-yil","{c}-asr","mil. avv."],
+en:["Key facts","Built / established","Elevation","Height","Area","Visitors per year","Population","UNESCO World Heritage","Yes","Architect","Architectural style","Official website","Coordinates","{y}","{y} BC","{c}th century","BC"],
+ru:["Факты","Построено / основано","Высота над уровнем моря","Высота","Площадь","Посетителей в год","Население","Всемирное наследие ЮНЕСКО","Да","Архитектор","Архитектурный стиль","Официальный сайт","Координаты","{y} г.","{y} г. до н. э.","{c} век","до н. э."],
+tr:["Bilgiler","Yapım / kuruluş","Rakım","Yükseklik","Alan","Yıllık ziyaretçi","Nüfus","UNESCO Dünya Mirası","Evet","Mimar","Mimari üslup","Resmî site","Koordinatlar","{y}","MÖ {y}","{c}. yüzyıl","MÖ"],
+kk:["Деректер","Салынған / құрылған","Теңіз деңгейінен биіктігі","Биіктігі","Ауданы","Жылдық келушілер","Халқы","ЮНЕСКО әлемдік мұрасы","Иә","Сәулетші","Сәулет стилі","Ресми сайт","Координаттар","{y} ж.","б.з.д. {y} ж.","{c} ғасыр","б.з.д."],
+ky:["Маалыматтар","Курулган / негизделген","Деңиз деңгээлинен бийиктиги","Бийиктиги","Аянты","Жылдык келүүчүлөр","Калкы","ЮНЕСКОнун дүйнөлүк мурасы","Ооба","Архитектор","Архитектуралык стиль","Расмий сайт","Координаттар","{y}-ж.","б.з.ч. {y}-ж.","{c}-кылым","б.з.ч."],
+tg:["Маълумот","Сохта / таъсис шудааст","Баландӣ аз сатҳи баҳр","Баландӣ","Масоҳат","Боздидкунандагон дар сол","Аҳолӣ","Мероси ҷаҳонии ЮНЕСКО","Ҳа","Меъмор","Услуби меъморӣ","Сомонаи расмӣ","Координатаҳо","соли {y}","соли {y} п.м.","асри {c}","п.м."],
+ar:["معلومات","البناء / التأسيس","الارتفاع عن سطح البحر","الارتفاع","المساحة","الزوار سنويًا","السكان","تراث عالمي لليونسكو","نعم","المعماري","الطراز المعماري","الموقع الرسمي","الإحداثيات","{y}","{y} ق.م","القرن {c}","ق.م"],
+zh:["概况","建成 / 设立","海拔","高度","面积","年访客量","人口","联合国教科文组织世界遗产","是","建筑师","建筑风格","官方网站","坐标","{y}年","公元前{y}年","{c}世纪","公元前"]};
 for(const l in V) K.forEach((k,i)=>I18N[l][k]=V[l][i]);})();

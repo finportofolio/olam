@@ -1,0 +1,51 @@
+# Dunyo katalogini yig'ish: har bir davlatdan eng mashhur joylar Wikidata'dan olinadi
+# va assets/catalog/<til>.json fayllariga yoziladi. Ilova shu fayllarni o'qiydi.
+name: Build world catalog
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 1 * *"   # har oyning 1-kuni
+  push:
+    paths:
+      - scripts/build-catalog.mjs
+      - .github/workflows/catalog.yml
+
+permissions:
+  contents: write
+  pages: write
+
+concurrency:
+  group: catalog-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Build catalog
+        run: node scripts/build-catalog.mjs
+      - name: Check output
+        run: |
+          ls -la assets/catalog
+          node -e 'const d=require("./assets/catalog/en.json"); if(d.items.length<1000){ console.error("too few places: "+d.items.length); process.exit(1); } console.log("en places:", d.items.length)'
+      - name: Commit catalog
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/catalog
+          if git diff --cached --quiet; then echo "no changes"; exit 0; fi
+          git commit -m "Update world catalog"
+          git push
+      - name: Rebuild GitHub Pages
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          curl -fsS -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/pages/builds" || echo "pages build request failed"
