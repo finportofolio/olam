@@ -1,4 +1,6 @@
 const SITE=document.body.classList.contains("site");
+const LIFE=document.body.classList.contains("life");   // "Tirik olam" — jonzotlar ilovasi
+const HOME_URL=LIFE?"tirik/":"./", APP_URL=LIFE?"tirik/app/":"app/";
 const clean = s=>String(s).replace(/^[^\p{L}\p{N}]+/u,"").trim();
 const EMO=/[\u{1F000}-\u{1FAFF}\u{2600}-\u{2604}\u{2606}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}\u{20E3}]/gu;
 const deEmo=x=>String(x).replace(EMO,"").replace(/[ \t]{2,}/g," ").replace(/^\s+|\s+$/g,"");
@@ -319,7 +321,7 @@ function score(p,w,tot){
   const cs=(p.cc||"").split("/"); let cw=0; cs.forEach(c=>cw=Math.max(cw,LRN.c[c]||0)); s+=Math.max(-2,Math.min(3,cw/6));
   if(p.cls&&LRN.k[p.cls]) s+=Math.max(-2,Math.min(2.5,LRN.k[p.cls]/5));
   if(LRN.l[p.id]<0) s+=Math.max(-4,LRN.l[p.id]);   // o'tkazib yuborilganlar pastga
-  s+=p.cat?Math.min(1.5,Math.log10(1+(p.sl||1))*0.6):(p.dyn?0:1.2);
+  s+=p.animal?(p.dyn?Math.min(3,Math.log10(1+(p.sl||1))*1.3):3.5):p.cat?Math.min(1.5,Math.log10(1+(p.sl||1))*0.6):(p.dyn?0:1.2);
   // har kuni biroz yangilik (exploration)
   return s+(hash(p.id+":"+Math.floor(Date.now()/864e5))%100)/60;
 }
@@ -360,7 +362,7 @@ async function worldNear(lat,lon){
 let FYC=null;
 const forYou = ()=>{ const key=PLACES.length+"|"+JSON.stringify(LRN.t).length+"|"+Object.keys(LRN.l).length+"|"+saved.size+"|"+(U?.interests||[]).join();
   if(FYC&&FYC.k===key&&Date.now()-FYC.ts<4000) return FYC.l.slice();
-  const w=taste(), tot=Object.values(w).reduce((a,b)=>a+b,0)||1; const sorted=PLACES.filter(p=>(!p.dyn||p.keep)&&!p.animal).map(p=>[p,score(p,w,tot)]).sort((a,b)=>b[1]-a[1]).map(x=>x[0]);
+  const w=taste(), tot=Object.values(w).reduce((a,b)=>a+b,0)||1; const sorted=PLACES.filter(p=>LIFE?(p.animal&&p.img!==undefined||p.animal):((!p.dyn||p.keep)&&!p.animal)).map(p=>[p,score(p,w,tot)]).sort((a,b)=>b[1]-a[1]).map(x=>x[0]);
   // xilma-xillik: ketma-ket bir xil davlat/turdagi joylar ko'p bo'lmasin (lentaning boshi)
   const head=sorted.slice(0,240), rest=sorted.slice(240), out=[];
   while(head.length){ let k=head.findIndex(p=>{ const c=(p.cc||p.reg), t0=p.tags[0]; const a=out[out.length-1], b=out[out.length-2]; return !(a&&(a.cc||a.reg)===c&&b&&(b.cc||b.reg)===c)&&!(a&&a.tags[0]===t0&&b&&b.tags[0]===t0); }); if(k<0||k>8) k=0; out.push(head.splice(k,1)[0]); }
@@ -495,7 +497,7 @@ function obDone(){
 /* ================= ASOSIY ================= */
 function cardH(p,cls="",tag=""){ return ph(p,"card "+cls,`${tag?`<div class="tag">${tag}</div>`:""}<div class="ci"><b>${esc(pN(p))}</b><small>${esc(pCountry(p))}</small></div>`,false,`onclick="openPlace('${p.id}')"`); }
 function gcard(p){ return `<div class="gc" onclick="openPlace('${p.id}')">${ph(p,"gi",`<button class="hrt ${saved.has(p.id)?"on":""}" aria-label="${esc(t("b_save"))}" onclick="event.stopPropagation();save('${p.id}');this.classList.toggle('on',saved.has('${p.id}'))">${ICON.heart}</button>`)}<b>${esc(pN(p))}</b><div class="meta"><span>${PIN}${esc(pCountry(p))}</span><span class="r">${rate(p)}</span></div></div>`; }
-function renderHome(){ if(SITE) return renderHomeSite(); setTimeout(fillAIPicks,0);
+function renderHome(){ if(LIFE) return renderLife(); if(SITE) return renderHomeSite(); setTimeout(fillAIPicks,0);
   const C=CAT(), R=REGN(), PR=PER();
   const list=forYou(), hero=(U?.dream&&byId(U.dream))||list[0];
   const near=PLACES.filter(p=>!p.dyn&&p.lat!=null&&p.id!==hero.id).sort((a,b)=>dist(a)-dist(b)).slice(0,4);
@@ -646,13 +648,17 @@ function tripAdd(id){ const S=$("#sh"); S.dataset.k="trip"; S.classList.add("on"
   S.innerHTML=`<div class="shb" onclick="event.stopPropagation()"><div class="shh"><b>${t("trip_pick")}</b><button class="x" onclick="closeSheet()">${ICON.down}</button></div><div class="shl">
    ${TRIPS.map((tr,i)=>`<div class="trk"><span>${ICON.bag} ${esc(tr.name)} · ${tr.ids.length}</span><button onclick="${tr.ids.includes(id)?"":`TRIPS[${i}].ids.push('${id}');keepTrips();`}toast(t('trip_added'));closeSheet()">${tr.ids.includes(id)?"✓":"＋"}</button></div>`).join("")}
    <form class="cin" style="padding:6px 0 0;background:none" onsubmit="event.preventDefault();tripNew($('#trn2').value,'${id}')"><input id="trn2" maxlength="40" placeholder="${esc(t("trip_name_ph"))}"><button>＋</button></form></div></div>`; }
-const dailyPlace=()=>{ const pool=PLACES.filter(p=>!p.dyn&&VID[p.id]?.length); const d=Math.floor(Date.now()/864e5); return pool[(d*7919)%pool.length]; };
+const dailyPlace=()=>{ const pool=LIFE?PLACES.filter(p=>p.animal&&!p.dyn):PLACES.filter(p=>!p.dyn&&VID[p.id]?.length); const d=Math.floor(Date.now()/864e5); return pool[(d*7919)%pool.length]; };
 
 /* ================= KASHF ET ================= */
 const X={tag:"all",q:"",reg:"all"};
-const matchX=p=>(X.tag==="all"||(X.tag==="wonder"?wondersOf(p.id).length>0:p.tags.includes(X.tag)))&&(X.reg==="all"||p.reg===X.reg);
+const matchX=p=>LIFE?(X.tag==="all"||p.grp===X.tag):(X.tag==="all"||(X.tag==="wonder"?wondersOf(p.id).length>0:p.tags.includes(X.tag)))&&(X.reg==="all"||p.reg===X.reg);
 function renderExplore(){
   const C=CAT(), R=REGN();
+  if(LIFE){ const all=PLACES.filter(p=>p.animal);
+    $("#explore").innerHTML=`<div class="xhead"><h1>${t("exp_h")}</h1><label class="search">${ICON.search}<input id="xq" placeholder="${esc(t("life_ph"))}" value="${esc(X.q)}" oninput="X.q=this.value;renderMas()"></label></div>
+     <div class="chips"><button class="chip ${X.tag==="all"?"on":""}" onclick="X.tag='all';renderExplore()">${t("all")} · ${all.length}</button>${GRPS.filter(g=>all.some(p=>p.grp===g)).map(g=>`<button class="chip ${X.tag===g?"on":""}" onclick="X.tag='${g}';renderExplore()">${t("g_"+g)} · ${all.filter(p=>p.grp===g).length}</button>`).join("")}</div>
+     <div id="mas"></div><div id="wres"></div><div class="foot"></div>`; renderMas(); return; }
   $("#explore").innerHTML=`<div class="xhead"><div class="row" style="justify-content:space-between;align-items:center;margin-bottom:14px"><h1 style="margin:0">${t("exp_h")}</h1><div class="row"><button class="pill o2" onclick="openCats()" aria-label="${esc(t("cats_all"))}">${ICON.filter}</button><button class="pill g" onclick="openAdd()">＋</button></div></div><label class="search">${ICON.search}<input id="xq" placeholder="${esc(t("exp_ph"))}" value="${esc(X.q)}" oninput="X.q=this.value;renderMas()"></label></div>
    <div class="chips"><button class="chip ${X.tag==="all"?"on":""}" onclick="X.tag='all';renderExplore()">${t("all")}</button><button class="chip ${X.tag==="wonder"?"on":""}" onclick="X.tag='wonder';renderExplore()">${t("won_chip")}</button>${TAGS.map(k=>`<button class="chip ${X.tag===k?"on":""}" onclick="X.tag='${k}';renderExplore()">${C[k]}</button>`).join("")}</div>
    <div class="chips" style="padding-top:0"><button class="chip ${X.reg==="all"?"on":""}" onclick="X.reg='all';renderExplore()">${t("whole")}</button>${REGS.map(k=>`<button class="chip ${X.reg===k?"on":""}" onclick="X.reg='${k}';renderExplore()">${R[k]}</button>`).join("")}</div>
@@ -663,7 +669,7 @@ function renderExplore(){
 }
 function renderMas(){
   const q=X.q.toLowerCase().trim();
-  const l=[...(q?PLACES.filter(p=>p.animal&&[pN(p),p.n,p.t].join(" ").toLowerCase().includes(q)).slice(0,24):[]),...forYou().filter(p=>matchX(p)&&(!q||[pN(p),p.n,p.c,p.t,pC(p)].join(" ").toLowerCase().includes(q)))];
+  const l=[...forYou().filter(p=>matchX(p)&&(!q||[pN(p),p.n,p.c,p.t,pC(p)].join(" ").toLowerCase().includes(q)))];
   const aiBtn=q?`<button class="aisearch" onclick="aiSearch()">${t("ai_search",{q:esc(X.q.trim())})}</button>`:"";
   $("#mas").innerHTML=(l.length?`<div class="grid2">${l.slice(0,q?60:400).map(gcard).join("")}</div>`:(q?"":`<div class="empty">${t("nothing")}</div>`))+aiBtn;
   clearTimeout(X.wt); const W2=$("#wres"); if(!W2) return;
@@ -715,7 +721,7 @@ function renderSettings(){
    <div class="sgrp"><div class="sl">${t("s_speed")}</div>${seg("speed",[[1,t("sp1")],[2,t("sp2")],[3,t("sp3")]])}</div>
    <div class="sgrp"><div class="sl">${t("loc_q")}</div><button class="locb ${U?.lat!=null?"on":""}" onclick="locate(()=>renderSettings())">${ICON.locate}<span>${U?.lat!=null?t("loc_ok")+" · "+U.lat+", "+U.lon:t("loc_b")}</span></button></div>
    <div class="sgrp"><div class="sl">${t("s_prof")}</div><p class="sp">${esc(U?.name||"")} · ${esc(cname(U?.country||"UZ"))}</p><button class="pill o2 wide" onclick="closeSettings();startOb()">${t("edit")}</button></div>
-   <div class="sgrp"><div class="sl">${t("s_share")}</div><button class="pill o2 wide" onclick="shareApp()">${ICON.share} OLAM</button></div>${SITE?"":`<div class="sgrp"><a class="pill o2 wide" href="./">${t("open_site")}</a></div>`}
+   <div class="sgrp"><div class="sl">${t("s_share")}</div><button class="pill o2 wide" onclick="shareApp()">${ICON.share} OLAM</button></div>${SITE?"":`<div class="sgrp"><a class="pill o2 wide" href="${HOME_URL}">${t("open_site")}</a></div>`}
    <div class="sgrp"><div class="sl">${t("s_install")}</div><p class="sp">${t("install_t")}</p></div>
    <div class="sgrp"><div class="sl">${t("s_clear")}</div><div id="clr"><button class="pill o2 wide" onclick="askClear()">${t("clear_b")}</button></div></div>
    <div class="sgrp"><div class="sl">${t("s_about")}</div><p class="sp">${t("about_t")}</p><p class="sp">v3.0 · ${PLACES.filter(p=>!p.dyn||p.cat).length} ${t("places")}</p></div>
@@ -1107,7 +1113,7 @@ function countryIn(q){ if(!CNAMES||CNAMES.l!==LANG){ const dn=l=>{ try{ return n
     const extra={US:["aqsh","amerika qoshma","usa","сша","америк"],GB:["angliya","buyuk britaniya","англи","uk"],AE:["baa","дубай","dubay","dubai","оаэ"],KR:["koreya","корея"],CZ:["chexiya","чехия"],NL:["gollandiya","голланд"],TR:["turkiya","turkey","туркия"]};
     CNAMES={l:LANG,a:(ALLC||CTRY).map(c=>{ const iso=c[0]; const ns=new Set([cname(iso),...D.map(d=>d?.of(iso)),UZC[iso],...(extra[iso]||[])].filter(Boolean).map(NORM).filter(x=>x.length>=3)); return [iso,[...ns]]; })}; }
   const n=NORM(q); let best=null,bl=0; for(const [iso,ns] of CNAMES.a) for(const x of ns){ const stem=x.length>5?x.slice(0,x.length-1):x; if(n.includes(stem)&&stem.length>bl){ best=iso; bl=stem.length; } } return best; }
-async function findPlaces(q){
+async function findPlaces(q){ if(LIFE) return null;
   const n=NORM(q); const iso=countryIn(q); const fs=INTENTS.filter(([re])=>re.test(n)).map(x=>x[1]); if(!iso&&!fs.length) return null;
   const ok=p=>(!iso||(p.cc||"").split("/").includes(iso))&&(!fs.length||fs.some(f=>f(p)));
   let pool=PLACES.filter(p=>(!p.dyn||p.keep)&&ok(p));
@@ -1215,7 +1221,7 @@ const shuffle=a=>{ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random
 function openQuiz(){ QZ.score=0; QZ.n=0; $("#quiz").classList.add("on"); qNext(); }
 function closeQuiz(){ $("#quiz").classList.remove("on"); clearTimeout(QZ.t); }
 function qNext(){
-  const pool=PLACES.filter(p=>p.img&&(!p.dyn||p.cat)&&!p.animal);
+  const pool=PLACES.filter(p=>p.img&&(LIFE?(p.animal&&(!p.dyn||(p.sl||0)>=60)):((!p.dyn||p.cat)&&!p.animal)));
   if(pool.length<4){ $("#quiz").innerHTML=`<button class="ovx" onclick="closeQuiz()">${ICON.down}</button><div class="empty">${t("img_load")}</div>`; clearTimeout(QZ.t); QZ.t=setTimeout(()=>{ if($("#quiz").classList.contains("on")) qNext(); },1500); return; }
   const p=pool[Math.floor(Math.random()*pool.length)]; QZ.p=p; QZ.done=false; QZ.n++;
   const opts=shuffle([p,...shuffle(pool.filter(x=>x.id!==p.id)).slice(0,3)]);
@@ -1349,7 +1355,7 @@ function catReset(){ for(let i=PLACES.length-1;i>=0;i--){ const p=PLACES[i]; if(
 function catTxt(){ return WC.busy?t("ctry_load"):t("cat_st",{n:WC.n}); }
 function catUI(){ const N=PLACES.filter(p=>!p.dyn||p.cat).length; const h=$("#hN"); if(h) h.textContent=N+"+"; const s=$("#wcst"); if(s) s.textContent=catTxt(); }
 async function catLoad(){
-  if(WC.busy) return; WC.busy=true; const lang=catLang();
+  if(WC.busy||LIFE) return; WC.busy=true; const lang=catLang();
   try{
     let r=await fetch("assets/catalog/"+lang+".json"); if(!r.ok&&lang!=="en") r=await fetch("assets/catalog/en.json");
     if(r.ok){ const d=await r.json(); if(lang===catLang()){
@@ -1388,7 +1394,7 @@ const GRPT={mam:"tabiat",bird:"tabiat",fish:"dengiz",rep:"tabiat",amph:"tabiat",
 ANIMALS.forEach(([k,grp,en,uz,see])=>{ const id="a_"+k; if(IDX[id]) return; const p={id,t:en.replace(/ /g,"_"),nt:en,q:en,n:uz,c:"",cc:"",reg:"",tags:["hayvon"],grp,best:"—",s:"",g:PAL2[hash(id)%PAL2.length],animal:1,see}; PLACES.push(p); IDX[id]=p; });
 const grpName=p=>t("g_"+(p.grp||"mam"));
 const AN={g:"all",n:60};
-function animalsRow(){ const l=PLACES.filter(p=>p.animal&&p.img); if(l.length<4) return ""; const d=Math.floor(Date.now()/864e5);
+function animalsRow(){ return ""; const l=PLACES.filter(p=>p.animal&&p.img); if(l.length<4) return ""; const d=Math.floor(Date.now()/864e5);
   const pick=l.slice().sort((a,b)=>(LRN.l[b.id]||0)-(LRN.l[a.id]||0)||(hash(a.id+":"+d)%97)-(hash(b.id+":"+d)%97)).slice(0,14);
   return `<div class="sec"><h2>${t("an_h")}<small>${t("an_sub")}</small></h2><span onclick="openAnimals()">${t("all")} · ${PLACES.filter(p=>p.animal).length}</span></div><div class="hs">${pick.map(p=>cardH(p)).join("")}</div>`; }
 function openAnimals(g){ const O=ensureCtryView(); if(!O.classList.contains("on")) O.scrollTop=0; O.classList.add("on"); CT.code="__an"; if(g) AN.g=g;
@@ -1397,7 +1403,7 @@ function openAnimals(g){ const O=ensureCtryView(); if(!O.classList.contains("on"
    <div class="chips" style="padding:4px 0 14px"><button class="chip ${AN.g==="all"?"on":""}" onclick="AN.n=60;openAnimals('all')">${t("all")} · ${all.length}</button>${GRPS.filter(g=>all.some(p=>p.grp===g)).map(g=>`<button class="chip ${AN.g===g?"on":""}" onclick="AN.n=60;openAnimals('${g}')">${t("g_"+g)} · ${all.filter(p=>p.grp===g).length}</button>`).join("")}</div>
    <div class="grid2" style="padding:0">${l.slice(0,AN.n).map(gcard).join("")}</div>${l.length>AN.n?`<button class="pill o2 wide" style="margin-top:16px" onclick="AN.n+=60;openAnimals()">${t("ctry_more")} · ${l.length-AN.n}</button>`:""}<div class="foot"></div>`; }
 // GitHub'da yig'ilgan minglab turlar (assets/catalog/life/<til>.json)
-async function lifeLoad(){ const lang=catLang(); try{ let r=await fetch("assets/catalog/life/"+lang+".json"); if(!r.ok&&lang!=="en") r=await fetch("assets/catalog/life/en.json"); if(!r.ok) return; const d=await r.json(); if(lang!==catLang()) return;
+async function lifeLoad(){ if(!LIFE) return; const lang=catLang(); try{ let r=await fetch("assets/catalog/life/"+lang+".json"); if(!r.ok&&lang!=="en") r=await fetch("assets/catalog/life/en.json"); if(!r.ok) return; const d=await r.json(); if(lang!==catLang()) return;
   const have=new Set(PLACES.filter(p=>p.animal).map(p=>p.nt.toLowerCase()));
   for(const [qid,grp,label,en,loc,desc,file,sl] of d.items||[]){ const id="q"+qid; if(IDX[id]||(en&&have.has(en.toLowerCase()))) continue;
     const wl=loc?lang:"en", title=loc||en;
@@ -1406,11 +1412,49 @@ async function lifeLoad(){ const lang=catLang(); try{ let r=await fetch("assets/
     PLACES.push(p); IDX[id]=p; } refresh(); }catch(e){} }
 setTimeout(lifeLoad,1500);
 
+/* ================= TIRIK OLAM: bosh sahifa ================= */
+function grpCover(g){ const l=PLACES.filter(p=>p.animal&&p.grp===g&&p.img); return l.sort((a,b)=>(b.sl||99)-(a.sl||99))[0]||PLACES.find(p=>p.animal&&p.grp===g); }
+function renderLife(){
+  const H=$("#home"), all=PLACES.filter(p=>p.animal), list=forYou(), d=dailyPlace(), name=esc(U?.name||t("friend"));
+  const groups=GRPS.filter(g=>all.some(p=>p.grp===g));
+  const chips=groups.map(g=>{ const p=grpCover(g); return p?`<button class="dchip" onclick="X.tag='${g}';X.q='';go('explore')">${ph(p)}<span>${t("g_"+g)}</span></button>`:""; }).join("");
+  const rows=groups.map(g=>{ const l=list.filter(p=>p.grp===g&&p.img).slice(0,14); return l.length>=3?`<div class="sec"><h2>${t("g_"+g)}<small>${all.filter(p=>p.grp===g).length} ${t("life_n")}</small></h2><span onclick="X.tag='${g}';X.q='';go('explore')">${t("all")}</span></div><div class="hs">${l.map(p=>cardH(p)).join("")}</div>`:""; }).join("");
+  const top=list.filter(p=>p.img).slice(0,12);
+  const dayCard=d?`<div class="feat ph" style="background:${grad(d)}" onclick="openPlace('${d.id}')">${d.img?`<img src="${hq(d.img)}" alt="" onerror="this.src='${big(d.img)}';this.onerror=null">`:""}<div class="badge">${t("life_day")}</div>
+     <div class="fi"><h1>${esc(pN(d))}</h1><p>${esc(pS(d)||grpName(d))}</p><div class="row"><button class="pill g" onclick="event.stopPropagation();openPlace('${d.id}')">${t("details")}</button><button class="pill o" onclick="event.stopPropagation();openArticle('${d.id}')">${t("art_btn")}</button></div></div></div>`:"";
+  if(SITE){
+    if(!$("#shero")||H.dataset.l!==LANG){ H.dataset.l=LANG;
+      H.innerHTML=`<section class="shero" id="shero"><div class="bgl" id="hbA"></div><div class="bgl" id="hbB"></div><video id="hbV" muted playsinline loop preload="none"></video>
+        <button class="hcap" id="hcap"></button>
+        <div class="hgrid"><div><span class="hkick"><i></i>${t("life_kick")}</span><h1 class="htitle">${t("life_h1")}</h1><p class="hsub">${t("life_sub")}</p>
+          <div class="hbtns"><button class="hbtn" onclick="go('watch')">${t("watch_now")}<span class="arw">${ICON.arrow}</span></button><button class="hbtn gl" onclick="openQuiz()">${t("quiz_h")}</button></div></div>
+         <div class="hpanel"><form class="hsearch" onsubmit="event.preventDefault();X.q=this.q.value;X.tag='all';go('explore')">${ICON.search}<input name="q" placeholder="${esc(t("life_ph"))}" autocomplete="off"><button>${t("search_b")}</button></form>
+          <div class="hchips">${groups.slice(0,8).map(g=>`<button onclick="X.tag='${g}';X.q='';go('explore')">${t("g_"+g)}</button>`).join("")}</div></div></div>
+        <div class="hfoot"><div class="hstat"><i>${CATI.zoo?SV(CATI.zoo):""}</i><b id="hN">${all.length}+</b><small>${t("life_n")}</small></div><div class="hstat"><i>${SV(CATI.tabiat)}</i><b>${groups.length}</b><small>${t("life_g")}</small></div><div class="hstat"><i>${ICON.spark}</i><b>AI</b><small>${t("t_ai")}</small></div>
+         ${d?`<div class="hday" onclick="openPlace('${d.id}')"><div><small>${t("life_day")}</small><b>${esc(pN(d))}</b></div><span class="arw">${ICON.arrow}</span></div>`:""}</div></section><div id="hbody"></div>`;
+      HB.pool=null; clearInterval(HB.timer); heroNext(); HB.timer=setInterval(()=>{ if(!document.hidden) heroNext(); },10000); }
+    $("#hN")&&($("#hN").textContent=all.length+"+");
+    $("#hbody").innerHTML=`<div class="sec"><div><span class="slabel">${t("life_g")}</span><h2>${t("life_sub2")}</h2></div></div><div class="dchips">${chips}</div>
+      <div class="sec"><div><span class="slabel">${t("life_day")}</span><h2>${d?esc(pN(d)):""}</h2></div></div><div class="sfeat"><div style="grid-column:1/-1">${dayCard}</div></div>
+      ${recsHTML()}<div class="sec"><div><span class="slabel">${t("for_you_f")}</span><h2>${t("best_h")}</h2></div><span onclick="X.tag='all';go('explore')">${t("all")} →</span></div><div class="grid2">${top.map(gcard).join("")}</div>
+      ${rows}<footer class="sfooter"><div><div class="logo dark"><i>T</i>${t("life_brand")}</div><p>${t("life_sub")}</p></div><div><h4>${t("life_brand")}</h4><button onclick="go('explore')">${clean(t("nav_exp"))}</button><button onclick="go('watch')">${clean(t("nav_watch"))}</button><button onclick="openQuiz()">${t("quiz_h")}</button><a href="./">OLAM</a></div><div><h4>${clean(t("s_lang"))}</h4>${LANGS.slice(0,6).map(([k,n])=>`<button onclick="setLang('${k}')">${n}</button>`).join("")}<a href="${APP_URL}">${t("get_app")}</a></div><div class="copy"><span>© ${new Date().getFullYear()} ${t("life_brand")}</span><span>Wikipedia · Wikidata · Wikimedia Commons</span></div></footer>`;
+    return; }
+  H.innerHTML=`<header class="hd"><div class="avatar" onclick="go('profile')">${esc((U?.name||"S")[0].toUpperCase())}</div><div class="hdt"><small>${t("life_brand")}</small><b>${t("hello",{name})}</b></div>
+     <button class="ibtn" aria-label="${esc(t("settings"))}" onclick="openSettings()">${ICON.gear}</button></header>
+   <h1 class="hq">${t("life_h1")}</h1>
+   <div class="sbar"><div class="sin" onclick="go('explore');setTimeout(()=>$('#xq')?.focus(),60)">${ICON.search}<span>${t("life_ph")}</span></div><button class="sfil" onclick="openQuiz()" aria-label="quiz">${ICON.target}</button></div>
+   <div class="sec"><h2>${t("life_g")}</h2></div><div class="dchips">${chips}</div>
+   <div class="sec"><h2>${t("life_day")}</h2></div>${dayCard}
+   ${recsHTML()}
+   <div class="sec"><h2>${t("best_h")}</h2><span onclick="X.tag='all';go('explore')">${t("all")}</span></div><div class="grid2">${top.map(gcard).join("")}</div>
+   ${rows}<div class="foot"></div>`;
+}
+
 /* ================= SAYT REJIMI ================= */
 const HB={i:0,timer:null,pool:null};
 // fon uchun dunyodagi eng chiroyli manzaralar (qo'lda tanlangan)
 const HERO_BEST=["santorini","moraine","halong","banff","lauterbrunnen","matterhorn","borabora","maldives","geiranger","lofoten","jiuzhaigou","zhangjiajie","faroe","peritomoreno","torres","uyuni","iguazu","plitvice","hallstatt","bled","amalfi","cinqueterre","dolomites","milford","whitehaven","seychelles","machu","fuji","kyoto","cappadocia","tigersnest","guilin","phiphi","elnido","yosemite","antelope","monumentvalley","horseshoe","victoria","uluru","jokulsarlon","skogafoss","como","neuschwanstein","pamukkale","bigalmaty","kaindy","iskanderkul","charvak","registan"];
-function heroPool(){ if(HB.pool&&HB.pool.length) return HB.pool; const best=HERO_BEST.map(byId).filter(p=>p&&p.img); const rest=shuffle(best.slice(6)); HB.pool=[...shuffle(best.slice(0,6)),...rest]; return HB.pool; }
+function heroPool(){ if(HB.pool&&HB.pool.length) return HB.pool; if(LIFE){ HB.pool=shuffle(PLACES.filter(p=>p.animal&&p.img&&!p.dyn)); return HB.pool; } const best=HERO_BEST.map(byId).filter(p=>p&&p.img); const rest=shuffle(best.slice(6)); HB.pool=[...shuffle(best.slice(0,6)),...rest]; return HB.pool; }
 function heroNext(){ const H=$("#shero"); if(!H||cur!=="home") return; const pool=heroPool(); if(!pool.length){ clearTimeout(HB.rt); HB.rt=setTimeout(heroNext,900); return; } const p=pool[HB.i++%pool.length];
   const a=$("#hbA"), b=$("#hbB"), v=$("#hbV"); const [on,off]=a.classList.contains("on")?[b,a]:[a,b];
   const land=(VID[p.id]||[]).filter(x=>/_1920_1080_/.test(x)===(innerWidth>innerHeight));
@@ -1465,11 +1509,11 @@ function renderHomeSite(){ setTimeout(fillAIPicks,0);
    <div class="sec"><div><span class="slabel">${catIcon("globe")}OLAM</span><h2>${clean(t("world_h"))}</h2><small>${t("world_sub")}</small></div><span onclick="go('explore');setTimeout(()=>$('#xq')?.focus(),60)">${t("search_b")} →</span></div>
    ${["yevropa","osiyo","amerika","afrika","okeaniya","uz"].map(r=>{ const l=list.filter(p=>p.reg===r).slice(0,14); return `<div class="sec" style="padding-top:18px;padding-bottom:12px"><h2 style="font-size:20px;letter-spacing:-.4px">${R[r]}</h2><span onclick="X.reg='${r}';X.tag='all';go('explore')">${PLACES.filter(p=>p.reg===r).length} ${t("places")} →</span></div><div class="hs">${l.map(p=>cardH(p,"sm")).join("")}</div>`; }).join("")}
    <section class="sapp"><div><span class="slabel" style="background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.3);color:#fff">OLAM App</span><h2>${t("app_h")}</h2><p>${t("app_p")}</p>
-     <div class="hbtns"><a class="hbtn" href="app/">${t("get_app")}<span class="arw">${ICON.arrow}</span></a><button class="hbtn gl" onclick="shareApp()">${clean(t("s_share"))}</button></div></div>
+     <div class="hbtns"><a class="hbtn" href="${APP_URL}">${t("get_app")}<span class="arw">${ICON.arrow}</span></a><button class="hbtn gl" onclick="shareApp()">${clean(t("s_share"))}</button></div></div>
      <div class="phone ph" style="position:relative">${hero.img?ph(hero,"","",true):""}<div class="pui"><b>${esc(pN(hero))}</b>${PIN}${esc(pCountry(hero))}</div></div></section>
    <footer class="sfooter"><div><div class="logo dark"><i>O</i>OLAM</div><p>${t("about_t")}</p></div>
      <div><h4>OLAM</h4><button onclick="go('explore')">${clean(t("nav_exp"))}</button><button onclick="go('watch')">${clean(t("nav_watch"))}</button><button onclick="openMap()">${clean(t("t_map"))}</button><button onclick="openQuiz()">${clean(t("t_quiz"))}</button><button onclick="openChat()">${clean(t("t_ai"))}</button></div>
-     <div><h4>${clean(t("s_lang"))}</h4>${LANGS.slice(0,6).map(([k,n,f])=>`<button onclick="setLang('${k}')">${n}</button>`).join("")}<a href="app/">${t("get_app")}</a></div>
+     <div><h4>${clean(t("s_lang"))}</h4>${LANGS.slice(0,6).map(([k,n,f])=>`<button onclick="setLang('${k}')">${n}</button>`).join("")}<a href="${APP_URL}">${t("get_app")}</a></div>
      <div class="copy"><span>© ${new Date().getFullYear()} OLAM</span><span>Wikipedia · Wikimedia Commons · Pexels · Open-Meteo</span></div></footer>`;
 }
 function langSheet(){ const S=$("#sh"); S.dataset.k="lang"; S.classList.add("on");
@@ -1479,8 +1523,9 @@ function siteInit(){
 }
 
 /* ================= START ================= */
+if(LIFE){ for(const l in I18N){ if(I18N[l].life_q){ I18N[l].quiz_h=I18N[l].life_q; I18N[l].t_quiz=I18N[l].life_q; } } }
 applyTheme(); applyUI(); applyLang();
-if(!U&&SITE) U={name:"",country:"UZ",interests:[],regions:[],dream:null,style:"",with:"",season:""};
+if(!U&&(SITE||LIFE)) U={name:"",country:"UZ",interests:[],regions:[],dream:null,style:"",with:"",season:""};
 if(!SITE&&(!U||U.lat==null)&&!ls.get("olam_locask",false)){ ls.set("olam_locask",true); setTimeout(()=>locate(()=>{ if($("#ob").classList.contains("on")&&obStep===1) renderOb(); }),1200); }
 if(U) go("home"); else startOb();
 if(SITE) siteInit();
