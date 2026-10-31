@@ -239,7 +239,12 @@ async function cmSend(id){ const inp=$("#cmq"); const x=(inp?.value||"").trim();
 /* ================= KO'RINISH YORDAMCHILARI ================= */
 const grad = p=>`linear-gradient(140deg,${p.g[0]},${p.g[1]})`;
 const big = u=>u&&!u.startsWith("data:")?u.replace(/\/\d+px-/,"/1280px-").replace(/([?&]width=)\d+/,"$11280"):u;
-const hq = u=>(innerWidth*(devicePixelRatio||1)>1500)?huge(u):big(u);
+const uhd = u=>u&&!u.startsWith("data:")?u.replace(/\/\d+px-/,"/3840px-").replace(/([?&]width=)\d+/,"$13840"):u;
+const SCR=()=>Math.max(innerWidth,innerHeight)*(devicePixelRatio||1);
+const hq = u=>SCR()>2600?uhd(u):SCR()>1500?huge(u):big(u);   // 4K → Full HD → HD
+// rasm yuklanmasa bir pog'ona past sifatga tushish
+const down = u=>/3840px-|width=3840/.test(u)?u.replace("/3840px-","/1920px-").replace("width=3840","width=1920"):/1920px-|width=1920/.test(u)?u.replace("/1920px-","/1280px-").replace("width=1920","width=1280"):null;
+function loadBest(u,ok,fail){ const im=new Image(); im.decoding="async"; im.onload=()=>ok(u); im.onerror=()=>{ const d=down(u); d?loadBest(d,ok,fail):fail&&fail(); }; im.src=u; }
 const huge = u=>u&&!u.startsWith("data:")?u.replace(/\/\d+px-/,"/1920px-").replace(/([?&]width=)\d+/,"$11920"):u;
 const FB = "if(!this.dataset.f&&/1280px-/.test(this.src)){this.dataset.f=1;this.src=this.src.replace('/1280px-','/960px-')}else{this.remove()}";
 const img = (p,lg)=>p.img?`<img src="${lg?big(p.img):p.img}" alt="" loading="lazy" decoding="async" onerror="${FB}">`:"";
@@ -424,7 +429,7 @@ async function loadVideo(p){
     const d=await (await fetch(u)).json();
     const pages=Object.values(d.query?.pages||{}).filter(x=>x.videoinfo).sort((a,b)=>(a.index||0)-(b.index||0));
     const webm=document.createElement("video").canPlayType('video/webm; codecs="vp9"');
-    const near=arr=>arr.sort((a,b)=>Math.abs(a.height-1080)-Math.abs(b.height-1080))[0];
+    const tgt=SCR()>2600?2160:1080; const near=arr=>arr.sort((a,b)=>Math.abs(a.height-tgt)-Math.abs(b.height-tgt))[0];
     const got=[]; for(const pg of pages){ const ds=pg.videoinfo[0].derivatives||[]; const pick=near(ds.filter(x=>/mp4/.test(x.type)&&x.height>=480))||(webm&&near(ds.filter(x=>/webm/.test(x.type)&&x.height>=480))); if(pick) got.push(pick.src); if(got.length>=3) break; }
     if(got.length){ p.vlist=got; p.video=got[0]; }
   }catch(e){}
@@ -761,7 +766,7 @@ function wShow(){
   const p=W.list[W.i]; const a=$("#la"), b=$("#lb"); if(!a) return; W.shown=Date.now(); clearInterval(W.gt);
   const v=$("#wv"); v.classList.remove("on"); $("#watch")?.classList.remove("vfit"); v.pause(); v.removeAttribute("src"); v.load();
   const put=u=>{ const A=$("#la"),B=$("#lb"); if(!A) return; const [on,off]=A.classList.contains("on")?[B,A]:[A,B]; on.style.backgroundImage=u?`url("${u}"), ${grad(p)}`:grad(p); on.classList.remove("kb"); void on.offsetWidth; on.classList.add("on","kb"); off.classList.remove("on"); setTimeout(()=>off.classList.remove("kb"),1300); };
-  if(p.img){ const u=hq(p.img); const im=new Image(); im.onload=()=>put(u); im.onerror=()=>{ const b=big(p.img); const i2=new Image(); i2.onload=()=>put(b); i2.onerror=()=>put(p.img); i2.src=b; }; im.src=u; } else put(null);
+  if(p.img){ loadBest(hq(p.img),put,()=>put(p.img)); } else put(null);
   $("#wf")?.classList.remove("on");
   const tx=$("#wt"); tx.classList.remove("in"); void tx.offsetWidth; const d=dist(p);
   tx.innerHTML=`<div class="kicker">${esc(pC(p))}${d!=null?" · "+km(d):""}</div><h2>${esc(pN(p))}</h2><p>${esc(pS(p))}</p>`; tx.classList.add("in");
@@ -769,7 +774,7 @@ function wShow(){
   W.dur=SPD(); wTimer(W.dur); ambStart(ambKind(p)); if(window.speechSynthesis?.speaking) speechSynthesis.cancel();
   const id=p.id;
   loadVideo(p).then(src=>{ if(W.list[W.i]?.id!==id||cur!=="watch") return;
-    const slides=()=>loadGallery(p).then(g=>{ if(W.list[W.i]?.id!==id||g.length<2) return; let k=0; clearInterval(W.gt); W.gt=setInterval(()=>{ if(W.paused||W.list[W.i]?.id!==id) return; k=(k+1)%g.length; const u=hq(g[k]); const im=new Image(); im.onload=()=>put(u); im.onerror=()=>{ const i2=new Image(); i2.onload=()=>put(g[k]); i2.src=g[k]; }; im.src=u; },Math.max(3000,W.dur/3)); });
+    const slides=()=>loadGallery(p).then(g=>{ if(W.list[W.i]?.id!==id||g.length<2) return; let k=0; clearInterval(W.gt); W.gt=setInterval(()=>{ if(W.paused||W.list[W.i]?.id!==id) return; k=(k+1)%g.length; loadBest(hq(g[k]),put,()=>put(g[k])); },Math.max(3000,W.dur/3)); });
     if(!src){ slides(); return; }   // video yo'q: rasmlar almashib turadi
     v.src=src; v.muted=!SET.vsound; v.volume=1;
     v.onloadedmetadata=()=>{ if(v.duration>14) v.currentTime=Math.random()*(v.duration-12); };
@@ -854,7 +859,7 @@ async function galBuild(p){
   const el=$("#gal");
   el.innerHTML=slides.map((x,k)=>x.v
     ?`<div class="gs vs" style="--bgimg:url('${bg}')"><video src="${x.v}" muted playsinline preload="${k===0?"auto":"metadata"}" ${slides.length===1?"loop":""} onloadedmetadata="galFit(this)"></video></div>`
-    :`<div class="gs ph" style="background:${grad(p)};--bgimg:url('${x.i}')"><img src="${x.i}" alt="" ${k>1?'loading="lazy"':""} decoding="async" onload="galFit(this)" onerror="if(!this.dataset.h&&/1920px-|width=1920/.test(this.src)){this.dataset.h=1;this.src=this.src.replace('/1920px-','/1280px-').replace('width=1920','width=1280')}else{${FB}}"></div>`).join("");
+    :`<div class="gs ph" style="background:${grad(p)};--bgimg:url('${x.i}')"><img src="${x.i}" alt="" ${k>1?'loading="lazy"':""} decoding="async" onload="galFit(this)" onerror="const d=down(this.src);if(d){this.src=d}else{${FB}}"></div>`).join("");
   $("#gdots").innerHTML=slides.length>1?slides.map((x,k)=>`<button class="${x.v?"v":""}" onclick="galStep(${k},1)" aria-label="${k+1}"></button>`).join(""):"";
   $("#detail .dg").classList.toggle("multi",slides.length>1);
   const hold=()=>{ G.hold=Date.now()+9000; };
@@ -1377,8 +1382,7 @@ function heroNext(){ const H=$("#shero"); if(!H||cur!=="home") return; const poo
   const swapVideo=()=>{ if(!v) return; if(!useV){ if(v.classList.contains("on")){ v.classList.remove("on"); setTimeout(()=>{ if(!v.classList.contains("on")){ v.pause(); v.removeAttribute("src"); } },1300); } return; }
     const go=()=>{ v.onplaying=()=>{ v.classList.add("on"); }; v.src=pexels(land[Math.floor(Math.random()*land.length)]); v.play().catch(()=>{}); };
     if(v.classList.contains("on")){ v.classList.remove("on"); setTimeout(go,1250); } else go(); };
-  const u=huge(p.img); const im=new Image(); im.decoding="async";
-  im.onload=()=>{ show(`url("${u}")`); swapVideo(); }; im.onerror=()=>{ show(`url("${big(p.img)}"), ${grad(p)}`); swapVideo(); }; im.src=u; }
+  loadBest(SCR()>2600?uhd(p.img):huge(p.img),u=>{ show(`url("${u}")`); swapVideo(); },()=>{ show(`url("${big(p.img)}"), ${grad(p)}`); swapVideo(); }); }
 function heroSearch(q){ q=(q||"").trim(); X.q=q; X.tag="all"; X.reg="all"; go("explore"); }
 function renderHomeSite(){ setTimeout(fillAIPicks,0);
   const H=$("#home"), C=CAT(), R=REGN(), PR=PER(), N=PLACES.filter(p=>!p.dyn||p.cat).length;
