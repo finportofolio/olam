@@ -1,19 +1,28 @@
 # OLAM Bilim katalogi: insonlar, texnika, internet (Wikidata).
-# Joylar katalogi tugagach avtomatik ishga tushadi; qo'lda ham, har oy ham.
+# Ish 6 soatlik chegaraga yetsa, borini saqlab, o'zini yana ishga tushiradi (ko'pi bilan 8 marta ketma-ket).
 name: Build knowledge catalog
 
 on:
   workflow_dispatch:
+    inputs:
+      round:
+        description: "Ketma-ket ishga tushish raqami"
+        default: "0"
+      fresh:
+        description: "1 — noldan yig'ish"
+        default: "0"
   schedule:
     - cron: "41 5 2 * *"
-  workflow_run:
-    workflows: ["Build world catalog"]
-    types: [completed]
+  push:
     branches: [main]
+    paths:
+      - scripts/build-bilim.mjs
+      - .github/workflows/catalog-bilim.yml
 
 permissions:
   contents: write
   pages: write
+  actions: write
 
 concurrency:
   group: catalog-bilim
@@ -23,6 +32,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 355
+    env:
+      BUDGET_MIN: "300"
+      MORE_FILE: /tmp/olam-more.txt
+      FRESH: ${{ github.event_name == 'schedule' && '1' || inputs.fresh || '0' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -30,23 +43,42 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Build knowledge catalog
+      - name: Build
+        id: build
         run: node scripts/build-bilim.mjs
       - name: Check output
         run: |
-          node -e 'const d=require("./assets/catalog/bilim/en.json"); if(d.items.length<500){ console.error("too few: "+d.items.length); process.exit(1); } console.log("items:", d.total)'
+          node -e 'const d=require("./assets/catalog/bilim/en.json"); if(d.total<500){ console.error("too few: "+d.total); process.exit(1); } console.log("items:", d.total, JSON.stringify(d.counts))'
+          du -sh assets/catalog/bilim
       - name: Commit catalog
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add assets/catalog/bilim
+          git add -A assets/catalog/bilim
           if git diff --cached --quiet; then echo "no changes"; exit 0; fi
-          git commit -m "Update knowledge catalog"
-          git pull --rebase origin main
-          git push origin HEAD:main
+          git commit -q -m "Update knowledge catalog"
+          for i in 1 2 3 4; do
+            git pull -q --rebase -X theirs origin main && git push -q origin HEAD:main && break
+            echo "push qayta urinish $i"; sleep $((i*10))
+          done
       - name: Rebuild GitHub Pages
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           curl -fsS -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
             "https://api.github.com/repos/${{ github.repository }}/pages/builds" || echo "pages build request failed"
+      - name: Continue in next run
+        if: always() && steps.build.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ROUND: ${{ inputs.round || '0' }}
+        run: |
+          if [ -f "$MORE_FILE" ] && [ "$ROUND" -lt 8 ]; then
+            cat "$MORE_FILE"
+            NEXT=$((ROUND+1))
+            curl -fsS -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${{ github.repository }}/actions/workflows/catalog-bilim.yml/dispatches" \
+              -d "{\"ref\":\"main\",\"inputs\":{\"round\":\"$NEXT\"}}" && echo "keyingi ish: $NEXT"
+          else
+            echo "davomi kerak emas (round=$ROUND)"
+          fi
