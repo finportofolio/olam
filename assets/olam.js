@@ -823,6 +823,7 @@ async function openPlace(id){
      <button class="pill o2" style="width:100%;margin-top:8px" onclick="openComments('${p.id}')">${ICON.chat}<span>${clean(t("cm_btn"))}</span></button>
      ${p.animal?"":`<div class="aibar">${tl("aiq").map((q,i)=>`<button onclick="aiAsk('${p.id}',${i})">${ICON.spark}${esc(clean(q[0]))}</button>`).join("")}</div>`}
      <div class="tagline">${esc(pS(p))}</div>
+     <div class="hook" id="phook"><div class="artsk"><i></i><i></i><i></i></div></div>
      ${p.animal?"":`     <div class="facts"><div>${t("best_time")}<b>${bestTxt(p.best)}</b></div><div>${t("from_you")}<b>${km(dist(p))}</b></div><div>${t("region")}<b>${clean(R[p.reg])}</b></div></div>
      <div class="sgrp wxb" id="wx"><div class="sl">\${t("wx_h")}</div><div class="sp">…</div></div><div class="sgrp" id="fx"></div>
      <div class="gmap"><a class="pill gm" href="\${gmapsUrl(p)}" target="_blank" rel="noopener">\${ICON.pin}<span>\${t("gm_open")}</span></a><a class="pill gm g2" href="\${gdirUrl(p)}" target="_blank" rel="noopener">\${ICON.route}<span>\${t("gm_dir")}</span></a></div>
@@ -839,7 +840,7 @@ async function openPlace(id){
    ${others.map(o=>{ const s=pS(o); return `<div class="rec" onclick="openPlace('${o.id}')">${ph(o)}<div><b>${esc(pN(o))}</b><small>${esc(pCountry(o))}<br>${esc(s.length>60?s.slice(0,58)+"…":s)}</small></div></div>`; }).join("")}
    <div class="foot"></div>`;
   DD.classList.add("on"); DD.scrollTop=0;
-  if(!desc) fillDesc(p); loadWx(p); loadFx(p); placeSoundStart(p); loadFacts(p); loadMore(p);
+  if(!desc) fillDesc(p); loadWx(p); loadFx(p); placeSoundStart(p); loadFacts(p); loadMore(p); loadHook(p);
   galBuild(p);
 }
 /* ===== Galereya: 1-video → rasmlar → qolgan videolar; avtomatik, silliq, strelka/nuqta/surish ===== */
@@ -898,9 +899,9 @@ function artParse(txt){ const out=[]; let cur={h:"",p:[]}; String(txt||"").split
 const words=secs=>secs.reduce((a,x)=>a+x.p.join(" ").split(/\s+/).length,0);
 async function wikiFull(l,title){ const d=await (await fetch(`https://${l}.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1&prop=extracts&explaintext=1&exsectionformat=wiki${l==="zh"?"&variant=zh-cn":""}&titles=`+encodeURIComponent(title))).json(); return Object.values(d.query?.pages||{})[0]?.extract||""; }
 function ensureArtView(){ let O=$("#artv"); if(!O){ O=document.createElement("section"); O.className="ov art"; O.id="artv"; $("#app").insertBefore(O,$("#sh")); } return O; }
-function closeArticle(){ $("#artv")?.classList.remove("on"); }
+function closeArticle(){ $("#artv")?.classList.remove("on"); selBtnHide(); }
 async function openArticle(id){
-  const p=byId(id); if(!p) return; const O=ensureArtView(); O.classList.add("on"); O.scrollTop=0; learn(id,1.5);
+  const p=byId(id); if(!p) return; ARTID=id; const O=ensureArtView(); O.classList.add("on"); O.scrollTop=0; learn(id,1.5);
   const key=id+"|"+LANG;
   O.innerHTML=`<button class="ovx" onclick="closeArticle()">${ICON.down}</button>
    <article class="artw"><div class="arth ph" style="background:${grad(p)}">${p.img?`<img src="${hq(p.img)}" alt="" onerror="this.src='${big(p.img)}'">`:""}<div class="arthi"><span class="kicker">${esc(pCountry(p))}</span><h1>${esc(pN(p))}</h1><p>${esc(pS(p))}</p></div></div>
@@ -928,7 +929,7 @@ async function openArticle(id){
 function artRender(p,A){ const b=$("#artb"); if(!b) return; const w=words(A.secs);
   $("#artm").innerHTML=`<span>${t("art_words",{n:w.toLocaleString(LOC[LANG]),m:Math.max(1,Math.round(w/200))})}</span><span>${t("art_src",{l:A.srcL.toUpperCase()})}${A.tr?" · "+t("art_trd"):""}</span>`;
   $("#arttoc").innerHTML=A.secs.filter(x=>x.h).length>2?`<b>${t("art_toc")}</b>${A.secs.map((x,i)=>x.h?`<a href="#" onclick="event.preventDefault();document.getElementById('as${i}')?.scrollIntoView({behavior:'smooth'})">${esc(x.h)}</a>`:"").join("")}`:"";
-  b.innerHTML=A.secs.map((x,i)=>`<section id="as${i}">${x.h?`<h2>${esc(x.h)}</h2>`:""}${x.p.map(q=>`<p${x.raw?' class="raw"':""}>${esc(q)}</p>`).join("")}</section>`).join("")+`<div id="artg"></div>`;
+  b.innerHTML=A.secs.map((x,i)=>`<section id="as${i}">${x.h?`<h2>${esc(x.h)}</h2>`:""}${x.p.map(q=>`<p${x.raw?' class="raw"':""}>${esc(q)}</p>`).join("")}<button class="secask" onclick="askAbout(ARTID,(this.parentNode.querySelector('h2')?.textContent||'')+': '+[...this.parentNode.querySelectorAll('p')].map(e=>e.textContent).join(' ').slice(0,600))">${ICON.chat}<span>${t("ask_sec")}</span></button></section>`).join("")+`<div id="artg"></div>`;
   if(A.guide) artGuideRender(A.guide); }
 async function artGuide(p){ const key=p.id+"|"+LANG; const A=ART[key]||{}; if(A.guide){ artGuideRender(A.guide); return; } const box=$("#artg"); if(box) box.innerHTML=`<div class="artgd"><h2>${t("art_guide")}</h2><p class="sp">${t("thinking")}</p></div>`;
   try{ const g=await ai(`Write a practical travel guide about "${pN(p)}" (${pCountry(p)}) in my language. Use exactly these sections, each starting with "## ": best time to visit; how to get there; tickets, hours and approximate prices (say clearly if unknown or variable); what to see and do; useful tips. 300-450 words total. Only facts you are confident about; no invented numbers. Plain sentences, no emoji.`,`${pN(p)} (${pC(p)})`);
@@ -937,7 +938,29 @@ function artGuideRender(g){ const box=$("#artg"); if(!box) return; const parts=S
   box.innerHTML=`<div class="artgd"><h2>${t("art_guide")}</h2>${parts.map(x=>{ const [h,...r]=x.split("\n"); return r.length?`<h3>${esc(h.replace(/[*#]/g,""))}</h3>${r.join("\n").split(/\n+/).filter(Boolean).map(q=>`<p>${esc(q.replace(/\*\*/g,"").replace(/^[-*]\s*/,"• "))}</p>`).join("")}`:`<p>${esc(h)}</p>`; }).join("")}<p class="sp">${t("art_ai")}</p></div>`; }
 document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&$("#artv")?.classList.contains("on")) closeArticle(); });
 
-/* ===== Batafsil ma'lumot: Wikidata faktlari va Wikipedia'dan to'liq tavsif ===== */
+/* ===== Qiziqtiruvchi blok: nega kelishadi, qachon, bilasizmi, tarix sanalarda ===== */
+const HOOK={};
+const HIST=["tarix","islom","ibodat","saroy","muzey"];
+async function loadHook(p){ const key=p.id+"|"+LANG; const box=()=>stillOpen(p)?$("#phook"):null;
+  if(HOOK[key]) return hookRender(p,HOOK[key]);
+  const hist=!p.animal&&p.tags.some(x=>HIST.includes(x));
+  const q=p.animal
+    ?`About the creature "${pN(p)}" (${(p.nt||p.t).replace(/_/g," ")}), write in my language, engaging but strictly factual (no invented numbers):\n## WHY — 3 short bullet points on what makes it amazing (each line starts with "- ")\n## WHERE — where in the wild it lives and where people can see it, 2 short sentences\n## FACT — one surprising true fact, 1-2 sentences\nUnder 140 words. No emoji. Use exactly these ## headings.`
+    :`About "${pN(p)}" (${pCountry(p)}), write in my language, engaging but strictly factual (no invented numbers):\n## WHY — why people travel here: 3 short bullet points (each line starts with "- ")\n## WHEN — best season(s) and the best time of day to visit, 2 short sentences\n## FACT — one surprising true fact, 1-2 sentences${hist?"\n## TIMELINE — 4 to 6 key dates, each line exactly: - YEAR — event (use BC where needed)":""}\nUnder ${hist?230:150} words. No emoji. Use exactly these ## headings.`;
+  try{ const txt=await ai(q,`${pN(p)} (${pC(p)})`); if(!txt){ box()?.remove(); return; } HOOK[key]=txt; hookRender(p,txt); }catch(e){ box()?.remove(); } }
+function hookRender(p,txt){ const b=stillOpen(p)?$("#phook"):null; if(!b) return;
+  const sec={}; String(txt).split(/^##\s*/m).forEach(part=>{ const [h,...r]=part.trim().split("\n"); if(!h) return; const k=(h.match(/WHY|WHEN|WHERE|FACT|TIMELINE/i)||[""])[0].toUpperCase(); if(k) sec[k]=r.join("\n").trim(); });
+  const li=x=>(x||"").split("\n").map(l=>l.replace(/^[-*•]\s*/,"").replace(/\*\*/g,"").trim()).filter(Boolean);
+  if(!Object.keys(sec).length){ b.remove(); return; }
+  const card=(k,ic,title,body)=>body?`<div class="hk hk-${k}"><div class="hkh"><i>${SV(ic)}</i><b>${title}</b></div>${body}</div>`:"";
+  b.innerHTML=
+    card("why",CATI.wonder,p.animal?t("hk_amaze"):t("hk_why"),sec.WHY?`<ul>${li(sec.WHY).map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:"")+
+    card("when",p.animal?CATI.globe:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',p.animal?t("hk_where"):t("hk_when"),(sec.WHEN||sec.WHERE)?`<p>${esc(li(sec.WHEN||sec.WHERE).join(" "))}</p>`:"")+
+    card("fact",'<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.8.8 1 1.5 1 2.5h6c0-1 .2-1.7 1-2.5A6 6 0 0 0 12 3z"/>',t("hk_fact"),sec.FACT?`<p>${esc(li(sec.FACT).join(" "))}</p>`:"")+
+    card("time",CATI.tarix,t("hk_time"),sec.TIMELINE?`<ol class="tl">${li(sec.TIMELINE).map(x=>{ const m=/^(.{1,22}?)\s*[—–-]\s+(.+)$/.exec(x); return m?`<li><b>${esc(m[1])}</b><span>${esc(m[2])}</span></li>`:`<li><span>${esc(x)}</span></li>`; }).join("")}</ol>`:"")+
+    `<p class="sp hkai">${t("hk_ai")}</p>`; }
+
+/* ===== Batafsil ma\'lumot: Wikidata faktlari va Wikipedia'dan to'liq tavsif ===== */
 const stillOpen=p=>$("#detail").classList.contains("on")&&$("#detail h1")?.textContent===pN(p);
 async function qidOf(p){ if(p.wd) return p.id.slice(1); if(p.qid) return p.qid;
   try{ const d=await (await fetch(`https://${p.wl||"en"}.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1&prop=pageprops&ppprop=wikibase_item&titles=`+encodeURIComponent((p.nt||p.t).replace(/_/g," ")))).json();
@@ -968,17 +991,18 @@ async function loadFacts(p){
     const wg=val("P2050"); if(wg) rows.push(["f_wing",'<path d="M2 12c4-6 8-6 10 0 2-6 6-6 10 0"/>',num(wg)+" "+(unit(wg)||({Q174728:"cm"}[String(wg.unit||"").split("/").pop()]||""))]);
     const lt=val("P7725"); if(lt) rows.push(["f_litter",'<circle cx="8" cy="9" r="2.5"/><circle cx="16" cy="9" r="2.5"/><circle cx="12" cy="16" r="2.5"/>',num(lt)]);
     const lf=val("P2250"); if(lf) rows.push(["f_life",'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',num(lf)+" "+(tu(lf)||t("f_yrs"))]);
-    const ids=[...all("P84").slice(0,2).map(x=>["f_arch",x.id]),...all("P149").slice(0,2).map(x=>["f_style",x.id]),...(val("P141")?.id?[["f_iucn",val("P141").id]]:[]),...all("P1034").slice(0,3).map(x=>["f_food",x.id]),...all("P2974").slice(0,3).map(x=>["f_hab",x.id])];
+    const ids=[...all("P84").slice(0,2).map(x=>["f_arch",x.id]),...all("P149").slice(0,2).map(x=>["f_style",x.id]),...(val("P141")?.id?[["f_iucn",val("P141").id]]:[]),...all("P1034").slice(0,3).map(x=>["f_food",x.id]),...all("P2974").slice(0,3).map(x=>["f_hab",x.id]),...all("P9714").slice(0,4).map(x=>["f_range",x.id]),...all("P183").slice(0,3).map(x=>["f_range",x.id])];
     if(ids.length){ try{ const d=(await (await fetch(`https://www.wikidata.org/w/api.php?action=wbgetentities&format=json&origin=*&ids=${[...new Set(ids.map(x=>x[1]))].join("|")}&props=labels&languages=${WL(LANG)}|en&languagefallback=1`)).json()).entities||{};
       const by={}; ids.forEach(([k,id])=>{ const l=d[id]?.labels?.[WL(LANG)]?.value||d[id]?.labels?.en?.value; if(l) (by[k]=by[k]||[]).push(LANG==="uzk"?cyr(l):l); });
       if(by.f_iucn) rows.unshift(["f_iucn",'<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/>',by.f_iucn[0]]);
       if(by.f_food) rows.push(["f_food",'<path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M17 21V3c-2.2 1.6-3 4.6-3 8h3"/>',by.f_food.join(", ")]);
+      if(by.f_range) rows.push(["f_range",'<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',[...new Set(by.f_range)].join(", ")]);
       if(by.f_hab) rows.push(["f_hab",'<path d="M12 22v-5M12 2l6 8h-3l4 6H5l4-6H6z"/>',by.f_hab.join(", ")]);
       if(by.f_arch) rows.push(["f_arch",'<path d="M3 21h18M6 21V10l6-6 6 6v11M10 21v-6h4v6"/>',by.f_arch.join(", ")]); if(by.f_style) rows.push(["f_style",CATI.muzey,by.f_style.join(", ")]); }catch(x){} }
     const web=val("P856"); if(web&&/^https?:\/\//.test(web)) rows.push(["f_web",'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',`<a href="${esc(web)}" target="_blank" rel="noopener">${esc(web.replace(/^https?:\/\/(www\.)?/,"").replace(/\/$/,"").slice(0,32))} ↗</a>`,1]);
     if(p.lat!=null) rows.push(["f_coord",'<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',`${(+p.lat).toFixed(4)}, ${(+p.lon).toFixed(4)}`]);
     if(!stillOpen(p)) return; if(rows.length<2) return fail();
-    $("#pfacts .pfg").innerHTML=rows.map(([k,ic,v,raw])=>`<div class="pf"><i>${SV(ic)}</i><div><small>${t(k)}</small><b>${raw?v:esc(v)}</b></div></div>`).join("");
+    $("#pfacts .pfg").innerHTML=rows.map(([k,ic,v,raw])=>`<div class="pf" role="button" tabindex="0" onclick="if(!event.target.closest('a'))askAbout('${p.id}',this.querySelector('small').textContent+': '+this.querySelector('b').textContent)"><i>${SV(ic)}</i><div><small>${t(k)}</small><b>${raw?v:esc(v)}</b></div></div>`).join("")+`<p class="sp pfhint">${t("ask_fact")}</p>`;
   }catch(x){ fail(); }
 }
 async function loadMore(p){
@@ -1022,20 +1046,21 @@ const CH={place:null,msgs:[],busy:false};
 function openChat(id){
   if(cur==="watch"&&!W.paused) wPause();
   if(CH.place!==(id||null)){ CH.place=id||null; CH.msgs=[]; }
-  const p=id?byId(id):null; const sug=p?tl("sg_p"):tl("sg_g");
+  const p=id?byId(id):null; const sug=p?(p.animal?tl("sg_a"):tl("sg_p")):tl("sg_g");
   const vp=p&&VID[p.id]?.length?p:forYou().find(x=>VID[x.id]?.length);
   $("#chat").innerHTML=`<div class="chh"><button class="x" onclick="closeChat()">${ICON.down}</button>
      <div><b>${t("guide")}</b><small>${p?esc(t("about_p",{p:pN(p)})):t("any_q")}</small></div></div>
    ${vp&&SET.video?`<div class="chv"><video src="${pexels(VID[vp.id][0])}" autoplay muted loop playsinline></video><div class="chvt">${PIN}${esc(pN(vp))}</div></div>`:""}
    <div class="msgs" id="msgs"></div>
    <div class="sugg">${sug.map(s=>`<button onclick="chatSend(this.textContent)">${esc(s)}</button>`).join("")}</div>
+   <div class="cqr" id="cqr" hidden></div>
    <form class="cin" onsubmit="event.preventDefault();chatSend($('#cq').value)"><input id="cq" placeholder="${esc(t("ask_ph"))}" autocomplete="off"><button aria-label="${esc(t("send"))}">↑</button></form>`;
   $("#chat").classList.add("on"); drawMsgs();
 }
 function closeChat(){ $("#chat").classList.remove("on"); }
 function drawMsgs(){
   const box=$("#msgs"); if(!box) return; const p=CH.place?byId(CH.place):null; const name=U?.name||t("friend");
-  box.innerHTML=`<div class="m a">${esc(p?t("hi_p",{name,p:pN(p)}):t("hi_g",{name}))}</div>`+CH.msgs.map((m,i)=>`<div class="m ${m.role==="user"?"u":"a"}">${esc(m.text)}${m.role!=="user"?`<button class="spk mspk" onclick="speak(CH.msgs[${i}].text,this)" aria-label="${esc(t("listen"))}">${ICON.sound}</button>`:""}</div>`+(m.role!=="user"?(m.cards?.length?cardStrip(m.cards):placeCards(m.text)):"")).join("")+(CH.busy?`<div class="m a t">${t("typing")}</div>`:"");
+  box.innerHTML=`<div class="m a">${esc(p?t("hi_p",{name,p:pN(p)}):t("hi_g",{name}))}</div>`+CH.msgs.map((m,i)=>`<div class="m ${m.role==="user"?"u":"a"}">${m.quote?`<blockquote>${esc(m.quote)}</blockquote>`:""}${esc(m.text)}${m.role!=="user"?`<button class="spk mspk" onclick="speak(CH.msgs[${i}].text,this)" aria-label="${esc(t("listen"))}">${ICON.sound}</button>`:""}</div>`+(m.role!=="user"?(m.cards?.length?cardStrip(m.cards):placeCards(m.text)):"")).join("")+(CH.busy?`<div class="m a t">${t("typing")}</div>`:"");
   box.scrollTop=box.scrollHeight;
 }
 function placeCards(text){ const low=" "+String(text).toLowerCase()+" "; const out=[];
@@ -1043,6 +1068,18 @@ function placeCards(text){ const low=" "+String(text).toLowerCase()+" "; const o
     if(ns.some(n=>low.includes(n))&&!out.includes(p)) out.push(p); if(out.length>=6) break; }
   return out.length?`<div class="pcards">${out.map(p=>`<div class="pcard" onclick="chatPlace('${p.id}')">${ph(p)}<div><b>${esc(pN(p))}</b><small>${t("open_app")}</small></div></div>`).join("")}</div>`:""; }
 const reqUser=()=>({name:U?.name,country:cname(U?.country||"UZ"),interests:userCtx()});
+/* ===== Gidga "reply": matn, bo'lim yoki faktni iqtibos qilib savol berish ===== */
+function drawReply(){ const b=$("#cqr"); if(!b) return; if(!CH.reply){ b.hidden=true; b.innerHTML=""; return; } b.hidden=false;
+  b.innerHTML=`<i>${ICON.chat}</i><div><b>${t("reply_h")}</b><p>${esc(CH.reply)}</p></div><button onclick="CH.reply=null;drawReply()" aria-label="x"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>`; }
+function askAbout(id,quote){ quote=String(quote||"").replace(/\s+/g," ").trim().slice(0,700); if(!quote) return; selBtnHide(); closeArticle(); openChat(id||undefined); CH.reply=quote; drawReply(); setTimeout(()=>$("#cq")?.focus(),60); }
+let ARTID=null;
+function curPid(){ if($("#artv")?.classList.contains("on")) return ARTID; if($("#detail").classList.contains("on")) return PDW?.id||G?.p||null; return null; }
+function selBtnHide(){ $("#askSel")?.remove(); }
+document.addEventListener("selectionchange",()=>{ clearTimeout(window.__selT); window.__selT=setTimeout(()=>{ const sel=getSelection(); const txt=String(sel||"").trim();
+  if(txt.length<3||!sel.rangeCount){ selBtnHide(); return; } const node=sel.anchorNode?.parentElement; if(!node||!node.closest("#artv,#detail .wiki,#detail .tagline,.pf")){ selBtnHide(); return; }
+  const r=sel.getRangeAt(0).getBoundingClientRect(); let b=$("#askSel"); if(!b){ b=document.createElement("button"); b.id="askSel"; b.className="asksel"; document.body.appendChild(b); }
+  b.innerHTML=`${ICON.spark}<span>${t("ask_sel")}</span>`; b.onmousedown=e=>e.preventDefault(); b.onclick=()=>askAbout(curPid(),txt);
+  b.style.left=Math.max(10,Math.min(innerWidth-190,r.left+r.width/2-85))+"px"; b.style.top=Math.max(10,r.top-52)+"px"; },220); });
 function chatPlace(id){ if(!SITE||innerWidth<760) closeChat(); openPlace(id); }
 function cardStrip(ids){ const ps=ids.map(byId).filter(Boolean); if(!ps.length) return "";
   return `<div class="ccards">${ps.map(p=>`<button class="ccard" onclick="chatPlace('${p.id}')">${ph(p,"cci")}<span class="cct"><b>${esc(pN(p))}</b><small>${PIN}${esc(pCountry(p))}</small></span></button>`).join("")}</div>`; }
@@ -1081,11 +1118,12 @@ async function findPlaces(q){
 async function chatSend(text){
   text=(text||"").trim(); if(!text||CH.busy) return;
   const inp=$("#cq"); if(inp) inp.value="";
-  CH.msgs.push({role:"user",text}); CH.busy=true; drawMsgs(); if(CH.place) learn(CH.place,2);
+  const quote=CH.reply||null; CH.reply=null; drawReply();
+  CH.msgs.push({role:"user",text,quote}); CH.busy=true; drawMsgs(); if(CH.place) learn(CH.place,2);
   let ans, found=null;
   try{ found=await findPlaces(text); }catch(e){}
   try{ const p=CH.place?byId(CH.place):null;
-    const msgs=CH.msgs.slice(-10).map(m=>({role:m.role,text:m.text}));
+    const msgs=CH.msgs.slice(-10).map(m=>({role:m.role,text:m.quote?`[The user quotes this text from the OLAM app${p?" about "+pN(p):""}: "${m.quote}"]\n${m.text}`:m.text}));
     const style="\n\n[Style: reply in the user's language, warm and friendly, with fitting emojis 🌍✨, short paragraphs or a short list, exact place names.]";
     const ctx=found&&found.length?`\n[Places found in the OLAM app for this request (they are shown to the user as cards): ${found.map(x=>pN(x)+" ("+pCountry(x)+")").join("; ")}. Describe each one in one line with an emoji, in the same order. Do not invent other places.]`:"";
     msgs[msgs.length-1].text+=ctx+style;
