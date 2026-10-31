@@ -221,3 +221,14 @@ tg:["Ҷойгиршавии шумо","Муайян кардани ҷойи ма
 ar:["موقعك","حدّد موقعي","تم تحديد الموقع","تم رفض إذن الموقع","الموقع غير متاح على هذا الجهاز","افتح في خرائط Google","الاتجاهات"],
 zh:["你的位置","定位我的位置","已定位","位置权限被拒绝","此设备不支持定位","在 Google 地图中打开","路线"]};
 for(const l in V) K.forEach((k,i)=>I18N[l][k]=V[l][i]);})();
+(()=>{const K=["cat_h","cat_st","cat_ing","cat_done","cat_re","cat_t"];
+const V={uz:["Dunyo katalogi","Qurilmada {n} ta qo'shimcha joy saqlangan","Yuklanmoqda: {d}/{t} davlat · {n} ta joy","Dunyo katalogi tayyor: yana {n} ta joy qo'shildi","Katalogni yangilash","Har bir davlatdagi eng mashhur joylar Wikidata'dan bir marta yuklanadi va internetsiz ham ko'rinadi."],
+en:["World catalog","{n} extra places saved on this device","Loading: {d}/{t} countries · {n} places","World catalog ready: {n} more places added","Refresh catalog","The most popular places of every country are loaded once from Wikidata and stay available offline."],
+ru:["Мировой каталог","На устройстве сохранено ещё {n} мест","Загрузка: {d}/{t} стран · {n} мест","Каталог готов: добавлено ещё {n} мест","Обновить каталог","Самые популярные места каждой страны загружаются из Wikidata один раз и доступны офлайн."],
+tr:["Dünya kataloğu","Bu cihazda {n} ek yer kayıtlı","Yükleniyor: {d}/{t} ülke · {n} yer","Dünya kataloğu hazır: {n} yer daha eklendi","Kataloğu yenile","Her ülkenin en popüler yerleri Wikidata'dan bir kez yüklenir ve çevrimdışı da görünür."],
+kk:["Әлем каталогы","Құрылғыда тағы {n} орын сақталған","Жүктелуде: {d}/{t} ел · {n} орын","Каталог дайын: тағы {n} орын қосылды","Каталогты жаңарту","Әр елдің ең танымал орындары Wikidata-дан бір рет жүктеліп, офлайн да қолжетімді."],
+ky:["Дүйнө каталогу","Түзмөктө дагы {n} жер сакталган","Жүктөлүүдө: {d}/{t} өлкө · {n} жер","Каталог даяр: дагы {n} жер кошулду","Каталогду жаңыртуу","Ар бир өлкөнүн эң белгилүү жерлери Wikidata'дан бир жолу жүктөлүп, офлайн да көрүнөт."],
+tg:["Феҳристи ҷаҳон","Дар дастгоҳ боз {n} ҷой нигоҳ дошта шуд","Бор шуда истодааст: {d}/{t} кишвар · {n} ҷой","Феҳрист омода: боз {n} ҷой илова шуд","Навсозии феҳрист","Машҳуртарин ҷойҳои ҳар кишвар як бор аз Wikidata бор шуда, офлайн ҳам дастрасанд."],
+ar:["كتالوج العالم","{n} مكانًا إضافيًا محفوظًا على هذا الجهاز","جارٍ التحميل: {d}/{t} دولة · {n} مكان","كتالوج العالم جاهز: أُضيف {n} مكانًا آخر","تحديث الكتالوج","تُحمَّل أشهر أماكن كل دولة من Wikidata مرة واحدة وتبقى متاحة دون اتصال."],
+zh:["世界目录","本设备已保存 {n} 个额外地点","正在加载：{d}/{t} 个国家 · {n} 个地点","世界目录已就绪：新增 {n} 个地点","刷新目录","每个国家最受欢迎的地点会从 Wikidata 加载一次，离线也可查看。"]};
+for(const l in V) K.forEach((k,i)=>I18N[l][k]=V[l][i]);})();

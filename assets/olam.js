@@ -128,7 +128,7 @@ const BGM=new Audio(); BGM.preload="none"; BGM.volume=0.55;
 const M={i:Math.floor(Math.random()*MUSIC.length),playing:false,q:[],url:null,name:""};
 BGM.onended=()=>mNext(); BGM.onerror=()=>{ if(M.playing){ M.i++; setTimeout(()=>{ mTrack(); BGM.play().catch(()=>{}); },800); } };
 let MDB=null;
-function idb(){ return new Promise((res,rej)=>{ if(MDB) return res(MDB); const r=indexedDB.open("olam",1); r.onupgradeneeded=()=>r.result.createObjectStore("songs",{keyPath:"id"}); r.onsuccess=()=>{ MDB=r.result; res(MDB); }; r.onerror=()=>rej(r.error); }); }
+function idb(){ return new Promise((res,rej)=>{ if(MDB) return res(MDB); const r=indexedDB.open("olam",2); r.onupgradeneeded=()=>{ const d=r.result; if(!d.objectStoreNames.contains("songs")) d.createObjectStore("songs",{keyPath:"id"}); if(!d.objectStoreNames.contains("kv")) d.createObjectStore("kv",{keyPath:"k"}); }; r.onsuccess=()=>{ MDB=r.result; res(MDB); }; r.onerror=()=>rej(r.error); }); }
 async function songsAll(){ try{ const db=await idb(); return await new Promise(res=>{ const q=db.transaction("songs").objectStore("songs").getAll(); q.onsuccess=()=>res(q.result||[]); q.onerror=()=>res([]); }); }catch(e){ return []; } }
 async function songAdd(files){ try{ const db=await idb(); const tx=db.transaction("songs","readwrite"); [...files].forEach((f,i)=>tx.objectStore("songs").put({id:"s"+Date.now()+i,name:f.name.replace(/\.[^.]+$/,""),blob:f})); await new Promise(r=>{ tx.oncomplete=r; tx.onerror=r; }); }catch(e){} await mQueue(); }
 async function songDel(id){ try{ const db=await idb(); const tx=db.transaction("songs","readwrite"); tx.objectStore("songs").delete(id); await new Promise(r=>{ tx.oncomplete=r; tx.onerror=r; }); }catch(e){} await mQueue(); }
@@ -280,11 +280,12 @@ function taste(){ const w={}; TAGS.forEach(k=>w[k]=(U?.interests?.includes(k)?6:
 function topTags(n=3){ return Object.entries(taste()).filter(e=>e[1]>0).sort((a,b)=>b[1]-a[1]).slice(0,n).map(e=>e[0]); }
 const optTxt=(k,v)=>v!==""&&v!=null?tl(k)[+v]:"";
 const userCtx = ()=>[...topTags(5).map(k=>clean(I18N.en.cat[k])), U?.style!==""&&U?.style!=null?"Budget: "+clean(I18N.en.sty[+U.style]):"", U?.with?"With: "+clean(I18N.en.wth[+U.with]):"", U?.season?"Season: "+clean(I18N.en.sea[+U.season]):""].filter(Boolean);
-function score(p){
-  const w=taste(), tot=Object.values(w).reduce((a,b)=>a+b,0)||1;
+function score(p,w,tot){
+  if(!w){ w=taste(); tot=Object.values(w).reduce((a,b)=>a+b,0)||1; }
   let s=p.tags.reduce((a,x)=>a+(w[x]||0)/tot,0)*10;
   s+=(U?.regions?.includes(p.reg)?2:0)+Math.min(2,(LRN.r[p.reg]||0)/10)+(U?.dream===p.id?100:0);
   s-=Math.min(2,(LRN.v[p.id]||0)*0.3);
+  s+=p.cat?Math.min(1.5,Math.log10(1+(p.sl||1))*0.6):(p.dyn?0:1.2);
   return s+(hash(p.id)%10)/20;
 }
 const wondersOf = id=>Object.keys(WONDERS).filter(k=>WONDERS[k].ids.includes(id));
@@ -321,7 +322,7 @@ async function worldNear(lat,lon){
   const wl=WL(LANG); const d=await (await fetch(WAPI+"&generator=geosearch&ggsradius=10000&ggslimit=40&ggscoord="+lat+"|"+lon+WP(wl!=="en"?wl:""))).json();
   return Object.values(d.query?.pages||{}).map(x=>dynFrom(x,"en")).filter(Boolean);
 }
-const forYou = ()=>PLACES.filter(p=>!p.dyn||p.keep).sort((a,b)=>score(b)-score(a));
+const forYou = ()=>{ const w=taste(), tot=Object.values(w).reduce((a,b)=>a+b,0)||1; return PLACES.filter(p=>!p.dyn||p.keep).map(p=>[p,score(p,w,tot)]).sort((a,b)=>b[1]-a[1]).map(x=>x[0]); };
 
 /* ================= WIKIPEDIA (koordinata, rasm) ================= */
 async function loadAll(){
@@ -660,6 +661,7 @@ function renderSettings(){
    <div class="sgrp"><div class="sl">${t("s_notif")}</div><div class="seg"><button class="${SET.notif?"on":""}" onclick="notifToggle(true)">${t("on")}</button><button class="${SET.notif?"":"on"}" onclick="notifToggle(false)">${t("off")}</button></div><p class="sp" style="margin:8px 0 0">${t("notif_t")}</p></div>
    <div class="sgrp"><div class="sl">${t("s_off")}</div><p class="sp" style="margin:0">${t("off_t")}</p></div>
    <div class="sgrp"><div class="sl">${t("s_video")}</div>${seg("video",[[true,t("v_on")],[false,t("v_off")]])}</div>
+   <div class="sgrp"><div class="sl">${t("cat_h")}</div><p class="sp" id="wcst">${catTxt()}</p><p class="sp">${t("cat_t")}</p><button class="pill o2 wide" onclick="catLoad(true);setTimeout(catUI,300)">${ICON.route}<span>${t("cat_re")}</span></button></div>
    <div class="sgrp"><div class="sl">${t("s_ui")}</div><div class="uipick">${[["white",t("ui_white")],["glass",t("ui_glass")]].map(([v,l])=>`<button class="${curUI()===v?"on":""} u-${v}" onclick="uiPick('${v}');renderSettings()"><i><b></b><b></b><b></b></i>${l}</button>`).join("")}</div><p class="sp" style="margin:10px 0 0">${t("ui_t")}</p></div>
    <div class="sgrp"><div class="sl">${t("s_theme")}</div>${seg("theme",[["auto",t("th_auto")],["light",t("th_light")],["dark",t("th_dark")]])}</div>
    <div class="sgrp"><div class="sl">${t("s_units")}</div>${seg("unit",[["km",t("u_km")],["mi",t("u_mi")]])}</div>
@@ -669,7 +671,7 @@ function renderSettings(){
    <div class="sgrp"><div class="sl">${t("s_share")}</div><button class="pill o2 wide" onclick="shareApp()">${ICON.share} OLAM</button></div>${SITE?"":`<div class="sgrp"><a class="pill o2 wide" href="./">${t("open_site")}</a></div>`}
    <div class="sgrp"><div class="sl">${t("s_install")}</div><p class="sp">${t("install_t")}</p></div>
    <div class="sgrp"><div class="sl">${t("s_clear")}</div><div id="clr"><button class="pill o2 wide" onclick="askClear()">${t("clear_b")}</button></div></div>
-   <div class="sgrp"><div class="sl">${t("s_about")}</div><p class="sp">${t("about_t")}</p><p class="sp">v3.0 · ${PLACES.filter(p=>!p.dyn).length} ${t("places")}</p></div>
+   <div class="sgrp"><div class="sl">${t("s_about")}</div><p class="sp">${t("about_t")}</p><p class="sp">v3.0 · ${PLACES.filter(p=>!p.dyn||p.cat).length} ${t("places")}</p></div>
    <div class="foot"></div>`;
 }
 function setOpt(k,v){ SET[k]=v; saveSet();
@@ -681,7 +683,7 @@ function applyUI(){ const R=document.documentElement; R.dataset.ui=curUI();
 function uiPick(v){ SET[SITE?"sui":"ui"]=v; saveSet(); applyUI(); applyTheme(); }
 function applyTheme(){ const dark=(SITE&&curUI()==="glass")||SET.theme==="dark"||(SET.theme==="auto"&&matchMedia("(prefers-color-scheme: dark)").matches); document.documentElement.dataset.theme=dark?"dark":"light"; document.querySelector('meta[name=theme-color]')?.setAttribute("content",dark?"#0e1622":"#f4f8fd"); }
 try{ matchMedia("(prefers-color-scheme: dark)").addEventListener("change",applyTheme); }catch(e){}
-function setLang(k){ if(k===LANG) return; LANG=k; SET.lang=k; saveSet(); lzLoad(); applyLang(); toast(t("lang_set"));
+function setLang(k){ if(k===LANG) return; const oldCat=catLang(); LANG=k; if(oldCat!==catLang()||k==="uzk"||oldCat==="uz"){ catReset(); setTimeout(()=>catLoad(),400); } SET.lang=k; saveSet(); lzLoad(); applyLang(); toast(t("lang_set"));
   if(!$("#ob").classList.contains("on")){ render(cur==="watch"?"home":cur); if(cur==="watch") go("home"); }
   if(!(k==="uz"||k==="uzk")){ wikiNames(); aiTaglines(); } }
 function applyLang(){ document.documentElement.lang=LOC[LANG]; document.documentElement.dir=LANG==="ar"?"rtl":"ltr";
@@ -906,8 +908,8 @@ async function openMap(focus){
     MAP.addPin=p=>{ if(p.lat==null||MAP._mk.has(p.id)) return; MAP._mk.add(p.id);
       const ic=Lf.divIcon({className:"",html:`<div class="mkw"><div class="mk ${p.dyn?"dy":""}" style="background:${grad(p)}">${p.img?`<img src="${thumb(p)}" alt="" loading="lazy" onerror="this.remove()">`:""}</div></div>`,iconSize:[44,44],iconAnchor:[22,22]});
       Lf.marker([p.lat,p.lon],{icon:ic}).addTo(MAP).on("click",()=>mapPick(p.id)); };
-    PLACES.filter(p=>!p.dyn||p.keep).forEach(MAP.addPin);
-    let nt; MAP.on("moveend",()=>{ clearTimeout(nt); const z=MAP.getZoom(), hint=$("#maphint");
+    PLACES.filter(p=>!p.dyn||(p.keep&&!p.cat)||(p.cat&&p.sl>=70)).forEach(MAP.addPin);
+    let nt; MAP.on("moveend",()=>{ clearTimeout(nt); const z=MAP.getZoom(), hint=$("#maphint"); if(z>=4){ const bb=MAP.getBounds(); PLACES.filter(p=>p.cat&&!MAP._mk.has(p.id)&&bb.contains([p.lat,p.lon])).slice(0,300).forEach(MAP.addPin); }
       if(z<9){ if(hint) hint.textContent=t("zoom"); return; }
       if(hint) hint.textContent=t("area_load");
       nt=setTimeout(async()=>{ const c=MAP.getCenter(); let r=[]; try{ r=await worldNear(c.lat.toFixed(4),c.lng.toFixed(4)); }catch(e){} r.forEach(MAP.addPin); if(hint) hint.textContent=r.length?t("area_n",{n:r.length}):t("area_0"); },500); });
@@ -927,7 +929,7 @@ const shuffle=a=>{ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random
 function openQuiz(){ QZ.score=0; QZ.n=0; $("#quiz").classList.add("on"); qNext(); }
 function closeQuiz(){ $("#quiz").classList.remove("on"); clearTimeout(QZ.t); }
 function qNext(){
-  const pool=PLACES.filter(p=>p.img&&!p.dyn);
+  const pool=PLACES.filter(p=>p.img&&(!p.dyn||p.cat));
   if(pool.length<4){ $("#quiz").innerHTML=`<button class="ovx" onclick="closeQuiz()">${ICON.down}</button><div class="empty">${t("img_load")}</div>`; clearTimeout(QZ.t); QZ.t=setTimeout(()=>{ if($("#quiz").classList.contains("on")) qNext(); },1500); return; }
   const p=pool[Math.floor(Math.random()*pool.length)]; QZ.p=p; QZ.done=false; QZ.n++;
   const opts=shuffle([p,...shuffle(pool.filter(x=>x.id!==p.id)).slice(0,3)]);
@@ -983,9 +985,9 @@ const flag=c=>"";
 function ctryChips(){ const mine=U?.country&&CTRY.find(c=>c[0]===U.country); const top=[...(mine?[mine]:[]),...CTRY.filter(c=>c!==mine)].slice(0,14);
   return top.map(c=>`<button class="chip" onclick="openCountry('${c[0]}')">${esc(cname(c[0]))}</button>`).join("")+`<button class="chip" onclick="openCountries()">${t("all")} · ${CTRY.length}</button>`; }
 function ensureCtryView(){ let O=$("#ctryv"); if(!O){ O=document.createElement("section"); O.className="ov"; O.id="ctryv"; $("#app").insertBefore(O,$("#sh")); } return O; }
-function openCountries(){ const O=ensureCtryView(); O.classList.add("on"); O.scrollTop=0; CT.code=null; const R=REGN();
+function openCountries(){ if(!ALLC) allCountries().then(()=>{ if($("#ctryv")?.classList.contains("on")&&!CT.code) openCountries(); }); const O=ensureCtryView(); O.classList.add("on"); O.scrollTop=0; CT.code=null; const R=REGN();
   O.innerHTML=`<button class="ovx" onclick="closeCountry()">${ICON.down}</button><div class="seth"><h1>${t("ctry_h")}</h1><p class="sp">${t("ctry_sub")}</p></div>
-   ${REGS.filter(r=>r!=="uz").map(r=>{ const l=CTRY.filter(c=>c[2]===r||(r==="osiyo"&&c[2]==="uz")); return l.length?`<div class="sl" style="margin-top:18px">${R[r]}</div><div class="opts">${l.map(c=>`<button class="opt" onclick="openCountry('${c[0]}')">${esc(cname(c[0]))}</button>`).join("")}</div>`:""; }).join("")}<div class="foot"></div>`; }
+   ${REGS.filter(r=>r!=="uz").map(r=>{ const l=(ALLC||CTRY).filter(c=>c[2]===r||(r==="osiyo"&&c[2]==="uz")); return l.length?`<div class="sl" style="margin-top:18px">${R[r]}</div><div class="opts">${l.map(c=>`<button class="opt" onclick="openCountry('${c[0]}')">${esc(cname(c[0]))}</button>`).join("")}</div>`:""; }).join("")}<div class="foot"></div>`; }
 function closeCountry(){ $("#ctryv")?.classList.remove("on"); }
 const BIGC=["FR","IT","ES","DE","GB","US","RU","CN","JP","IN","PL","CZ","AT","CH","NL","BE","PT","GR","SE","NO","FI","DK","CA","BR","MX","AU","UA","HU","TR","IR"];
 const WDQ=(qid,lang,big)=>`SELECT ?item ?itemLabel ?itemDescription ?img ?coord ?cls ?sl ?en ?loc WHERE {
@@ -997,23 +999,28 @@ const WDQ=(qid,lang,big)=>`SELECT ?item ?itemLabel ?itemDescription ?img ?coord 
  ${lang!=="en"?`OPTIONAL { ?la schema:about ?item ; schema:isPartOf <https://${lang}.wikipedia.org/> ; schema:name ?loc . }`:""}
  SERVICE wikibase:label { bd:serviceParam wikibase:language "${lang},en,ru" . }
 } ORDER BY DESC(?sl) LIMIT 2500`;
-function wdPlace(r,code,reg,lang){
-  const id="q"+r.item.value.split("/").pop(); if(IDX[id]) return IDX[id];
+// Wikidata qatori → ixcham yozuv [qid,label,en,loc,desc,file,lat,lon,cls,sl,iso,reg]
+function wdCompact(r,code,reg){
   const m=/Point\(([-\d.]+) ([-\d.]+)\)/.exec(r.coord?.value||""); if(!m) return null;
-  const file=decodeURIComponent((r.img.value.split("/FilePath/")[1]||"")); if(!file||/\.(svg|png|gif|tif|tiff|webm|ogv|pdf)$/i.test(file)||BADIMG.test(file)) return null;
+  const file=decodeURIComponent((r.img?.value.split("FilePath/")[1]||"")); if(!file||/\.(svg|png|gif|tif|tiff|webm|ogv|pdf)$/i.test(file)||BADIMG.test(file)) return null;
   const label=r.itemLabel?.value||""; if(!label||/^Q\d+$/.test(label)) return null;
-  const en=r.en?.value||"", loc=r.loc?.value||"", desc=r.itemDescription?.value||"";
-  const cls=r.cls.value.split("/").pop(); let tags=[...(WDT[cls]||[])]; if(!tags.length) tags=guessTags(label+" "+desc+" "+en);
-  const lat=+m[2], lon=+m[1]; const wl=loc?lang:"en", title=loc||en;
-  const p={id,t:(en||label).replace(/ /g,"_"),q:en||label,n:LANG==="uzk"?cyr(label):label,c:cname(code),cc:code,reg:reg==="uz"&&code!=="UZ"?"osiyo":reg,tags:[...new Set(tags)],best:"—",
-    s:desc?desc.charAt(0).toUpperCase()+desc.slice(1):cname(code),g:PAL2[hash(id)%PAL2.length],lat,lon,dyn:1,wd:1,wl,sl:+r.sl.value,
+  return [r.item.value.split("/").pop(),label,r.en?.value||"",r.loc?.value||"",r.itemDescription?.value||"",file,+(+m[2]).toFixed(5),+(+m[1]).toFixed(5),r.cls.value.split("/").pop(),+r.sl.value,code,reg==="uz"&&code!=="UZ"?"osiyo":reg];
+}
+function mkPlace(c,lang,cat){
+  const [qid,label,en,loc,desc,file,lat,lon,cls,sl,code,reg]=c; const id="q"+qid;
+  if(IDX[id]){ if(cat){ IDX[id].keep=1; IDX[id].cat=1; } return IDX[id]; }
+  let tags=[...(WDT[cls]||[])]; if(!tags.length) tags=guessTags(label+" "+desc+" "+en); if(cls==="Q9259"&&!tags.includes("tarix")) tags.push("tarix");
+  const wl=loc?lang:"en", title=loc||en;
+  const p={id,t:(en||label).replace(/ /g,"_"),q:en||label,n:LANG==="uzk"?cyr(label):label,c:cname(code),cc:code,reg,tags:[...new Set(tags)],best:"—",
+    s:desc?desc.charAt(0).toUpperCase()+desc.slice(1):cname(code),g:PAL2[hash(id)%PAL2.length],lat,lon,dyn:1,wd:1,wl,sl,
     img:"https://commons.wikimedia.org/wiki/Special:FilePath/"+encodeURIComponent(file.replace(/ /g,"_"))+"?width=960",
-    wt:{en,[lang]:loc||undefined},wurl:title?`https://${wl}.wikipedia.org/wiki/`+encodeURIComponent(title.replace(/ /g,"_")):r.item.value};
-  if(cls==="Q9259"&&!p.tags.includes("tarix")) p.tags.push("tarix");
+    wt:{en,[lang]:loc||undefined},wurl:title?`https://${wl}.wikipedia.org/wiki/`+encodeURIComponent(title.replace(/ /g,"_")):"https://www.wikidata.org/wiki/"+qid};
+  if(cat){ p.keep=1; p.cat=1; }
   PLACES.push(p); IDX[id]=p; return p;
 }
+function wdPlace(r,code,reg,lang){ const c=wdCompact(r,code,reg); return c?mkPlace(c,lang,false):null; }
 async function wdLoad(code){
-  const c=CTRY.find(x=>x[0]===code); if(!c) return [];
+  const c=(ALLC||CTRY).find(x=>x[0]===code); if(!c) return [];
   const lang=WL(LANG)==="uz"||WL(LANG)==="uzk"?"uz":WL(LANG), key=code+"|"+lang; if(CTC[key]) return CTC[key];
   const d=await (await fetch("https://query.wikidata.org/sparql?format=json&query="+encodeURIComponent(WDQ(c[1],lang,BIGC.includes(code))),{headers:{Accept:"application/sparql-results+json"}})).json();
   const seen=new Set(), out=[];
@@ -1040,6 +1047,59 @@ function renderCountry(){ const C=CAT(); const all=CT.list; if(!$("#ctb")) retur
    ${l.length?`<div class="grid2" style="padding:0">${l.slice(0,CT.n).map(gcard).join("")}</div>`:`<div class="empty">${t("nothing")}</div>`}
    ${l.length>CT.n?`<button class="pill o2 wide" style="margin-top:16px" onclick="CT.n+=60;renderCountry()">${t("ctry_more")} · ${l.length-CT.n}</button>`:""}<div class="foot"></div>`; }
 
+
+/* ================= DUNYO KATALOGI — har bir davlatdan eng mashhur joylar (~3000 ta) =================
+   Birinchi ochilishda fonda Wikidata'dan yuklanadi, qurilmada (IndexedDB) saqlanadi, 60 kunda yangilanadi. */
+const WC={busy:false,done:0,total:0,n:0};
+async function kvGet(k){ try{ const db=await idb(); return await new Promise(res=>{ const q=db.transaction("kv").objectStore("kv").get(k); q.onsuccess=()=>res(q.result?.v); q.onerror=()=>res(undefined); }); }catch(e){ return undefined; } }
+async function kvSet(k,v){ try{ const db=await idb(); const tx=db.transaction("kv","readwrite"); tx.objectStore("kv").put({k,v}); await new Promise(r=>{ tx.oncomplete=r; tx.onerror=r; }); }catch(e){} }
+const catLang=()=>{ const l=WL(LANG); return l==="uzk"?"uz":l; };
+async function sparql(q){ const r=await fetch("https://query.wikidata.org/sparql?format=json&query="+encodeURIComponent(q),{headers:{Accept:"application/sparql-results+json"}}); if(!r.ok) throw new Error("wdqs "+r.status); return (await r.json()).results?.bindings||[]; }
+let ALLC=null;   // barcha mustaqil davlatlar: [ISO, QID, mintaqa]
+async function allCountries(){ if(ALLC) return ALLC; let c=await kvGet("ctry");
+  if(!c||Date.now()-c.ts>90*864e5){ try{ const b=await sparql(`SELECT ?c ?iso ?coord WHERE { ?c wdt:P31 wd:Q3624078 ; wdt:P297 ?iso . OPTIONAL { ?c wdt:P625 ?coord } FILTER NOT EXISTS { ?c wdt:P576 ?e } }`);
+      const seen=new Set(), l=[]; b.forEach(r=>{ const iso=r.iso.value.toUpperCase(); if(seen.has(iso)) return; seen.add(iso); const m=/Point\(([-\d.]+) ([-\d.]+)\)/.exec(r.coord?.value||""); let rg=m?guessReg(+m[2],+m[1]):"osiyo"; if(rg==="uz") rg="osiyo"; l.push([iso,r.c.value.split("/").pop(),rg]); });
+      if(l.length>100){ c={ts:Date.now(),l}; kvSet("ctry",c); } }catch(e){} }
+  const known=new Set(CTRY.map(x=>x[0])); ALLC=[...CTRY,...(c?.l||[]).filter(x=>!known.has(x[0]))]; return ALLC; }
+const WCQ=(qid,lang,lim,big)=>`SELECT ?item ?itemLabel ?itemDescription ?img ?coord ?cls ?sl ?en ?loc WHERE {
+ { VALUES ?cls { ${Object.keys(WDT).filter(k=>k!=="Q9259").map(k=>"wd:"+k).join(" ")} } ?item wdt:P31 ?cls . }
+ UNION { ?item wdt:P1435 wd:Q9259 . BIND(wd:Q9259 AS ?cls) }
+ ?item wdt:P17 wd:${qid} ; wdt:P18 ?img ; wdt:P625 ?coord ; wikibase:sitelinks ?sl .
+ FILTER(?sl >= IF(?cls IN (wd:Q16970,wd:Q44539,wd:Q12280,wd:Q22698,wd:Q27686,wd:Q11315), ${big?14:6}, ${big?6:2}))
+ OPTIONAL { ?ea schema:about ?item ; schema:isPartOf <https://en.wikipedia.org/> ; schema:name ?en . }
+ ${lang!=="en"?`OPTIONAL { ?la schema:about ?item ; schema:isPartOf <https://${lang}.wikipedia.org/> ; schema:name ?loc . }`:""}
+ SERVICE wikibase:label { bd:serviceParam wikibase:language "${lang},en,ru" . }
+} ORDER BY DESC(?sl) LIMIT ${lim*4}`;
+let CURD=null;   // tayyor (qo'lda tanlangan) joylar — takrorlanmasin
+function catDup(c){ if(!CURD) CURD={t:new Set(PLACES.filter(p=>!p.dyn).map(p=>(p.nt||p.t).replace(/_/g," ").toLowerCase())),g:PLACES.filter(p=>!p.dyn&&p.lat!=null)};
+  if(c[2]&&CURD.t.has(c[2].toLowerCase())) return true;
+  const k=Math.cos(c[6]*Math.PI/180); return CURD.g.some(p=>{ const dx=(p.lon-c[7])*k, dy=p.lat-c[6]; return dx*dx+dy*dy<1.6e-5; }); }   // ~450 m
+function catReset(){ for(let i=PLACES.length-1;i>=0;i--){ const p=PLACES[i]; if(p.cat&&!saved.has(p.id)){ delete IDX[p.id]; PLACES.splice(i,1); } } WC.n=0; }
+function catTxt(){ return WC.busy?t("cat_ing",{d:WC.done,t:WC.total||"…",n:WC.n}):t("cat_st",{n:WC.n}); }
+function catUI(){ const N=PLACES.filter(p=>!p.dyn||p.cat).length; const h=$("#hN"); if(h) h.textContent=N+"+"; const s=$("#wcst"); if(s) s.textContent=catTxt(); }
+async function catLoad(force){
+  if(WC.busy||SET.wcat===false) return; WC.busy=true; const lang=catLang(), key="wcat|"+lang;
+  try{
+    let st=await kvGet(key); if(!st) st={ts:0,done:{},items:[]}; if(force||Date.now()-st.ts>60*864e5){ st.done={}; }
+    const add=arr=>arr.forEach(c=>{ if(!catDup(c)) mkPlace(c,lang,true); });
+    add(st.items); WC.n=PLACES.filter(p=>p.cat).length; refresh(); catUI();
+    const cs=await allCountries(); WC.total=cs.length; WC.done=cs.filter(c=>st.done[c[0]]).length;
+    const todo=cs.filter(c=>!st.done[c[0]]); if(!todo.length){ WC.busy=false; catUI(); return; }
+    const POP=new Set(CTRY.map(c=>c[0])); let i=0, fails=0;
+    const worker=async()=>{ while(i<todo.length&&fails<12){ if(lang!==catLang()) return; const c=todo[i++]; const big=BIGC.includes(c[0]); const lim=POP.has(c[0])?(big?45:30):10;
+      try{ const b=await sparql(WCQ(c[1],lang,lim,big)); const seen=new Set(), pos=new Set(), out=[];
+        for(const r of b){ const x=wdCompact(r,c[0],c[2]); if(!x||seen.has(x[0])) continue; const g=Math.round(x[6]*300)+","+Math.round(x[7]*300); if(pos.has(g)) continue; seen.add(x[0]); pos.add(g); out.push(x); if(out.length>=lim) break; }
+        st.items=st.items.filter(x=>x[10]!==c[0]).concat(out); st.done[c[0]]=1; add(out); fails=0;
+      }catch(e){ fails++; await new Promise(r=>setTimeout(r,3000*fails)); }
+      WC.done=cs.filter(x=>st.done[x[0]]).length; WC.n=PLACES.filter(p=>p.cat).length;
+      if(WC.done%5===0){ st.ts=Date.now(); kvSet(key,st); refresh(); catUI(); } } };
+    await Promise.all([worker(),worker()]);
+    st.ts=Date.now(); await kvSet(key,st);
+    if(WC.done>=WC.total) toast(t("cat_done",{n:WC.n}));
+  }catch(e){}
+  WC.busy=false; refresh(); catUI();
+}
+
 /* ================= SAYT REJIMI ================= */
 const HB={i:0,timer:null,pool:null};
 function heroPool(){ if(HB.pool&&HB.pool.length) return HB.pool; const d=dailyPlace(); const v=PLACES.filter(p=>!p.dyn&&p.img&&(VID[p.id]||[]).some(x=>/_1920_1080_/.test(x)));
@@ -1053,7 +1113,7 @@ function heroNext(){ const H=$("#shero"); if(!H||cur!=="home") return; const poo
   if(v){ v.classList.remove("on"); if(SET.video&&land.length&&!matchMedia("(prefers-reduced-motion:reduce)").matches){ setTimeout(()=>{ v.src=pexels(land[Math.floor(Math.random()*land.length)]); v.play().catch(()=>{}); },400); v.onplaying=()=>v.classList.add("on"); } else { v.pause(); v.removeAttribute("src"); } } }
 function heroSearch(q){ q=(q||"").trim(); X.q=q; X.tag="all"; X.reg="all"; go("explore"); }
 function renderHomeSite(){ setTimeout(fillAIPicks,0);
-  const H=$("#home"), C=CAT(), R=REGN(), PR=PER(), N=PLACES.filter(p=>!p.dyn).length;
+  const H=$("#home"), C=CAT(), R=REGN(), PR=PER(), N=PLACES.filter(p=>!p.dyn||p.cat).length;
   if(!$("#shero")||H.dataset.l!==LANG){ H.dataset.l=LANG;
     H.innerHTML=`<section class="shero" id="shero"><div class="bgl" id="hbA"></div><div class="bgl" id="hbB"></div><video id="hbV" muted playsinline loop preload="none"></video>
       <div class="bigw" aria-hidden="true">OLAM</div><button class="hcap" id="hcap"></button>
@@ -1061,7 +1121,7 @@ function renderHomeSite(){ setTimeout(fillAIPicks,0);
         <div class="hbtns"><button class="hbtn" onclick="go('watch')">${t("watch_now")}<span class="arw">${ICON.arrow}</span></button><button class="hbtn gl" onclick="openMap()">${clean(t("map_h"))}</button></div></div>
        <div class="hpanel"><form class="hsearch" onsubmit="event.preventDefault();heroSearch(this.q.value)">${ICON.search}<input name="q" placeholder="${esc(t("search_home"))}" autocomplete="off"><button>${t("search_b")}</button></form>
         <div class="hchips">${["dengiz","tog","tarix","islom","sharshara","shahar"].map(k=>`<button onclick="openMood('${k}')">${C[k]}</button>`).join("")}</div></div></div>
-      <div class="hfoot"><div class="hstat"><i>${ICON.pin}</i><b>${N}+</b><small>${t("places")}</small></div><div class="hstat"><i>${ICON.map}</i><b>${CTRY.length}</b><small>${t("st_ctry")}</small></div><div class="hstat"><i><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></i><b>${LANGS.length}</b><small>${t("st_lang")}</small></div><div class="hstat"><i>${ICON.spark}</i><b>AI</b><small>${t("t_ai")}</small></div>
+      <div class="hfoot"><div class="hstat"><i>${ICON.pin}</i><b id="hN">${N}+</b><small>${t("places")}</small></div><div class="hstat"><i>${ICON.map}</i><b>${(ALLC||CTRY).length}</b><small>${t("st_ctry")}</small></div><div class="hstat"><i><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></i><b>${LANGS.length}</b><small>${t("st_lang")}</small></div><div class="hstat"><i>${ICON.spark}</i><b>AI</b><small>${t("t_ai")}</small></div>
        ${(()=>{ const dp=dailyPlace(); return dp?`<div class="hday" onclick="go('watch','${dp.id}')"><div><small>${t("daily")}</small><b>${esc(pN(dp))} · ${esc(pCountry(dp))}</b></div><span class="arw">${ICON.play}</span></div>`:""; })()}</div>
       <div class="hscroll" aria-hidden="true"></div></section><div id="hbody"></div>`;
     HB.pool=null; clearInterval(HB.timer); heroNext(); HB.timer=setInterval(()=>{ if(!document.hidden) heroNext(); },10000);
@@ -1112,6 +1172,7 @@ if(!U&&SITE) U={name:"",country:"UZ",interests:[],regions:[],dream:null,style:""
 if(!SITE&&(!U||U.lat==null)&&!ls.get("olam_locask",false)){ ls.set("olam_locask",true); setTimeout(()=>locate(()=>{ if($("#ob").classList.contains("on")&&obStep===1) renderOb(); }),1200); }
 if(U) go("home"); else startOb();
 if(SITE) siteInit();
+setTimeout(()=>catLoad(),2500);
 loadHeroes(); loadAll(); mQueue(); loadCommunity(); setTimeout(()=>dailyNotify(false),4000); if(QP&&byId(QP)) setTimeout(()=>openPlace(QP),300);
 if(!(LANG==="uz"||LANG==="uzk")){ wikiNames().then(aiTaglines); }
 
