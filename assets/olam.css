@@ -1098,3 +1098,48 @@ body.site .sapp{background:linear-gradient(135deg,#1c46d6 0%,#2b6cf3 45%,#69bdff
 [data-ui=glass] .tour{background:var(--gl);box-shadow:var(--gls)}
 /* Bilim: logotiplar butun ko'rinsin */
 .ph img.lg{object-fit:contain;padding:14%;background:#fff}
+
+/* =====================================================================
+   HAR BIR ILOVANING O'Z QIYOFASI
+   Tirik olam — yashil, tabiiy (Fraunces) · Insonlar — iliq, jurnal uslubi (Playfair)
+   Texnika — grafit + to'q sariq, texnik (Chakra Petch) · Internet — binafsha→moviy (Unbounded)
+   ===================================================================== */
+body.life{--disp:"Fraunces",Georgia,serif;--sky:#1f9d6b;--sky2:#137a52;--skyl:#e3f6ec;--sky3:#bfe8d3;--a1:#2fbf84;--a2:#137a52;--ash:rgba(19,122,82,.55);--bg:#f1f8f3;--page:#e4f2e9;--line:#dcefe3}
+body.odam{--disp:"Playfair Display",Georgia,serif;--sky:#d9532f;--sky2:#a83a1d;--skyl:#fdeee6;--sky3:#f7d2bf;--a1:#f07a4f;--a2:#c2431f;--ash:rgba(194,67,31,.5);--bg:#fbf6f1;--page:#f4ebe1;--line:#efe2d4}
+body.texnika{--disp:"Chakra Petch",ui-monospace,monospace;--sky:#f26a1b;--sky2:#c24f0d;--skyl:#fff0e5;--sky3:#ffd6bd;--a1:#ff8a3d;--a2:#e0570e;--ash:rgba(224,87,14,.5);--bg:#f2f3f5;--page:#e6e8ec;--line:#dfe2e7;--ink:#14171c}
+body.internet{--disp:"Unbounded",system-ui,sans-serif;--sky:#7c3aed;--sky2:#5b21b6;--skyl:#f1eaff;--sky3:#dccaff;--a1:#8b5cf6;--a2:#06b6d4;--ash:rgba(124,58,237,.5);--bg:#f6f4fd;--page:#ece8fb;--line:#e5e0f7}
+/* sarlavhalar — har birining o'z shrifti */
+body.life .htitle,body.life .hq,body.life .xhead h1,body.life .seth h1,body.life .dt h1,body.life .feat h1,body.life .arthi h1,body.life .sec h2,body.life .logo span,body.life .ob h1{font-family:var(--disp);letter-spacing:-.5px}
+body.texnika .htitle,body.texnika .hq,body.texnika .xhead h1,body.texnika .sec h2,body.texnika .dt h1,body.texnika .logo span{text-transform:uppercase;letter-spacing:.5px}
+body.internet .htitle,body.internet .hq,body.internet .xhead h1,body.internet .dt h1{letter-spacing:-1.5px}
+body.odam .htitle,body.odam .hq,body.odam .dt h1{font-style:italic}
+/* asosiy tugmalar va faol elementlar — ilova rangida */
+[data-ui] body.life .pill.g,[data-ui] body.life .btn.g,[data-ui] body.life .sfil,[data-ui] body.life .tile:first-child i,[data-ui] body.life .hsearch button,[data-ui] body.life .m.u,[data-ui] body.life .ask,[data-ui] body.life .cin button,[data-ui] body.life .artb,[data-ui] body.life .logo i,
+[data-ui] body.life .chip.on,[data-ui] body.life .opt.on,[data-ui] body.life .tlinks button.on,[data-ui] body.life .nav button.on,[data-ui] body.life .asksel{background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;border-color:transparent;box-shadow:0 12px 26px -12px var(--ash)}
+[data-ui] body.life .nav button.on svg path{fill:#fff}
+[data-ui] body.life .sec span,[data-ui] body.life .kicker,[data-ui] body.life .aiph span,[data-ui] body.life .pcard small{color:var(--sky)}
+[data-ui] body.life .dream .ph.on{outline-color:var(--sky)}
+[data-ui] body.life .tb b{background:linear-gradient(90deg,var(--a1),var(--a2))}
+/* sayt foni (glass) — har biri o'z rangida */
+[data-ui=glass] body.life .app{background:linear-gradient(180deg,var(--skyl),#fff)}
+[data-ui=glass] body.life #home.deep .shero::after{background:linear-gradient(180deg,color-mix(in srgb,var(--skyl) 82%,transparent),color-mix(in srgb,var(--bg) 90%,transparent))}
+[data-ui=glass] body.life:not(.site) .app{background:radial-gradient(60% 45% at 10% 8%,var(--sky3) 0%,transparent 70%),radial-gradient(55% 40% at 95% 30%,color-mix(in srgb,var(--a2) 35%,#fff) 0%,transparent 70%),var(--bg)}
+/* shakllar: Tirik olam — yumaloq; Insonlar — portret kartalar; Texnika — o'tkir burchaklar; Internet — gradient chegaralar */
+body.life:not(.odam):not(.texnika):not(.internet) .gc{border-radius:32px}
+body.life:not(.odam):not(.texnika):not(.internet) .gc .gi{border-radius:26px}
+body.odam .gc{border-radius:18px;padding:6px 6px 14px}
+body.odam .gc .gi{aspect-ratio:3/4;border-radius:14px}
+body.odam .gc .gi img{filter:grayscale(.35) contrast(1.05);transition:filter .4s,transform .6s}
+body.odam .gc:hover .gi img{filter:none}
+body.odam .card{border-radius:16px}
+body.texnika .gc,body.texnika .card,body.texnika .feat,body.texnika .li,body.texnika .sgrp,body.texnika .hk,body.texnika .dchips,body.texnika .pf{border-radius:10px}
+body.texnika .gc .gi,body.texnika .dchip .ph,body.texnika .dg{border-radius:8px}
+body.texnika .gc{border:1px solid var(--line);background:linear-gradient(180deg,#fff,#f7f8fa)}
+body.texnika .gc b,body.texnika .card b{font-family:var(--disp);letter-spacing:.3px}
+body.texnika #home{background-image:linear-gradient(rgba(20,23,28,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(20,23,28,.035) 1px,transparent 1px);background-size:28px 28px}
+body.texnika .pill,body.texnika .chip,body.texnika .btn,body.texnika .hbtn,body.texnika .tcta{border-radius:8px}
+body.internet .gc{border:1.5px solid transparent;background:linear-gradient(var(--card),var(--card)) padding-box,linear-gradient(135deg,var(--a1),var(--a2)) border-box}
+body.internet .gc .gi{border-radius:18px}
+body.internet .card .ci{background:linear-gradient(135deg,rgba(139,92,246,.35),rgba(6,182,212,.3))}
+body.internet .hq,body.internet .htitle{background:linear-gradient(90deg,var(--a1),var(--a2));-webkit-background-clip:text;background-clip:text;color:transparent}
+body.site.internet .htitle{background:none;color:#fff}

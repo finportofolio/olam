@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Insonlar</title>
+<meta name="description" content="Insonlar — dunyoning va O&#39;zbekistonning mashhur insonlari: faktlar, to&#39;liq maqolalar va AI gid, 10 tilda.">
+<base href="../../">
+<link rel="manifest" href="insonlar/app/manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Insonlar">
+<link rel="canonical" href="https://finportofolio.github.io/olam/insonlar/app/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Insonlar">
+<meta property="og:title" content="Insonlar">
+<meta property="og:description" content="Dunyoning mashhur insonlari.">
+<meta property="og:url" content="https://finportofolio.github.io/olam/insonlar/app/">
+<meta property="og:image" content="https://finportofolio.github.io/olam/og-insonlar.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Insonlar">
+<meta name="twitter:description" content="Dunyoning mashhur insonlari.">
+<meta name="twitter:image" content="https://finportofolio.github.io/olam/og-insonlar.jpg">
+<meta name="theme-color" content="#f3f5f9">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Instrument+Serif:ital@1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/olam.css">
+</head>
+<body class="appm life odam">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><filter id="lgf" x="0" y="0" width="1" height="1" primitiveUnits="objectBoundingBox" color-interpolation-filters="sRGB"><feImage href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='0'%3E%3Cstop offset='0' stop-color='rgb(0,0,0)'/%3E%3Cstop offset='.14' stop-color='rgb(128,0,0)'/%3E%3Cstop offset='.86' stop-color='rgb(128,0,0)'/%3E%3Cstop offset='1' stop-color='rgb(255,0,0)'/%3E%3C/linearGradient%3E%3Crect width='100' height='100' fill='url(%23g)'/%3E%3C/svg%3E" x="0" y="0" width="1" height="1" preserveAspectRatio="none" result="mx"/><feImage href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='rgb(0,0,0)'/%3E%3Cstop offset='.3' stop-color='rgb(0,128,0)'/%3E%3Cstop offset='.7' stop-color='rgb(0,128,0)'/%3E%3Cstop offset='1' stop-color='rgb(0,255,0)'/%3E%3C/linearGradient%3E%3Crect width='100' height='100' fill='url(%23g)'/%3E%3C/svg%3E" x="0" y="0" width="1" height="1" preserveAspectRatio="none" result="my"/><feComposite in="mx" in2="my" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" result="map"/><feDisplacementMap in="SourceGraphic" in2="map" scale="0.07" xChannelSelector="R" yChannelSelector="G"/></filter></svg>
+<div class="app" id="app">
+  <section class="ob" id="ob"><div class="bgl" id="obA"></div><div class="bgl" id="obB"></div><video class="obv" id="obV" muted playsinline loop preload="auto"></video><div class="veil"></div><div class="obcap" id="obCap"></div><div class="body" id="obBody"></div></section>
+
+  <main class="view on" id="home"></main>
+  <main class="view" id="watch"></main>
+  <main class="view" id="explore"></main>
+  <main class="view" id="profile"></main>
+  <section class="detail" id="detail"></section>
+  <section class="chat" id="chat"></section>
+  <section class="ov" id="mapv"></section>
+  <section class="ov" id="quiz"></section>
+  <section class="ov" id="set"></section>
+  <section class="ov" id="catv"></section>
+  <section class="ov" id="addv"></section>
+  <section class="ov" id="tripv"></section>
+  <section class="ov" id="ctryv"></section>
+  <section class="sheet" id="sh" onclick="closeSheet()"></section>
+  <nav class="nav">
+    <button class="on" data-v="home" aria-label="Asosiy" onclick="go('home')"><svg viewBox="0 0 24 24"><path d="M3 11 12 3l9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span>Asosiy</span></button>
+    <button data-v="explore" aria-label="Kashf et" onclick="go('explore')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg><span>Kashf et</span></button>
+    <button data-v="watch" aria-label="Tomosha" onclick="go('watch')"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><span>Tomosha</span></button>
+    <button data-v="saved" aria-label="Saqlangan" onclick="go('profile','saved')"><svg viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/></svg><span>Saqlangan</span></button>
+    <button data-v="profile" aria-label="Profil" onclick="go('profile')"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span>Profil</span></button>
+  </nav>
+  <div class="toast" id="toast"></div>
+</div>
+
+<script src="assets/i18n.js"></script>
+<script src="assets/data.js"></script>
+<script src="assets/olam.js"></script>
+</body>
+</html>

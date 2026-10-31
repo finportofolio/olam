@@ -1,7 +1,7 @@
 const SITE=document.body.classList.contains("site");
 const LIFE=document.body.classList.contains("life");   // to'plam ilovalari: Tirik olam va Bilim
-const COL=document.body.classList.contains("bilim")?"bilim":"life";   // qaysi to'plam
-const COLDIR=COL==="bilim"?"bilim":"tirik";
+const COL=["odam","texnika","internet"].find(c=>document.body.classList.contains(c))||"life";   // qaysi to'plam
+const COLDIR={odam:"insonlar",texnika:"texnika",internet:"internet",life:"tirik"}[COL], COLDATA=COL==="life"?"life":"bilim";   // insonlar, texnika, internet — bitta katalogdan
 const HOME_URL=LIFE?COLDIR+"/":"./", APP_URL=LIFE?COLDIR+"/app/":"app/";
 const clean = s=>String(s).replace(/^[^\p{L}\p{N}]+/u,"").trim();
 const EMO=/[\u{1F000}-\u{1FAFF}\u{2600}-\u{2604}\u{2606}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}\u{20E3}]/gu;
@@ -980,7 +980,7 @@ async function loadHook(p){ const key=p.id+"|"+LANG; const box=()=>stillOpen(p)?
   if(HOOK[key]) return hookRender(p,HOOK[key]);
   if(p.person){ box()?.remove(); return; }
   const hist=!p.animal&&p.tags.some(x=>HIST.includes(x));
-  const q=COL==="bilim"&&p.animal
+  const q=COL!=="life"&&p.animal
     ?`About "${pN(p)}" (${(p.nt||p.t).replace(/_/g," ")}), a ${grpName(p)}, write in my language, engaging but strictly factual (no invented numbers):\n## WHY — 3 short bullet points on why it matters or is famous (each line starts with "- ")\n## WHEN — when and by whom it was created or launched, 1-2 sentences\n## FACT — one surprising true fact, 1-2 sentences\nUnder 140 words. No emoji. Use exactly these ## headings.`
     :p.animal
     ?`About the creature "${pN(p)}" (${(p.nt||p.t).replace(/_/g," ")}), write in my language, engaging but strictly factual (no invented numbers):\n## WHY — 3 short bullet points on what makes it amazing (each line starts with "- ")\n## WHERE — where in the wild it lives and where people can see it, 2 short sentences\n## FACT — one surprising true fact, 1-2 sentences\nUnder 140 words. No emoji. Use exactly these ## headings.`
@@ -992,8 +992,8 @@ function hookRender(p,txt){ const b=stillOpen(p)?$("#phook"):null; if(!b) return
   if(!Object.keys(sec).length){ b.remove(); return; }
   const card=(k,ic,title,body)=>body?`<div class="hk hk-${k}"><div class="hkh"><i>${SV(ic)}</i><b>${title}</b></div>${body}</div>`:"";
   b.innerHTML=
-    card("why",CATI.wonder,p.animal?(COL==="bilim"?t("hk_matter"):t("hk_amaze")):t("hk_why"),sec.WHY?`<ul>${li(sec.WHY).map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:"")+
-    card("when",p.animal?CATI.globe:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',p.animal?(COL==="bilim"?t("hk_made"):t("hk_where")):t("hk_when"),(sec.WHEN||sec.WHERE)?`<p>${esc(li(sec.WHEN||sec.WHERE).join(" "))}</p>`:"")+
+    card("why",CATI.wonder,p.animal?(COL!=="life"?t("hk_matter"):t("hk_amaze")):t("hk_why"),sec.WHY?`<ul>${li(sec.WHY).map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:"")+
+    card("when",p.animal?CATI.globe:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',p.animal?(COL!=="life"?t("hk_made"):t("hk_where")):t("hk_when"),(sec.WHEN||sec.WHERE)?`<p>${esc(li(sec.WHEN||sec.WHERE).join(" "))}</p>`:"")+
     card("fact",'<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.8.8 1 1.5 1 2.5h6c0-1 .2-1.7 1-2.5A6 6 0 0 0 12 3z"/>',t("hk_fact"),sec.FACT?`<p>${esc(li(sec.FACT).join(" "))}</p>`:"")+
     card("time",CATI.tarix,t("hk_time"),sec.TIMELINE?`<ol class="tl">${li(sec.TIMELINE).map(x=>{ const m=/^(.{1,22}?)\s*[—–-]\s+(.+)$/.exec(x); return m?`<li><b>${esc(m[1])}</b><span>${esc(m[2])}</span></li>`:`<li><span>${esc(x)}</span></li>`; }).join("")}</ol>`:"")+
     `<p class="sp hkai">${t("hk_ai")}</p>`; }
@@ -1089,7 +1089,7 @@ const CH={place:null,msgs:[],busy:false};
 function openChat(id){
   if(cur==="watch"&&!W.paused) wPause();
   if(CH.place!==(id||null)){ CH.place=id||null; CH.msgs=[]; }
-  const p=id?byId(id):null; const sug=p?(p.animal?(COL==="bilim"?(p.person?tl("sg_bp"):tl("sg_bt")):tl("sg_a")):tl("sg_p")):tl("sg_g");
+  const p=id?byId(id):null; const sug=p?(p.animal?(COL==="odam"?tl("sg_bp"):COL!=="life"?tl("sg_bt"):tl("sg_a")):tl("sg_p")):tl("sg_g");
   const vp=p&&VID[p.id]?.length?p:forYou().find(x=>VID[x.id]?.length);
   $("#chat").innerHTML=`<div class="chh"><button class="x" onclick="closeChat()">${ICON.down}</button>
      <div><b>${t("guide")}</b><small>${p?esc(t("about_p",{p:pN(p)})):t("any_q")}</small></div></div>
@@ -1421,8 +1421,8 @@ try{ idb().then(db=>{ try{ db.transaction("kv","readwrite").objectStore("kv").cl
 
 /* ================= AJOYIB JONZOTLAR: sut emizuvchilar, qushlar, baliqlar, sudralib yuruvchilar... ================= */
 // [id, guruh, Wikipedia (en) nomi, o'zbekcha nomi, qayerda ko'rish mumkin (ilovadagi joylar)]
-const GRPS=COL==="bilim"?["uzb","sci","art","mus","sport","hist","pol","biz","car","air","dev","web","ai","app"]:["mam","bird","fish","rep","amph","ins","spider","worm","sea","plant","fungi"];
 const PEOPLE_G=["uzb","sci","art","mus","sport","hist","pol","biz"];
+const GRPS=COL==="odam"?PEOPLE_G:COL==="texnika"?["car","air","dev"]:COL==="internet"?["web","ai","app"]:["mam","bird","fish","rep","amph","ins","spider","worm","sea","plant","fungi"];
 const ANIMALS=[["snowleopard","mam","Snow leopard","Qor qoploni",["pamir","chimgan"]],["giantpanda","mam","Giant panda","Katta panda",["panda"]],["lion","mam","Lion","Sher",["serengeti","masaimara","kruger","ngorongoro"]],
  ["elephant","mam","African bush elephant","Afrika savanna fili",["kruger","okavango","serengeti"]],["giraffe","mam","Giraffe","Jirafa",["serengeti","masaimara","kruger"]],["cheetah","mam","Cheetah","Gepard",["masaimara","serengeti"]],
  ["gorilla","mam","Mountain gorilla","Tog' gorillasi",[]],["orangutan","mam","Bornean orangutan","Orangutan",["singaporezoo"]],["tiger","mam","Bengal tiger","Bengal yo'lbarsi",[]],["polarbear","mam","Polar bear","Oq ayiq",[]],
@@ -1444,7 +1444,7 @@ const ANIMALS=[["snowleopard","mam","Snow leopard","Qor qoploni",["pamir","chimg
  ["monarch","ins","Monarch butterfly","Monarx kapalagi",[]],["honeybee","ins","Western honey bee","Asalari",[]],["firefly","ins","Firefly","Yaltiroq qo'ng'iz",[]],["morpho","ins","Morpho","Morfo kapalagi",["amazon"]],
  ["octopus","sea","Common octopus","Sakkizoyoq",[]],["jellyfish","sea","Jellyfish","Meduza",[]],["mantisshrimp","sea","Mantis shrimp","Mantis qisqichbaqasi",[]],["coral","sea","Coral","Marjon",["barrierreef","maldives"]],["giantsquid","sea","Giant squid","Gigant kalmar",[]]];
 const GRPT={mam:"tabiat",bird:"tabiat",fish:"dengiz",rep:"tabiat",amph:"tabiat",ins:"tabiat",sea:"dengiz"};
-if(!(LIFE&&COL==="bilim")) ANIMALS.forEach(([k,grp,en,uz,see])=>{ const id="a_"+k; if(IDX[id]) return; const p={id,t:en.replace(/ /g,"_"),nt:en,q:en,n:uz,c:"",cc:"",reg:"",tags:["hayvon"],grp,best:"—",s:"",g:PAL2[hash(id)%PAL2.length],animal:1,see}; PLACES.push(p); IDX[id]=p; });
+if(!(LIFE&&COL!=="life")) ANIMALS.forEach(([k,grp,en,uz,see])=>{ const id="a_"+k; if(IDX[id]) return; const p={id,t:en.replace(/ /g,"_"),nt:en,q:en,n:uz,c:"",cc:"",reg:"",tags:["hayvon"],grp,best:"—",s:"",g:PAL2[hash(id)%PAL2.length],animal:1,see}; PLACES.push(p); IDX[id]=p; });
 const grpName=p=>t("g_"+(p.grp||"mam"));
 const AN={g:"all",n:60};
 function animalsRow(){ return ""; const l=PLACES.filter(p=>p.animal&&p.img); if(l.length<4) return ""; const d=Math.floor(Date.now()/864e5);
@@ -1458,18 +1458,20 @@ function openAnimals(g){ const O=ensureCtryView(); if(!O.classList.contains("on"
 // GitHub'da yig'ilgan minglab turlar (assets/catalog/life/<til>.json)
 const LIFEG={ld:{},counts:{},total:0};
 async function lifeGroup(g){ if(!LIFE||LIFEG.ld[g]) return; LIFEG.ld[g]=1; const lang=catLang();
-  try{ let r=await fetch(`assets/catalog/${COL}/${lang}/${g}.json`); if(!r.ok&&lang!=="en") r=await fetch(`assets/catalog/${COL}/en/${g}.json`); if(!r.ok) return; const d=await r.json(); if(lang!==catLang()) return; lifeAdd(d.items||[],lang); refresh(); }catch(e){ LIFEG.ld[g]=0; } }
+  try{ let r=await fetch(`assets/catalog/${COLDATA}/${lang}/${g}.json`); if(!r.ok&&lang!=="en") r=await fetch(`assets/catalog/${COLDATA}/en/${g}.json`); if(!r.ok) return; const d=await r.json(); if(lang!==catLang()) return; lifeAdd(d.items||[],lang); refresh(); }catch(e){ LIFEG.ld[g]=0; } }
 function lifeAdd(items,lang){ const have=new Set(PLACES.filter(p=>p.animal&&!p.dyn).map(p=>p.nt.toLowerCase()));
-  for(const [qid,grp,label,en,loc,desc,file,sl,logo] of items){ const id="q"+qid; if(IDX[id]||(en&&have.has(en.toLowerCase()))) continue;
+  for(let [qid,grp,label,en,loc,desc,file,sl,logo] of items){ if(!GRPS.includes(grp)) continue; const id="q"+qid; if(IDX[id]||(en&&have.has(en.toLowerCase()))) continue;
     const wl=loc?lang:"en", title=loc||en;
+    if(/^[A-Z][a-z]+ [a-z]+$/.test(label)&&en&&!/^[A-Z][a-z]+ [a-z]+$/.test(en)) label=en.replace(/\s*\(.*?\)\s*/g,"");   // lotincha nom o'rniga tushunarli nom
     const p={id,t:(en||label).replace(/ /g,"_"),nt:en||label,q:en||label,n:LANG==="uzk"?cyr(label):label,c:"",cc:"",reg:"",tags:["hayvon"],grp,best:"—",s:desc?desc.charAt(0).toUpperCase()+desc.slice(1):"",g:PAL2[hash(id)%PAL2.length],animal:1,dyn:1,wd:1,keep:0,wl,sl,see:[],
-      img:file?"https://commons.wikimedia.org/wiki/Special:FilePath/"+encodeURIComponent(file.replace(/ /g,"_"))+"?width=960":undefined,logo:logo?1:0,person:PEOPLE_G.includes(grp)&&COL==="bilim"?1:0,wt:{en,[lang]:loc||undefined},wurl:title?`https://${wl}.wikipedia.org/wiki/`+encodeURIComponent(title.replace(/ /g,"_")):""};
+      img:file?"https://commons.wikimedia.org/wiki/Special:FilePath/"+encodeURIComponent(file.replace(/ /g,"_"))+"?width=960":undefined,logo:logo?1:0,person:COL==="odam"?1:0,wt:{en,[lang]:loc||undefined},wurl:title?`https://${wl}.wikipedia.org/wiki/`+encodeURIComponent(title.replace(/ /g,"_")):""};
     PLACES.push(p); IDX[id]=p; } }
-async function lifeLoad(){ if(!LIFE) return; const lang=catLang(); try{ let r=await fetch(`assets/catalog/${COL}/${lang}.json`); if(!r.ok&&lang!=="en") r=await fetch(`assets/catalog/${COL}/en.json`); if(!r.ok) return; const d=await r.json(); if(lang!==catLang()) return;
-  LIFEG.ld={}; LIFEG.counts=d.counts||{}; LIFEG.total=d.total||0; lifeAdd(d.items||[],lang); refresh(); tryQP(); return;
+async function lifeLoad(){ if(!LIFE) return; const lang=catLang(); try{ let r=await fetch(`assets/catalog/${COLDATA}/${lang}.json`); if(!r.ok&&lang!=="en") r=await fetch(`assets/catalog/${COLDATA}/en.json`); if(!r.ok) return; const d=await r.json(); if(lang!==catLang()) return;
+  LIFEG.ld={}; LIFEG.counts=Object.fromEntries(Object.entries(d.counts||{}).filter(([g])=>GRPS.includes(g))); LIFEG.total=Object.values(LIFEG.counts).reduce((a,b)=>a+b,0)||d.total||0; lifeAdd(d.items||[],lang); refresh(); tryQP(); return;
   const have=new Set(PLACES.filter(p=>p.animal).map(p=>p.nt.toLowerCase()));
-  for(const [qid,grp,label,en,loc,desc,file,sl] of d.items||[]){ const id="q"+qid; if(IDX[id]||(en&&have.has(en.toLowerCase()))) continue;
+  for(let [qid,grp,label,en,loc,desc,file,sl] of d.items||[]){ const id="q"+qid; if(IDX[id]||(en&&have.has(en.toLowerCase()))) continue;
     const wl=loc?lang:"en", title=loc||en;
+    if(/^[A-Z][a-z]+ [a-z]+$/.test(label)&&en&&!/^[A-Z][a-z]+ [a-z]+$/.test(en)) label=en.replace(/\s*\(.*?\)\s*/g,"");   // lotincha nom o'rniga tushunarli nom
     const p={id,t:(en||label).replace(/ /g,"_"),nt:en||label,q:en||label,n:LANG==="uzk"?cyr(label):label,c:"",cc:"",reg:"",tags:["hayvon"],grp,best:"—",s:desc?desc.charAt(0).toUpperCase()+desc.slice(1):"",g:PAL2[hash(id)%PAL2.length],animal:1,dyn:1,wd:1,keep:0,wl,sl,see:[],
       img:"https://commons.wikimedia.org/wiki/Special:FilePath/"+encodeURIComponent(file.replace(/ /g,"_"))+"?width=960",wt:{en,[lang]:loc||undefined},wurl:title?`https://${wl}.wikipedia.org/wiki/`+encodeURIComponent(title.replace(/ /g,"_")):""};
     PLACES.push(p); IDX[id]=p; } refresh(); }catch(e){} }
@@ -1586,7 +1588,7 @@ function siteInit(){
 }
 
 /* ================= START ================= */
-if(LIFE&&COL==="bilim"){ for(const l in I18N){ ["brand","kick","h1","sub","sub2","ph","n","g","day","q"].forEach(k=>{ if(I18N[l]["bil_"+k]) I18N[l]["life_"+k]=I18N[l]["bil_"+k]; }); } }
+if(LIFE&&COL!=="life"){ const pre={odam:"odm_",texnika:"tex_",internet:"net_"}[COL]; for(const l in I18N){ ["brand","kick","h1","sub","sub2","ph","n","g","day","q"].forEach(k=>{ if(I18N[l][pre+k]) I18N[l]["life_"+k]=I18N[l][pre+k]; }); } }
 if(LIFE){ for(const l in I18N){ if(I18N[l].life_q){ I18N[l].quiz_h=I18N[l].life_q; I18N[l].t_quiz=I18N[l].life_q; } } }
 applyTheme(); applyUI(); applyLang();
 if(!U&&(SITE||LIFE)) U={name:"",country:"UZ",interests:[],regions:[],dream:null,style:"",with:"",season:""};
