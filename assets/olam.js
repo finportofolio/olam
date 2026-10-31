@@ -1330,7 +1330,7 @@ const CTRY=[["UZ","Q265","uz"],["KZ","Q232","osiyo"],["KG","Q813","osiyo"],["TJ"
  ["US","Q30","amerika"],["CA","Q16","amerika"],["MX","Q96","amerika"],["CU","Q241","amerika"],["BR","Q155","amerika"],["AR","Q414","amerika"],["PE","Q419","amerika"],["CL","Q298","amerika"],["CO","Q739","amerika"],["EC","Q736","amerika"],["BO","Q750","amerika"],
  ["AU","Q408","okeaniya"],["NZ","Q664","okeaniya"]];
 // Wikidata turi → OLAM kategoriyalari
-const WDT={Q570116:[],Q8502:["tog"],Q8072:["tog"],Q46831:["tog"],Q133056:["tog"],Q35666:["qor","tog"],Q130003:["qor"],Q23397:["dengiz","tabiat"],Q40080:["dengiz"],Q23442:["dengiz"],Q131681:["dengiz","tabiat"],Q39715:["dengiz"],
+const WDT={Q570116:[],Q515:["shahar"],Q8502:["tog"],Q8072:["tog"],Q46831:["tog"],Q133056:["tog"],Q35666:["qor","tog"],Q130003:["qor"],Q23397:["dengiz","tabiat"],Q40080:["dengiz"],Q23442:["dengiz"],Q131681:["dengiz","tabiat"],Q39715:["dengiz"],
  Q34038:["sharshara","tabiat"],Q177380:["sharshara","tabiat"],Q46169:["tabiat","park"],Q179049:["tabiat"],Q473972:["tabiat"],Q22698:["park"],Q1107656:["park","tabiat"],Q167346:["park","tabiat"],Q39816:["tabiat","tog"],Q35509:["tabiat"],
  Q150784:["sahro","tabiat"],Q8514:["sahro"],Q32815:["islom","ibodat","tarix"],Q132834:["islom","tarix"],Q48356:["islom","tarix"],Q162875:["tarix","islom"],Q16970:["ibodat","tarix"],Q2977:["ibodat","tarix"],Q5393308:["ibodat","tarix"],Q842402:["ibodat","tarix"],Q44539:["ibodat","tarix"],
  Q33506:["muzey"],Q207694:["muzey"],Q23413:["saroy","tarix"],Q57821:["tarix"],Q1785071:["tarix"],Q16560:["saroy","tarix"],Q839954:["tarix"],Q109607:["tarix"],Q676050:["tarix","shahar"],Q4989906:["tarix","shahar"],Q12518:["zamon","shahar"],Q11303:["zamon","shahar"],Q12280:["shahar"],Q174782:["shahar"],

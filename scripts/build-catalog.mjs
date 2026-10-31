@@ -16,6 +16,7 @@ const FULL = iso => POP.has(iso) ? (BIG.has(iso) ? 60000 : 25000) : 8000;   // d
 const PART = 5000;                                                            // davlat sahifasi fayli bo'lagi
 const TOP  = iso => POP.has(iso) ? (BIG.has(iso) ? 120 : 80) : 20;           // bosh ro'yxat
 const HMIN = iso => BIG.has(iso) ? 3 : POP.has(iso) ? 2 : 1;                 // meros obyektlari uchun min. sitelinks
+const SMIN = iso => iso === "UZ" ? 2 : BIG.has(iso) ? 20 : POP.has(iso) ? 10 : 5;   // shahar va qishloqlar uchun min. sitelinks
 
 const GEN = "world3-" + hash(JSON.stringify([CLS, COMMON, [...POP], [...BIG], FULL("FR"), FULL("UZ"), FULL("XX")]));
 const st0 = readJSON(DIR+"/state.json") || {};
@@ -98,6 +99,28 @@ async function worker(){
   }
 }
 await Promise.all([worker(), worker(), worker()]);
+// 2b) shahar va qishloqlar (aholi punktlari): O'zbekistonda deyarli hammasi, boshqa davlatlarda eng mashhurlari
+const qS = (qid, m) => `SELECT ?item ?img ?coord ?sl WHERE { ?item wdt:P17 wd:${qid} ; wikibase:sitelinks ?sl . FILTER(?sl >= ${m}) ?item wdt:P31/wdt:P279* wd:Q486972 . ?item wdt:P18 ?img ; wdt:P625 ?coord . } LIMIT 20000`;
+let si = 0, sOk = 0;
+const sTodo = countries.filter(([iso]) => !done.has("S:"+iso));
+async function sWorker(){
+  while(si < sTodo.length){
+    if(elapsed() > BUDGET*0.65){ stopped = true; return; }
+    const [iso, qid, reg] = sTodo[si++];
+    const b = await ladder(iso+" shaharlar", m => qS(qid, m), [SMIN(iso), SMIN(iso)*2, SMIN(iso)*4]);
+    if(!b){ failed++; continue; }
+    const have = new Set((byC[iso]||[]).map(x => x[0])), add = [];
+    for(const r of b){ const id = qidOfUri(r.item.value); if(have.has(id)) continue;
+      const m = /Point\(([-\d.]+) ([-\d.]+)\)/.exec(r.coord?.value||""); if(!m) continue;
+      const file = fileOf(r.img?.value); if(!file || /\.(svg|png|gif|tif|tiff|webm|ogv|pdf|djvu)$/i.test(file) || BADIMG.test(file)) continue;
+      have.add(id); add.push([id, file, +(+m[2]).toFixed(5), +(+m[1]).toFixed(5), "Q515", +r.sl.value, reg]); }
+    byC[iso] = [...(byC[iso]||[]), ...add].sort((x,y) => y[5]-x[5]); done.add("S:"+iso); sOk++;
+    if(add.length) console.log(mins()+"m", iso, "shaharlar +"+add.length);
+    await sleep(200);
+  }
+}
+await Promise.all([sWorker(), sWorker(), sWorker()]);
+console.log("shaharlar:", sOk, "davlatda so'raldi");
 console.log("davlatlar:", ok, "ta so'raldi, xato:", failed, "bajarilgan jami:", done.size, "/", countries.length);
 if(stopped) more("joylar: davlatlar tugamadi");
 if(failed) more("joylar: "+failed+" ta davlatda xato");
