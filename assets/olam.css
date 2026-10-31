@@ -1096,3 +1096,5 @@ body.site .sapp{background:linear-gradient(135deg,#1c46d6 0%,#2b6cf3 45%,#69bdff
 .tour small b{color:var(--text)}
 .tour .row{flex-wrap:wrap}.tour .pill{padding:9px 14px;font-size:13px}
 [data-ui=glass] .tour{background:var(--gl);box-shadow:var(--gls)}
+/* Bilim: logotiplar butun ko'rinsin */
+.ph img.lg{object-fit:contain;padding:14%;background:#fff}

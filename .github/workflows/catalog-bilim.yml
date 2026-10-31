@@ -1,0 +1,51 @@
+# OLAM Bilim katalogi: insonlar, texnika, internet (Wikidata).
+# Joylar katalogi tugagach avtomatik ishga tushadi; qo'lda ham, har oy ham.
+name: Build knowledge catalog
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "41 5 2 * *"
+  workflow_run:
+    workflows: ["Build world catalog"]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: write
+  pages: write
+
+concurrency:
+  group: catalog-bilim
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Build knowledge catalog
+        run: node scripts/build-bilim.mjs
+      - name: Check output
+        run: node -e 'const d=require("./assets/catalog/bilim/en.json"); if(d.items.length<500){ console.error("too few: "+d.items.length); process.exit(1); } console.log("items:", d.total)'
+      - name: Commit catalog
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/catalog/bilim
+          if git diff --cached --quiet; then echo "no changes"; exit 0; fi
+          git commit -m "Update knowledge catalog"
+          git pull --rebase origin main
+          git push origin HEAD:main
+      - name: Rebuild GitHub Pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          curl -fsS -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/pages/builds" || echo "pages build request failed"
