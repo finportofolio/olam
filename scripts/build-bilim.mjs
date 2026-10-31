@@ -30,8 +30,8 @@ async function qidOf(label){ if(QC[label]!==undefined) return QC[label];
   try{ const b = await sparql(`SELECT ?c ?s WHERE { ?c rdfs:label "${label}"@en ; wikibase:sitelinks ?s . } ORDER BY DESC(?s) LIMIT 1`); QC[label] = b[0]?.c?.value.split("/").pop() || null; }catch(e){ QC[label] = null; }
   if(!QC[label]) console.log("topilmadi:", label); return QC[label]; }
 const ids_ = async labels => (await Promise.all(labels.map(qidOf))).filter(Boolean);
-const LIMIT = { uzb:4000, pol:2000, sci:2000, art:2000, mus:2500, sport:2500, hist:1500, biz:1000, car:1500, air:1500, dev:1000, web:1500, ai:500, app:1500 };
-const MINSL = { uzb:1, pol:25, sci:20, art:20, mus:25, sport:25, hist:20, biz:12, car:6, air:6, dev:5, web:6, ai:2, app:6 };
+const LIMIT = { uzb:8000, pol:6000, sci:6000, art:6000, mus:6000, sport:8000, hist:5000, biz:4000, car:5000, air:5000, dev:3000, web:5000, ai:2000, app:5000 };
+const MINSL = { uzb:1, pol:10, sci:8, art:8, mus:10, sport:10, hist:8, biz:5, car:2, air:2, dev:2, web:3, ai:1, app:3 };
 const items = new Map();   // qid → [qid, grp, file, sl, logo?]
 async function collect(grp, cond, logo, noImg){
   const lim = LIMIT[grp], min = MINSL[grp];
