@@ -1063,12 +1063,22 @@ async function loadMore(p){
   if(!txt||txt.length<short.length+60||short.includes(txt.slice(0,80))){ box.remove(); return; }
   box.innerHTML=txt.split(/\n+/).filter(Boolean).slice(0,6).map(x=>`<p>${esc(x)}</p>`).join("");
 }
-async function ctryLoad(code){ const lang=catLang(), key=code+"|"+lang+"|s"; if(CTC[key]) return CTC[key];
-  try{ const r=await fetch("assets/catalog/c/"+code+".json"); if(r.ok){ const d=await r.json(); const L=d.langs||[], li=L.indexOf(lang), en=L.indexOf("en"); const out=[];
-      for(const it of d.items||[]){ const [qid,file,lat,lon,cls,sl,reg,ls,ds,ws]=it; const label=(li>=0&&ls[li])||ls[en]||ls.find(Boolean); if(!label) continue;
-        out.push(mkPlace([qid,label,ws[en]||"",lang==="en"?"":(li>=0?ws[li]:"")||"",(li>=0?ds[li]:"")||ds[en]||"",file,lat,lon,cls,sl,code,reg],lang,false)); }
-      if(out.length){ CTC[key]=out; return out; } } }catch(e){}
+// davlat sahifasi: c/<ISO>.json (1-bo'lak), c/<ISO>.2.json ... — har birida 5000 tagacha joy, 9 tilda
+const CTP={};
+function ctryRows(d,code,lang){ const L=d.langs||[], li=L.indexOf(lang), en=L.indexOf("en"), out=[];
+  for(const it of d.items||[]){ const [qid,file,lat,lon,cls,sl,reg,ls,ds,ws]=it; const label=(li>=0&&ls[li])||ls[en]||ls.find(Boolean); if(!label) continue;
+    out.push(mkPlace([qid,label,ws[en]||"",lang==="en"?"":(li>=0?ws[li]:"")||"",(li>=0?ds[li]:"")||ds[en]||"",file,lat,lon,cls,sl,code,reg],lang,false)); }
+  return out; }
+async function ctryPart(code,n){ const lang=catLang(); const r=await fetch("assets/catalog/c/"+code+(n>1?"."+n:"")+".json"); if(!r.ok) throw new Error("no part");
+  const d=await r.json(); CTP[code]={parts:d.parts||1,got:n,total:d.total||(d.items||[]).length}; return ctryRows(d,code,lang); }
+async function ctryLoad(code){ const lang=catLang(), key=code+"|"+lang+"|s"; if(CTC[key]){ if(CTP[code]) CTP[code].got=1; return CTC[key]; }
+  try{ const out=await ctryPart(code,1); if(out.length){ CTC[key]=out; return out; } }catch(e){}
   return wdLoad(code); }
+const ctryHasMore=()=>{ const P=CTP[CT.code]; return !!P&&P.got<P.parts; };
+async function ctryMore(){ CT.n+=60; const c=CT.code, P=CTP[c];
+  if(P&&P.got<P.parts&&(CT.tag!=="all"||CT.list.length<CT.n+120)){ const b=$("#ctb .pill.wide"); if(b) b.disabled=true;
+    try{ const add=await ctryPart(c,P.got+1); if(CT.code!==c) return; const ids=new Set(CT.list.map(p=>p.id)); CT.list.push(...add.filter(p=>!ids.has(p.id))); }catch(e){} }
+  renderCountry(); }
 async function fillDesc(p){
   const lang=LANG; let txt="";
   try{ // mahalliy Wikipedia
@@ -1388,10 +1398,10 @@ async function openCountry(code){
 function renderCountry(){ const C=CAT(); const all=CT.list; if(!$("#ctb")) return;
   const tags=TAGS.filter(k=>all.some(p=>p.tags.includes(k)));
   let l=CT.tag==="fit"?all.slice().sort((a,b)=>ctryScore(b)-ctryScore(a)):CT.tag==="all"?all:all.filter(p=>p.tags.includes(CT.tag));
-  $("#ctn").textContent=t("ctry_n",{n:all.length});
-  $("#ctb").innerHTML=`<div class="chips" style="padding:4px 0 14px">${(U?.interests||[]).length?`<button class="chip ${CT.tag==="fit"?"on":""}" onclick="CT.tag='fit';CT.n=60;renderCountry()">${ICON.spark}${t("for_you_f")}</button>`:""}<button class="chip ${CT.tag==="all"?"on":""}" onclick="CT.tag='all';CT.n=60;renderCountry()">${t("all")} · ${all.length}</button>${tags.map(k=>`<button class="chip ${CT.tag===k?"on":""}" onclick="CT.tag='${k}';CT.n=60;renderCountry()">${C[k]} · ${all.filter(p=>p.tags.includes(k)).length}</button>`).join("")}</div>
+  const P=CTP[CT.code], tot=Math.max(all.length,P?.total||0); $("#ctn").textContent=t("ctry_n",{n:tot});
+  $("#ctb").innerHTML=`<div class="chips" style="padding:4px 0 14px">${(U?.interests||[]).length?`<button class="chip ${CT.tag==="fit"?"on":""}" onclick="CT.tag='fit';CT.n=60;renderCountry()">${ICON.spark}${t("for_you_f")}</button>`:""}<button class="chip ${CT.tag==="all"?"on":""}" onclick="CT.tag='all';CT.n=60;renderCountry()">${t("all")} · ${tot}</button>${tags.map(k=>`<button class="chip ${CT.tag===k?"on":""}" onclick="CT.tag='${k}';CT.n=60;renderCountry()">${C[k]} · ${all.filter(p=>p.tags.includes(k)).length}</button>`).join("")}</div>
    ${l.length?`<div class="grid2" style="padding:0">${l.slice(0,CT.n).map(gcard).join("")}</div>`:`<div class="empty">${t("nothing")}</div>`}
-   ${l.length>CT.n?`<button class="pill o2 wide" style="margin-top:16px" onclick="CT.n+=60;renderCountry()">${t("ctry_more")} · ${l.length-CT.n}</button>`:""}<div class="foot"></div>`; }
+   ${l.length>CT.n||ctryHasMore()?`<button class="pill o2 wide" style="margin-top:16px" onclick="ctryMore()">${t("ctry_more")} · ${Math.max(l.length,CT.tag==="all"?tot:0)-CT.n}</button>`:""}<div class="foot"></div>`; }
 
 
 /* ================= DUNYO KATALOGI — ilovaga oldindan qo'shilgan ~3000+ joy =================
