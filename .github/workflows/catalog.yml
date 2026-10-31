@@ -1,20 +1,30 @@
-# Dunyo katalogini yig'ish: har bir davlatdan eng mashhur joylar Wikidata'dan olinadi
-# va assets/catalog/<til>.json fayllariga yoziladi. Ilova shu fayllarni o'qiydi.
+# Dunyo katalogini yig'ish: har bir davlatdan diqqatga sazovor joylar Wikidata'dan olinadi
+# va assets/catalog/<til>.json, assets/catalog/c/<ISO>.json fayllariga yoziladi. Ilova shu fayllarni o'qiydi.
+# Ish 6 soatlik chegaraga yetsa, borini saqlab, o'zini yana ishga tushiradi (ko'pi bilan 8 marta ketma-ket).
 name: Build world catalog
 
 on:
   workflow_dispatch:
+    inputs:
+      round:
+        description: "Ketma-ket ishga tushish raqami"
+        default: "0"
+      fresh:
+        description: "1 — noldan yig'ish"
+        default: "0"
   schedule:
-    - cron: "17 3 1 * *"   # har oyning 1-kuni
+    - cron: "17 3 1 * *"
   push:
     branches: [main]
     paths:
       - scripts/build-catalog.mjs
+      - scripts/lib.mjs
       - .github/workflows/catalog.yml
 
 permissions:
   contents: write
   pages: write
+  actions: write
 
 concurrency:
   group: catalog-${{ github.ref }}
@@ -24,30 +34,53 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 355
+    env:
+      BUDGET_MIN: "300"
+      MORE_FILE: /tmp/olam-more.txt
+      FRESH: ${{ github.event_name == 'schedule' && '1' || inputs.fresh || '0' }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Build catalog
+      - name: Build
+        id: build
         run: node scripts/build-catalog.mjs
       - name: Check output
         run: |
-          ls -la assets/catalog
-          node -e 'const d=require("./assets/catalog/en.json"); if(d.items.length<1000){ console.error("too few places: "+d.items.length); process.exit(1); } console.log("en places:", d.items.length)'
+          node -e 'const d=require("./assets/catalog/en.json"); if(d.items.length<1000){ console.error("too few places: "+d.items.length); process.exit(1); } console.log("places:", d.total, "index:", d.items.length)'
+          du -sh assets/catalog assets/catalog/* | sort -h | tail -5
       - name: Commit catalog
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add assets/catalog
+          git add -A assets/catalog/*.json assets/catalog/c
           if git diff --cached --quiet; then echo "no changes"; exit 0; fi
-          git commit -m "Update world catalog"
-          git pull --rebase origin "${GITHUB_REF_NAME}"
-          git push
+          git commit -q -m "Update world catalog"
+          for i in 1 2 3 4; do
+            git pull -q --rebase -X theirs origin main && git push -q origin HEAD:main && break
+            echo "push qayta urinish $i"; sleep $((i*10))
+          done
       - name: Rebuild GitHub Pages
-        if: github.ref == 'refs/heads/main'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           curl -fsS -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
             "https://api.github.com/repos/${{ github.repository }}/pages/builds" || echo "pages build request failed"
+      - name: Continue in next run
+        if: always() && steps.build.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ROUND: ${{ inputs.round || '0' }}
+        run: |
+          if [ -f "$MORE_FILE" ] && [ "$ROUND" -lt 8 ]; then
+            cat "$MORE_FILE"
+            NEXT=$((ROUND+1))
+            curl -fsS -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${{ github.repository }}/actions/workflows/catalog.yml/dispatches" \
+              -d "{\"ref\":\"main\",\"inputs\":{\"round\":\"$NEXT\"}}" && echo "keyingi ish: $NEXT"
+          else
+            echo "davomi kerak emas (round=$ROUND)"
+          fi
