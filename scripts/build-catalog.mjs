@@ -46,9 +46,27 @@ const qA = (qid, lim, big, m) => `SELECT ?item ?img ?coord ?cls ?sl WHERE {
  ?item wdt:P17 wd:${qid} ; wdt:P18 ?img ; wdt:P625 ?coord ; wikibase:sitelinks ?sl .
  FILTER(?sl >= IF(?cls IN (${COMMON.map(k=>"wd:"+k).join(",")}), ${(big?5:2)*m}, ${m}))
 } ORDER BY DESC(?sl) LIMIT ${lim*2}`;
-const qH = (qid, lim, m) => `SELECT ?item (SAMPLE(?im) AS ?img) (SAMPLE(?co) AS ?coord) (SAMPLE(?c) AS ?cls) ?sl WHERE {
- ?item wdt:P1435 ?h ; wdt:P17 wd:${qid} ; wdt:P18 ?im ; wdt:P625 ?co ; wikibase:sitelinks ?sl . FILTER(?sl >= ${m}) OPTIONAL { ?item wdt:P31 ?c }
-} GROUP BY ?item ?sl ORDER BY DESC(?sl) LIMIT ${lim}`;
+// meros obyektlari: saralashsiz va guruhlashsiz (yengil so'rov), takrorlar skriptda olib tashlanadi
+const qH = (qid, lim, m) => `SELECT ?item ?img ?coord ?cls ?sl WHERE {
+ ?item wdt:P1435 ?h ; wdt:P17 wd:${qid} ; wdt:P18 ?img ; wdt:P625 ?coord ; wikibase:sitelinks ?sl . FILTER(?sl >= ${m}) OPTIONAL { ?item wdt:P31 ?cls }
+} LIMIT ${lim*3}`;
+// katta davlatlar: har bir joy turi alohida (bitta katta so'rov vaqti tugab qoladi)
+const qC = (qid, cls, lim, m) => cls === "WH"
+  ? `SELECT ?item ?img ?coord ?sl WHERE { ?item wdt:P1435 wd:Q9259 ; wdt:P17 wd:${qid} ; wdt:P18 ?img ; wdt:P625 ?coord ; wikibase:sitelinks ?sl . }`
+  : `SELECT ?item ?img ?coord ?sl WHERE { ?item wdt:P31 wd:${cls} ; wdt:P17 wd:${qid} ; wdt:P18 ?img ; wdt:P625 ?coord ; wikibase:sitelinks ?sl . FILTER(?sl >= ${m}) } LIMIT ${lim}`;
+async function byClass(iso, qid, lim, big){
+  const rows = []; let fails = 0;
+  for(const cls of [...CLS, "WH"]){
+    const base = COMMON.includes(cls) ? (big ? 5 : 2) : 1;
+    const b = await ladder(iso+" "+cls, m => qC(qid, cls, lim, m), [base, base*2, base*4]);
+    if(!b){ fails++; continue; }
+    const uri = "http://www.wikidata.org/entity/"+(cls === "WH" ? "Q9259" : cls);
+    for(const r of b){ r.cls = { value: uri }; rows.push(r); }
+    await sleep(120);
+  }
+  console.log("  "+iso, "turlar bo'yicha:", rows.length, "qator, xato:", fails);
+  return fails > CLS.length/3 ? null : rows;
+}
 async function ladder(name, mk, mins_){ for(const m of mins_){ try{ return await sparql(mk(m)); }catch(e){ console.log("  qayta urinish", name, "min", m, "—", e.message.slice(0,60)); await sleep(2000); } } return null; }
 
 let ci = 0, ok = 0, failed = 0, stopped = false;
@@ -57,7 +75,8 @@ async function worker(){
   while(ci < todo.length){
     if(elapsed() > BUDGET*0.6){ stopped = true; return; }
     const [iso, qid, reg] = todo[ci++]; const lim = FULL(iso), big = BIG.has(iso);
-    const a = await ladder(iso+" turlar", m => qA(qid, lim, big, m), [1, 2, 4]);
+    let a = big ? null : await ladder(iso+" turlar", m => qA(qid, lim, big, m), [1]);
+    if(!a) a = await byClass(iso, qid, lim, big);
     const h = await ladder(iso+" meros", m => qH(qid, lim, m), [HMIN(iso), HMIN(iso)*2, HMIN(iso)*4]);
     if(!a && !h){ failed++; console.log(iso, "XATO — oldingi natija qoladi"); continue; }
     const all = [...(a||[]), ...(h||[])].map(r => ({ r, sl: +r.sl.value })).sort((x,y) => y.sl - x.sl);
