@@ -3,7 +3,7 @@
 // Oldingi natija saqlanadi va ustiga qo'shiladi; vaqt tugasa davomi keyingi ishda (MORE_FILE).
 // Natija: assets/catalog/<til>.json (bosh ro'yxat) va assets/catalog/c/<ISO>.json (davlat sahifasi, 9 tilda)
 import { existsSync, mkdirSync, rmSync } from "node:fs";
-import { LANGS, EN, sparql, qidOfUri, fileOf, fetchMeta, GONE, readJSON, writeJSON, unpackMeta, packMeta, more, elapsed, mins, sleep, hash, BUDGET, FRESH } from "./lib.mjs";
+import { LANGS, EN, sparql, sparql1, qidOfUri, fileOf, fetchMeta, GONE, readJSON, writeJSON, unpackMeta, packMeta, more, elapsed, mins, sleep, hash, BUDGET, FRESH } from "./lib.mjs";
 const DIR = "assets/catalog";
 
 const CLS = ["Q570116", "Q8502", "Q8072", "Q46831", "Q133056", "Q35666", "Q130003", "Q23397", "Q40080", "Q23442", "Q131681", "Q39715", "Q34038", "Q177380", "Q46169", "Q179049", "Q473972", "Q22698", "Q1107656", "Q167346", "Q39816", "Q35509", "Q150784", "Q8514", "Q32815", "Q132834", "Q48356", "Q162875", "Q16970", "Q2977", "Q5393308", "Q842402", "Q44539", "Q33506", "Q207694", "Q23413", "Q57821", "Q1785071", "Q16560", "Q839954", "Q109607", "Q676050", "Q4989906", "Q12518", "Q11303", "Q12280", "Q174782", "Q11707", "Q30022", "Q37654", "Q11315", "Q740326", "Q1501", "Q875157", "Q27686", "Q22746", "Q43501", "Q2281788", "Q483110", "Q194195", "Q2416723",
@@ -100,14 +100,16 @@ async function worker(){
 }
 await Promise.all([worker(), worker(), worker()]);
 // 2b) shahar va qishloqlar (aholi punktlari): O'zbekistonda deyarli hammasi, boshqa davlatlarda eng mashhurlari
-const qS = (qid, m) => `SELECT ?item ?img ?coord ?sl WHERE { ?item wdt:P17 wd:${qid} ; wikibase:sitelinks ?sl . FILTER(?sl >= ${m}) ?item wdt:P31/wdt:P279* wd:Q486972 . ?item wdt:P18 ?img ; wdt:P625 ?coord . } LIMIT 20000`;
+// tartib qat'iy: avval davlat va sitelinks, keyin rasm/koordinata, eng oxirida tur (P279* og'ir) — optimizator o'zgartirmasin
+const qS = (qid, m) => `SELECT ?item ?img ?coord ?sl WHERE { hint:Query hint:optimizer "None" . ?item wdt:P17 wd:${qid} . ?item wikibase:sitelinks ?sl . FILTER(?sl >= ${m}) ?item wdt:P18 ?img . ?item wdt:P625 ?coord . ?item wdt:P31/wdt:P279* wd:Q486972 . } LIMIT 20000`;
+async function ladder1(name, mk, mins_){ for(const m of mins_){ try{ return await sparql1(mk(m)); }catch(e){ console.log("  og'ir", name, "min", m, "—", e.message.slice(0,40)); } } return null; }
 let si = 0, sOk = 0;
 const sTodo = countries.filter(([iso]) => !done.has("S:"+iso));
 async function sWorker(){
   while(si < sTodo.length){
     if(elapsed() > BUDGET*0.65){ stopped = true; return; }
     const [iso, qid, reg] = sTodo[si++];
-    const b = await ladder(iso+" shaharlar", m => qS(qid, m), [SMIN(iso), SMIN(iso)*2, SMIN(iso)*4]);
+    const b = await ladder1(iso+" shaharlar", m => qS(qid, m), [SMIN(iso), SMIN(iso)*3, SMIN(iso)*9]);
     if(!b){ failed++; continue; }
     const have = new Set((byC[iso]||[]).map(x => x[0])), add = [];
     for(const r of b){ const id = qidOfUri(r.item.value); if(have.has(id)) continue;
