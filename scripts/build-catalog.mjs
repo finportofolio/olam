@@ -102,6 +102,9 @@ await Promise.all([worker(), worker(), worker()]);
 // 2b) shahar va qishloqlar (aholi punktlari): O'zbekistonda deyarli hammasi, boshqa davlatlarda eng mashhurlari
 // tartib qat'iy: avval davlat va sitelinks, keyin rasm/koordinata, eng oxirida tur (P279* og'ir) — optimizator o'zgartirmasin
 const qS = (qid, m) => `SELECT ?item ?img ?coord ?sl WHERE { hint:Query hint:optimizer "None" . ?item wdt:P17 wd:${qid} . ?item wikibase:sitelinks ?sl . FILTER(?sl >= ${m}) ?item wdt:P18 ?img . ?item wdt:P625 ?coord . ?item wdt:P31/wdt:P279* wd:Q486972 . } LIMIT 20000`;
+// zaxira: aholi punktlarining asosiy turlari to'g'ridan-to'g'ri (P279* siz) — juda katta davlatlar uchun
+const SETTLE = ["Q515","Q3957","Q532","Q1549591","Q5119","Q486972","Q484170","Q262166","Q1093829","Q747074","Q2039348","Q1637706","Q200250","Q15284"];
+const qS2 = (qid, m) => `SELECT ?item ?img ?coord ?sl WHERE { VALUES ?c { ${SETTLE.map(k=>"wd:"+k).join(" ")} } ?item wdt:P31 ?c ; wdt:P17 wd:${qid} ; wikibase:sitelinks ?sl . FILTER(?sl >= ${m}) ?item wdt:P18 ?img ; wdt:P625 ?coord . } LIMIT 20000`;
 async function ladder1(name, mk, mins_){ for(const m of mins_){ try{ return await sparql1(mk(m)); }catch(e){ console.log("  og'ir", name, "min", m, "—", e.message.slice(0,40)); } } return null; }
 let si = 0, sOk = 0;
 const sTodo = countries.filter(([iso]) => !done.has("S:"+iso));
@@ -109,7 +112,7 @@ async function sWorker(){
   while(si < sTodo.length){
     if(elapsed() > BUDGET*0.65){ stopped = true; return; }
     const [iso, qid, reg] = sTodo[si++];
-    const b = await ladder1(iso+" shaharlar", m => qS(qid, m), [SMIN(iso), SMIN(iso)*3, SMIN(iso)*9]);
+    const b = await ladder1(iso+" shaharlar", m => qS(qid, m), [SMIN(iso), SMIN(iso)*3, SMIN(iso)*9]) || await ladder1(iso+" shaharlar (asosiy turlar)", m => qS2(qid, m), [SMIN(iso), SMIN(iso)*3]);
     if(!b){ failed++; continue; }
     const have = new Set((byC[iso]||[]).map(x => x[0])), add = [];
     for(const r of b){ const id = qidOfUri(r.item.value); if(have.has(id)) continue;
