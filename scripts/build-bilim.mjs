@@ -82,25 +82,31 @@ for(const [key, grp, cond, lim, min, opt] of tasks){ if(elapsed() > BUDGET*0.7){
 const split = st.split || [];   // [kalit, guruh, kasb QID, min, davlat] — holatda saqlanadi
 const splitKeys = new Set(split.map(x => x[0]));
 for(const [grp, label, lim, min, kind] of labelTasks){
-  const key = grp+":"+label.split("|")[0]+(kind === "cls" ? "#2" : "");   // #2 — texnika/internet 2-bosqich (min. 1, rasmsiz 3+)
+  // #2 — texnika/internet 2-bosqich (min. 1, rasmsiz 3+); #p2 — insonlar 2-bosqich (min. sitelinks 1 taga past)
+  const key = grp+":"+label.split("|")[0]+(kind === "cls" ? "#2" : "#p2");
   if(done.has(key)) continue;
   if(elapsed() > BUDGET*0.7){ stopped = true; break; }
   const q = label.startsWith("sub:") ? label.slice(4) : await qidOf(label); if(q === undefined){ failed++; continue; } if(!q){ done.add(key); continue; }
   const cond = kind === "occ" ? `?item wdt:P106 wd:${q} ; wdt:P31 wd:Q5 .` : label.startsWith("sub:") ? `?item wdt:P31/wdt:P279* wd:${q} .` : `?item wdt:P31 wd:${q} .`;
-  const r = await collect(key, grp, cond, lim, kind === "cls" ? 1 : min, { logo: ["web","ai","app"].includes(grp), famous: kind === "occ" ? 25 : 3 });
+  const r = await collect(key, grp, cond, lim, kind === "cls" ? 1 : Math.max(1, min-1), { logo: ["web","ai","app"].includes(grp), famous: kind === "occ" ? 25 : 3 });
   if(!r) failed++;
   // chala yoki xato bo'lgan kasb → davlatlar bo'yicha
   if(kind === "occ" && r !== 1 && COUNTRIES.length){ done.add(key); if(!r) failed--;
-    for(const c of COUNTRIES){ const k = key+"@"+c; if(!splitKeys.has(k)){ splitKeys.add(k); split.push([k, grp, q, min, c]); } } }
+    for(const c of COUNTRIES){ const k = key+"@"+c; if(!splitKeys.has(k)){ splitKeys.add(k); split.push([k, grp, q, Math.max(1, min-1), c]); } } }
   await sleep(300);
 }
-const SPLIT_LIM = 4000;
-for(const [key, grp, q, min, c] of split){
-  if(done.has(key)) continue;
-  if(elapsed() > BUDGET*0.7){ stopped = true; break; }
-  if(!await collect(key, grp, `?item wdt:P106 wd:${q} ; wdt:P27 wd:${c} ; wdt:P31 wd:Q5 .`, SPLIT_LIM, min, { famous: 25 })) failed++;
-  await sleep(150);
+const SPLIT_LIM = 6000;
+let sp = 0;
+async function splitWorker(){
+  while(sp < split.length){
+    const [key, grp, q, min, c] = split[sp++];
+    if(done.has(key)) continue;
+    if(elapsed() > BUDGET*0.7){ stopped = true; return; }
+    if(!await collect(key, grp, `?item wdt:P106 wd:${q} ; wdt:P27 wd:${c} ; wdt:P31 wd:Q5 .`, SPLIT_LIM, min, { famous: 25 })) failed++;
+    await sleep(150);
+  }
 }
+await Promise.all([splitWorker(), splitWorker()]);
 if(stopped) more("bilim: so'rovlar tugamadi");
 if(failed) more("bilim: "+failed+" ta so'rov xato bo'ldi");
 console.log("jami:", items.size, "xato so'rovlar:", failed);
