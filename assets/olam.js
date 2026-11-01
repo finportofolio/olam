@@ -1,6 +1,10 @@
 const SITE=document.body.classList.contains("site");
 const LIFE=document.body.classList.contains("life");   // to'plam ilovalari: Tirik olam va Bilim
 const COL=["odam","texnika","internet"].find(c=>document.body.classList.contains(c))||"life";   // qaysi to'plam
+// Wonderly brendi: Travel, Nature, People, Tech, Web
+const APPNM=LIFE?{life:"Nature",odam:"People",texnika:"Tech",internet:"Web"}[COL]:"Travel", BRAND="Wonderly "+APPNM;
+const WMARK=`<svg viewBox="205.3 203.8 451 323.3" aria-hidden="true"><path d="M256 240 C240 310 228 390 238 444 C246 484 268 500 294 498 C334 496 358 446 366 396 C370 364 372 330 373 298 C376 360 384 430 404 470 C418 496 446 504 470 490 C504 470 530 418 548 356 C564 300 574 250 540 236 C504 222 464 256 466 308 C468 356 500 380 542 378 C578 376 606 366 628 350" fill="none" stroke="currentColor" stroke-width="58" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const LOGO=(cls="")=>`<div class="logo ${cls}"><i class="wm">${WMARK}</i><span class="bn">Wonderly <em>${APPNM}</em></span></div>`;
 const COLDIR={odam:"insonlar",texnika:"texnika",internet:"internet",life:"tirik"}[COL], COLDATA=COL==="life"?"life":"bilim";   // insonlar, texnika, internet — bitta katalogdan
 const HOME_URL=LIFE?COLDIR+"/":"./", APP_URL=LIFE?COLDIR+"/app/":"app/";
 const clean = s=>String(s).replace(/^[^\p{L}\p{N}]+/u,"").trim();
@@ -481,7 +485,7 @@ function startOb(){ obStep=0; if(LIFE){ obData={name:U?.name||"",country:U?.coun
 const steps=n=>`<div class="steps">${[1,2,3,4].map(i=>`<i class="${i<=n?"on":""}"></i>`).join("")}</div>`;
 const langChips=(fn)=>`<div class="opts lng">${LANGS.map(([k,n,f])=>`<button class="opt ${LANG===k?"on":""}" onclick="setLang('${k}');${fn}">${n}</button>`).join("")}</div>`;
 function renderObCol(){ const B=$("#obB")?$("#obBody"):$("#obBody"), Dd=obData; B.classList.toggle("splash",obStep===0);
-  if(obStep===0){ B.innerHTML=`<div class="logo">${t("life_brand")}</div><h1>${t("life_h1")}</h1><p class="sub">${t("life_sub")}</p>${langChips("renderOb()")}<div class="obb"><button class="btn g" onclick="obNext()">${t("start")}</button></div>`; return; }
+  if(obStep===0){ B.innerHTML=`${LOGO()}<h1>${t("life_h1")}</h1><p class="sub">${t("life_sub")}</p>${langChips("renderOb()")}<div class="obb"><button class="btn g" onclick="obNext()">${t("start")}</button></div>`; return; }
   const all=PLACES.filter(p=>p.animal); const gs=GRPS.filter(g=>all.some(p=>p.grp===g)||LIFEG.counts[g]||true);
   B.innerHTML=`<div class="steps"><i class="on"></i><i class="on"></i></div><h1>${t("ob_col_h")}</h1><p class="sub">${t("ob_col_sub")}</p>
     <label class="f">${t("name")}</label><input class="t" id="nm" placeholder="${esc(t("name_ph"))}" value="${esc(Dd.name||"")}" oninput="obData.name=this.value">
@@ -492,7 +496,7 @@ function renderOb(){ if(LIFE) return renderObCol();
   const B=$("#obBody"), Dd=obData; B.classList.toggle("splash",obStep===0);
   const back=`<button class="btn o" onclick="obStep--;renderOb()">←</button>`;
   if(obStep===0){
-    B.innerHTML=`<div class="logo">OLAM</div><h1>${t("ob_h1")}</h1><p class="sub">${t("ob_sub")}</p>${langChips("renderOb()")}
+    B.innerHTML=`${LOGO()}<h1>${t("ob_h1")}</h1><p class="sub">${t("ob_sub")}</p>${langChips("renderOb()")}
       <div class="obb"><button class="btn g" onclick="mPlay();obNext()">${t("start")}</button></div>`;
   } else if(obStep===1){
     B.innerHTML=`${steps(1)}<h1>${t("ob1_h")}</h1><p class="sub">${t("ob1_sub")}</p>
@@ -763,7 +767,7 @@ function renderSettings(){
    <div class="sgrp"><div class="sl">${t("s_speed")}</div>${seg("speed",[[1,t("sp1")],[2,t("sp2")],[3,t("sp3")]])}</div>
    <div class="sgrp"><div class="sl">${t("loc_q")}</div><button class="locb ${U?.lat!=null?"on":""}" onclick="locate(()=>renderSettings())">${ICON.locate}<span>${U?.lat!=null?t("loc_ok")+" · "+U.lat+", "+U.lon:t("loc_b")}</span></button></div>
    <div class="sgrp"><div class="sl">${t("s_prof")}</div><p class="sp">${esc(U?.name||"")} · ${esc(cname(U?.country||"UZ"))}</p><button class="pill o2 wide" onclick="closeSettings();startOb()">${t("edit")}</button></div>
-   <div class="sgrp"><div class="sl">${t("s_share")}</div><button class="pill o2 wide" onclick="shareApp()">${ICON.share} OLAM</button></div>${SITE?"":`<div class="sgrp"><a class="pill o2 wide" href="${HOME_URL}">${t("open_site")}</a></div>`}
+   <div class="sgrp"><div class="sl">${t("s_share")}</div><button class="pill o2 wide" onclick="shareApp()">${ICON.share} ${BRAND}</button></div>${SITE?"":`<div class="sgrp"><a class="pill o2 wide" href="${HOME_URL}">${t("open_site")}</a></div>`}
    <div class="sgrp"><div class="sl">${t("s_install")}</div><p class="sp">${t("install_t")}</p></div>
    <div class="sgrp"><div class="sl">${t("s_clear")}</div><div id="clr"><button class="pill o2 wide" onclick="askClear()">${t("clear_b")}</button></div></div>
    <div class="sgrp"><div class="sl">${t("s_about")}</div><p class="sp">${t("about_t")}</p><p class="sp">v3.0 · ${PLACES.filter(p=>!p.dyn||p.cat).length} ${t("places")}</p></div>
@@ -788,7 +792,7 @@ function applyLang(){ try{ ttsCheck(); }catch(e){} document.documentElement.lang
   document.querySelectorAll("[data-t]").forEach(e=>{ e.textContent=t(e.dataset.t); }); const lb=$("#tlang"); if(lb){ const L=LANGS.find(x=>x[0]===LANG); lb.innerHTML=catIcon("globe")+(LANG==="uzk"?"ЎЗ":LANG.toUpperCase()); } }
 function askClear(){ $("#clr").innerHTML=`<p class="sp">${t("clear_q")}</p><div class="row"><button class="pill g" onclick="clearData()">${t("yes")}</button><button class="pill o2" onclick="renderSettings()">${t("no")}</button></div>`; }
 function clearData(){ ["olam_saved","olam_liked","olam_learn","olam_aipick","olam_dyn"].forEach(k=>{ try{localStorage.removeItem(k)}catch(e){} }); saved.clear(); liked.clear(); LRN.t={}; LRN.r={}; LRN.v={}; AIP=null; toast(t("cleared")); renderSettings(); }
-async function shareApp(){ const url=location.href.split("#")[0]; try{ if(navigator.share){ await navigator.share({title:"OLAM",text:t("ob_sub"),url}); return; } await navigator.clipboard.writeText(url); toast(t("copied")); }catch(e){} }
+async function shareApp(){ const url=location.href.split("#")[0]; try{ if(navigator.share){ await navigator.share({title:BRAND,text:t("ob_sub"),url}); return; } await navigator.clipboard.writeText(url); toast(t("copied")); }catch(e){} }
 
 /* ================= TOMOSHA ================= */
 const W={list:[],i:0,t:null,paused:false,dur:9000,start:0,left:0};
@@ -797,7 +801,7 @@ function renderWatch(startId){
   W.list=forYou(); if(startId){ const i=W.list.findIndex(p=>p.id===startId); if(i>=0) W.list.unshift(...W.list.splice(i,1)); else if(byId(startId)) W.list.unshift(byId(startId)); } W.i=0;
   $("#watch").innerHTML=`<div class="layer" id="la"></div><div class="layer" id="lb"></div><video id="wv" playsinline muted loop></video><div class="wshade"></div>
    <div class="wbar"><i id="wbi"></i></div>
-   <div class="wtop"><div class="brand">OLAM</div><div class="wnext" id="wn"></div><button class="ib ${SET.vsound?"on":""}" id="wvs" onclick="vSound()" aria-label="Video">${SET.vsound?ICON.sound:ICON.mute}</button><button class="ib" onclick="openMusic()" id="wm" aria-label="Music"></button></div>
+   <div class="wtop"><div class="brand">${LOGO("w")}</div><div class="wnext" id="wn"></div><button class="ib ${SET.vsound?"on":""}" id="wvs" onclick="vSound()" aria-label="Video">${SET.vsound?ICON.sound:ICON.mute}</button><button class="ib" onclick="openMusic()" id="wm" aria-label="Music"></button></div>
    <button class="wnav wpv" onclick="wGo(-1)" aria-label="prev"><svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg></button><button class="wnav wnx" onclick="wGo(1)" aria-label="next"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button>
    <div class="wtap" id="wtap"></div><div class="paused" id="wp"><div>${ICON.pause}</div></div><div class="hint" id="wh">${t("hint")}</div>
    <div class="wtxt" id="wt"></div><div class="wfact" id="wf"></div>
@@ -852,7 +856,7 @@ document.addEventListener("visibilitychange",()=>{ if(document.hidden&&cur==="wa
 
 /* ================= JOY SAHIFASI ================= */
 async function openPlace(id){
-  const p=byId(id), DD=$("#detail"); if(!p) return; dynKeep(p); learn(id,1); document.title=pN(p)+" — "+(LIFE?t("life_brand"):"OLAM"); try{ history.replaceState(null,"",placeUrl(id)); }catch(e){} if(PDW&&PDW.id!==id){ const dt=(Date.now()-PDW.t)/1000; learn(PDW.id,dt>90?3:dt>30?1.5:dt>12?0.5:0); } PDW={id,t:Date.now()};
+  const p=byId(id), DD=$("#detail"); if(!p) return; dynKeep(p); learn(id,1); document.title=pN(p)+" — "+BRAND; try{ history.replaceState(null,"",placeUrl(id)); }catch(e){} if(PDW&&PDW.id!==id){ const dt=(Date.now()-PDW.t)/1000; learn(PDW.id,dt>90?3:dt>30?1.5:dt>12?0.5:0); } PDW={id,t:Date.now()};
   if(cur==="watch"&&!W.paused) wPause();
   const others=p.animal?shuffle(PLACES.filter(x=>x.animal&&x.id!==id&&x.grp===p.grp&&x.img)).slice(0,10):PLACES.filter(x=>x.id!==id&&(!x.dyn||x.keep)&&!x.animal).map(x=>({x,s:x.tags.filter(y=>p.tags.includes(y)).length*2+(x.reg===p.reg?1:0)+score(x)/10})).sort((a,b)=>b.s-a.s).slice(0,10).map(o=>o.x);
   const C=CAT(), R=REGN(), WN=tl("won"), desc=pDesc(p);
@@ -1217,7 +1221,7 @@ async function chatSend(text){
   let ans, found=null;
   try{ found=await findPlaces(text); }catch(e){}
   try{ const p=CH.place?byId(CH.place):null;
-    const msgs=CH.msgs.slice(-10).map(m=>({role:m.role,text:m.quote?`[The user quotes this text from the OLAM app${p?" about "+pN(p):""}: "${m.quote}"]\n${m.text}`:m.text}));
+    const msgs=CH.msgs.slice(-10).map(m=>({role:m.role,text:m.quote?`[The user quotes this text from the ${BRAND} app${p?" about "+pN(p):""}: "${m.quote}"]\n${m.text}`:m.text}));
     const style="\n\n[Style: reply in the user's language, warm and friendly, with fitting emojis 🌍✨, short paragraphs or a short list, exact place names.]";
     const ctx=found&&found.length?(LIFE?`\n[Items found in this app for the request (shown to the user as tappable cards): ${found.map(x=>pN(x)+" — "+(pS(x)||grpName(x))).join("; ")}. Recommend from these first, writing their names exactly as given, one line each with an emoji; you may add brief general advice.]`:`\n[Places found in the OLAM app for this request (they are shown to the user as cards): ${found.map(x=>pN(x)+" ("+pCountry(x)+")").join("; ")}. Describe each one in one line with an emoji, in the same order. Do not invent other places.]`):"";
     msgs[msgs.length-1].text+=ctx+style;
@@ -1547,7 +1551,7 @@ function renderLife(){
     $("#hbody").innerHTML=`<div class="sec"><div><span class="slabel">${t("life_g")}</span><h2>${t("life_sub2")}</h2></div></div><div class="dchips">${chips}</div>
       <div class="sec"><div><span class="slabel">${t("life_day")}</span><h2>${d?esc(pN(d)):""}</h2></div></div><div class="sfeat"><div style="grid-column:1/-1">${dayCard}</div></div>
       ${recsHTML()}<div class="sec"><div><span class="slabel">${t("for_you_f")}</span><h2>${t("best_h")}</h2></div><span onclick="X.tag='all';go('explore')">${t("all")} →</span></div><div class="grid2">${top.map(gcard).join("")}</div>
-      ${rows}<footer class="sfooter"><div><div class="logo dark"><i>T</i>${t("life_brand")}</div><p>${t("life_sub")}</p></div><div><h4>${t("life_brand")}</h4><button onclick="go('explore')">${clean(t("nav_exp"))}</button><button onclick="go('watch')">${clean(t("nav_watch"))}</button><button onclick="openQuiz()">${t("quiz_h")}</button><a href="./">OLAM</a></div><div><h4>${clean(t("s_lang"))}</h4>${LANGS.slice(0,6).map(([k,n])=>`<button onclick="setLang('${k}')">${n}</button>`).join("")}<a href="${APP_URL}">${t("get_app")}</a></div><div class="copy"><span>© ${new Date().getFullYear()} ${t("life_brand")}</span><span>Wikipedia · Wikidata · Wikimedia Commons</span></div></footer>`;
+      ${rows}<footer class="sfooter"><div>${LOGO("dark")}<p>${t("life_sub")}</p></div><div><h4>${t("life_brand")}</h4><button onclick="go('explore')">${clean(t("nav_exp"))}</button><button onclick="go('watch')">${clean(t("nav_watch"))}</button><button onclick="openQuiz()">${t("quiz_h")}</button><a href="./">OLAM</a></div><div><h4>${clean(t("s_lang"))}</h4>${LANGS.slice(0,6).map(([k,n])=>`<button onclick="setLang('${k}')">${n}</button>`).join("")}<a href="${APP_URL}">${t("get_app")}</a></div><div class="copy"><span>© ${new Date().getFullYear()} ${t("life_brand")}</span><span>Wikipedia · Wikidata · Wikimedia Commons</span></div></footer>`;
     return; }
   H.innerHTML=`<header class="hd"><div class="avatar" onclick="go('profile')">${esc((U?.name||"S")[0].toUpperCase())}</div><div class="hdt"><small>${t("life_brand")}</small><b>${t("hello",{name})}</b></div>
      <button class="ibtn" aria-label="${esc(t("settings"))}" onclick="openSettings()">${ICON.gear}</button></header>
@@ -1580,7 +1584,7 @@ function renderHomeSite(){ setTimeout(fillAIPicks,0);
   const H=$("#home"), C=CAT(), R=REGN(), PR=PER(), N=PLACES.filter(p=>!p.dyn||p.cat).length;
   if(!$("#shero")||H.dataset.l!==LANG){ H.dataset.l=LANG;
     H.innerHTML=`<section class="shero" id="shero"><div class="bgl" id="hbA"></div><div class="bgl" id="hbB"></div><video id="hbV" muted playsinline loop preload="none"></video>
-      <div class="bigw" aria-hidden="true">OLAM</div><button class="hcap" id="hcap"></button>
+      <div class="bigw" aria-hidden="true">Wonderly</div><button class="hcap" id="hcap"></button>
       <div class="hgrid"><div><span class="hkick"><i></i>${esc(t("hd_sub"))}</span><h1 class="htitle">${t("ob_h1")}</h1><p class="hsub">${t("ob_sub")}</p>
         <div class="hbtns"><button class="hbtn" onclick="go('watch')">${t("watch_now")}<span class="arw">${ICON.arrow}</span></button><button class="hbtn gl" onclick="openMap()">${clean(t("map_h"))}</button></div></div>
        <div class="hpanel"><form class="hsearch" onsubmit="event.preventDefault();heroSearch(this.q.value)">${ICON.search}<input name="q" placeholder="${esc(t("search_home"))}" autocomplete="off"><button>${t("search_b")}</button></form>
@@ -1616,15 +1620,15 @@ function renderHomeSite(){ setTimeout(fillAIPicks,0);
    ${animalsRow()}
    <div class="sec"><div><span class="slabel">${t("for_you_f")}</span><h2>${t("best_h")}</h2></div><span onclick="go('explore')">${t("all")} →</span></div>
    <div class="grid2">${list.filter(p=>p.id!==hero.id).slice(7,19).map(gcard).join("")}</div>
-   <div class="sec"><div><span class="slabel">${catIcon("globe")}OLAM</span><h2>${clean(t("world_h"))}</h2><small>${t("world_sub")}</small></div><span onclick="go('explore');setTimeout(()=>$('#xq')?.focus(),60)">${t("search_b")} →</span></div>
+   <div class="sec"><div><span class="slabel">${catIcon("globe")}Wonderly</span><h2>${clean(t("world_h"))}</h2><small>${t("world_sub")}</small></div><span onclick="go('explore');setTimeout(()=>$('#xq')?.focus(),60)">${t("search_b")} →</span></div>
    ${["yevropa","osiyo","amerika","afrika","okeaniya","uz"].map(r=>{ const l=list.filter(p=>p.reg===r).slice(0,14); return `<div class="sec" style="padding-top:18px;padding-bottom:12px"><h2 style="font-size:20px;letter-spacing:-.4px">${R[r]}</h2><span onclick="X.reg='${r}';X.tag='all';go('explore')">${PLACES.filter(p=>p.reg===r).length} ${t("places")} →</span></div><div class="hs">${l.map(p=>cardH(p,"sm")).join("")}</div>`; }).join("")}
-   <section class="sapp"><div><span class="slabel" style="background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.3);color:#fff">OLAM App</span><h2>${t("app_h")}</h2><p>${t("app_p")}</p>
+   <section class="sapp"><div><span class="slabel" style="background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.3);color:#fff">${BRAND}</span><h2>${t("app_h")}</h2><p>${t("app_p")}</p>
      <div class="hbtns"><a class="hbtn" href="${APP_URL}">${t("get_app")}<span class="arw">${ICON.arrow}</span></a><button class="hbtn gl" onclick="shareApp()">${clean(t("s_share"))}</button></div></div>
      <div class="phone ph" style="position:relative">${hero.img?ph(hero,"","",true):""}<div class="pui"><b>${esc(pN(hero))}</b>${PIN}${esc(pCountry(hero))}</div></div></section>
-   <footer class="sfooter"><div><div class="logo dark"><i>O</i>OLAM</div><p>${t("about_t")}</p></div>
-     <div><h4>OLAM</h4><button onclick="go('explore')">${clean(t("nav_exp"))}</button><button onclick="go('watch')">${clean(t("nav_watch"))}</button><button onclick="openMap()">${clean(t("t_map"))}</button><button onclick="openQuiz()">${clean(t("t_quiz"))}</button><button onclick="openChat()">${clean(t("t_ai"))}</button></div>
+   <footer class="sfooter"><div>${LOGO("dark")}<p>${t("about_t")}</p></div>
+     <div><h4>${BRAND}</h4><button onclick="go('explore')">${clean(t("nav_exp"))}</button><button onclick="go('watch')">${clean(t("nav_watch"))}</button><button onclick="openMap()">${clean(t("t_map"))}</button><button onclick="openQuiz()">${clean(t("t_quiz"))}</button><button onclick="openChat()">${clean(t("t_ai"))}</button></div>
      <div><h4>${clean(t("s_lang"))}</h4>${LANGS.slice(0,6).map(([k,n,f])=>`<button onclick="setLang('${k}')">${n}</button>`).join("")}<a href="${APP_URL}">${t("get_app")}</a></div>
-     <div class="copy"><span>© ${new Date().getFullYear()} OLAM</span><span>Wikipedia · Wikimedia Commons · Pexels · Open-Meteo</span></div></footer>`;
+     <div class="copy"><span>© ${new Date().getFullYear()} Wonderly</span><span>Wikipedia · Wikimedia Commons · Pexels · Open-Meteo</span></div></footer>`;
 }
 function langSheet(){ const S=$("#sh"); S.dataset.k="lang"; S.classList.add("on");
   S.innerHTML=`<div class="shb" onclick="event.stopPropagation()"><div class="shh"><b>${t("s_lang")}</b><button class="x" onclick="closeSheet()">${ICON.down}</button></div><div class="shl"><div class="langs">${LANGS.map(([k,n,f])=>`<button class="${LANG===k?"on":""}" onclick="setLang('${k}');closeSheet()">${n}</button>`).join("")}</div></div></div>`; }
@@ -1634,6 +1638,7 @@ function siteInit(){
 
 /* ================= START ================= */
 if(LIFE&&COL!=="life"){ const pre={odam:"odm_",texnika:"tex_",internet:"net_"}[COL]; for(const l in I18N){ ["brand","kick","h1","sub","sub2","ph","n","g","day","q"].forEach(k=>{ if(I18N[l][pre+k]) I18N[l]["life_"+k]=I18N[l][pre+k]; }); } }
+for(const l in I18N){ I18N[l].life_brand=BRAND; I18N[l].brand=BRAND; }   // brend nomi tarjima qilinmaydi
 if(LIFE){ for(const l in I18N){ if(I18N[l].life_q){ I18N[l].quiz_h=I18N[l].life_q; I18N[l].t_quiz=I18N[l].life_q; } } }
 applyTheme(); applyUI(); applyLang();
 if(!U&&(SITE||LIFE)) U={name:"",country:"UZ",interests:[],regions:[],dream:null,style:"",with:"",season:""};

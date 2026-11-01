@@ -1143,3 +1143,21 @@ body.internet .gc .gi{border-radius:18px}
 body.internet .card .ci{background:linear-gradient(135deg,rgba(139,92,246,.35),rgba(6,182,212,.3))}
 body.internet .hq,body.internet .htitle{background:linear-gradient(90deg,var(--a1),var(--a2));-webkit-background-clip:text;background-clip:text;color:transparent}
 body.site.internet .htitle{background:none;color:#fff}
+/* ===== Wonderly logosi (Travel — to'q havo rang; har ilova o'z rangida) ===== */
+:root{--brand:#0b72d6}
+body.life{--brand:#0e5a3f} body.odam{--brand:#8a2b1f} body.texnika{--brand:#1f2937} body.internet{--brand:#4c1d95}
+.logo{letter-spacing:0}
+.logo i.wm{background:var(--brand);box-shadow:0 8px 18px -8px rgba(11,114,214,.55);overflow:hidden}
+.logo i.wm svg{width:72%;height:auto;display:block;color:#fff}
+.logo .bn{font-weight:800;font-size:18px;letter-spacing:-.3px;white-space:nowrap;line-height:1}
+.logo .bn em{font-style:normal;font-weight:600;color:var(--brand);margin-left:1px}
+[data-theme=dark] .logo .bn em,.ob .body.splash .logo .bn em,.wtop .logo .bn em,.sapp .logo .bn em{color:#8fd0ff}
+body.life .logo .bn em{color:#2fbf84} body.odam .logo .bn em{color:#e4572e} body.internet .logo .bn em{color:#8b5cf6}
+.ob .logo{justify-content:center;font-size:16px;letter-spacing:0;margin-bottom:14px}
+.ob .logo i.wm{width:44px;height:44px;border-radius:14px}
+.ob .logo .bn{font-size:22px}
+.wtop .brand .logo{color:#fff;gap:8px}
+.wtop .brand .logo i.wm{width:32px;height:32px;border-radius:10px}
+.wtop .brand .logo .bn{font-size:16px;text-shadow:0 1px 10px rgba(0,0,0,.35)}
+.bigw{letter-spacing:-.05em}
+.wtop .brand{letter-spacing:0}
