@@ -158,7 +158,7 @@ for(const [li, lang] of LANGS.entries()){
     for(const [id, file, lat, lon, cls, sl, reg] of list){
       if(n >= TOP(iso)) break; const m = meta[id]; if(!m) continue;
       const label = m.l[li] || m.l[EN] || m.l.find(Boolean); if(!label) continue;
-      out.push([id, label, m.w[EN], lang==="en" ? "" : m.w[li], m.d[li] || m.d[EN] || "", file, lat, lon, cls, sl, iso, reg]); n++;
+      out.push([id, label, m.w[EN], lang==="en" ? "" : m.w[li], packMeta(m)[1][li] || "", file, lat, lon, cls, sl, iso, reg]); n++;
     }
   }
   writeJSON(`${DIR}/${lang}.json`, { v: 3, ts: new Date().toISOString().slice(0,10), countries, total: full, items: out });
