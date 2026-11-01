@@ -15,10 +15,10 @@ const BADIMG = /logo|map|plan\b|flag|coat_of|seal|sign|stamp|scheme|diagram|sate
 const FULL = iso => POP.has(iso) ? (BIG.has(iso) ? 60000 : 25000) : 8000;   // davlat sahifasi
 const PART = 5000;                                                            // davlat sahifasi fayli bo'lagi
 const TOP  = iso => POP.has(iso) ? (BIG.has(iso) ? 120 : 80) : 20;           // bosh ro'yxat
-const HMIN = iso => BIG.has(iso) ? 3 : POP.has(iso) ? 2 : 1;                 // meros obyektlari uchun min. sitelinks
-const SMIN = iso => iso === "UZ" ? 2 : BIG.has(iso) ? 20 : POP.has(iso) ? 10 : 5;   // shahar va qishloqlar uchun min. sitelinks
+const HMIN = iso => BIG.has(iso) ? 2 : 1;                 // meros obyektlari uchun min. sitelinks
+const SMIN = iso => iso === "UZ" ? 1 : BIG.has(iso) ? 10 : POP.has(iso) ? 5 : 3;   // shahar va qishloqlar uchun min. sitelinks
 
-const GEN = "world3-" + hash(JSON.stringify([CLS, COMMON, [...POP], [...BIG], FULL("FR"), FULL("UZ"), FULL("XX")]));
+const GEN = "world4-" + hash(JSON.stringify([CLS, COMMON, [...POP], [...BIG], FULL("FR"), FULL("UZ"), FULL("XX")]));
 const st0 = readJSON(DIR+"/state.json") || {};
 const st = (FRESH || st0.gen !== GEN) ? { gen: GEN, round: 0, done: [], pend: {} } : { gen: GEN, round: (st0.round||0)+1, done: st0.done || [], pend: st0.pend || {} };
 console.log("avlod:", GEN, "aylanish:", st.round, "bajarilgan davlatlar:", st.done.length);
@@ -60,7 +60,7 @@ const qC = (qid, cls, lim, m) => cls === "WH"
 async function byClass(iso, qid, lim, big){
   const rows = []; let fails = 0;
   for(const cls of [...CLS, "WH"]){
-    const base = COMMON.includes(cls) ? (big ? 5 : 2) : 1;
+    const base = COMMON.includes(cls) ? (big ? 3 : 1) : 1;
     const b = await ladder(iso+" "+cls, m => qC(qid, cls, lim, m), [base, base*2, base*4]);
     if(!b){ fails++; continue; }
     const uri = "http://www.wikidata.org/entity/"+(cls === "WH" ? "Q9259" : cls);
