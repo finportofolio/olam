@@ -24,6 +24,7 @@ const st = (FRESH || st0.gen !== GEN) ? { gen: GEN, round: 0, done: [], pend: {}
 console.log("avlod:", GEN, "aylanish:", st.round, "bajarilgan davlatlar:", st.done.length);
 const done = new Set(st.done);
 
+const REGFIX=(()=>{ const m={}; [["yevropa","AL AD AT BY BE BA BG HR CY CZ DK EE FI FR DE GR HU IS IE IT XK LV LI LT LU MT MD MC ME NL MK NO PL PT RO RU SM RS SK SI ES SE CH UA GB VA"],["amerika","AG AR BS BB BZ BO BR CA CL CO CR CU DM DO EC SV GD GT GY HT HN JM MX NI PA PY PE KN LC VC SR TT US UY VE"],["afrika","DZ AO BJ BW BF BI CV CM CF TD KM CG CD CI DJ EG GQ ER SZ ET GA GM GH GN GW KE LS LR LY MG MW ML MR MU MA MZ NA NE NG RW ST SN SC SL SO ZA SS SD TZ TG TN UG ZM ZW SA AE QA OM YE JO IL PS LB SY IQ KW BH"],["okeaniya","AU NZ PG FJ SB VU WS TO TV KI NR PW FM MH"]].forEach(([r,l])=>l.split(" ").forEach(c=>m[c]=r)); m.UZ="uz"; return m; })();   // davlat → mintaqa (aniq ro'yxat)
 function guessReg(lat, lon){ if(lat>=37&&lat<=45.6&&lon>=56&&lon<=73.2) return "uz"; if(lon<-30) return lat<-10&&lon<-140?"okeaniya":"amerika"; if(lat<-10&&lon>110) return "okeaniya"; if(lon>-25&&lon<45&&lat>=36) return "yevropa"; if(lon>-20&&lon<60&&lat<37) return "afrika"; return "osiyo"; }
 
 // 1) davlatlar ro'yxati
@@ -31,7 +32,7 @@ const cb = await sparql(`SELECT ?c ?iso ?coord WHERE { ?c wdt:P31 wd:Q3624078 ; 
 const seenC = new Set(), countries = [];
 for(const r of cb){ const iso = r.iso.value.toUpperCase(); if(seenC.has(iso)) continue; seenC.add(iso);
   const m = /Point\(([-\d.]+) ([-\d.]+)\)/.exec(r.coord?.value||""); let reg = m ? guessReg(+m[2], +m[1]) : "osiyo"; if(iso==="UZ") reg="uz"; else if(reg==="uz") reg="osiyo";
-  countries.push([iso, qidOfUri(r.c.value), reg]); }
+  countries.push([iso, qidOfUri(r.c.value), REGFIX[iso] || reg]); }
 console.log("davlatlar:", countries.length);
 
 // 0) oldingi natija: c/<ISO>.json → qatorlar va nomlar

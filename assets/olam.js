@@ -357,8 +357,8 @@ function score(p,w,tot){
 }
 const wondersOf = id=>Object.keys(WONDERS).filter(k=>WONDERS[k].ids.includes(id));
 let WCUR="new7";
-function wondersHTML(){ const W2=tl("won"); return `<div class="chips" style="padding-top:0">${Object.keys(WONDERS).map(k=>`<button class="chip ${WCUR===k?"on":""}" onclick="WCUR='${k}';$('#wond').innerHTML=wondersHTML()">${W2[k][0]}</button>`).join("")}</div>
-  <div class="ainote">${W2[WCUR][1]}${WCUR==="new7"?t("new7_note"):""}</div>
+function wondersHTML(){ const W2=tl("won"); return `<div class="chips" style="padding-top:0">${Object.keys(WONDERS).map(k=>`<button class="chip ${WCUR===k?"on":""}" onclick="WCUR='${k}';$('#wond').innerHTML=wondersHTML()">${esc(clean(W2[k][0]))}</button>`).join("")}</div>
+  <div class="ainote">${W2[WCUR][1]}${WCUR==="new7"?" "+t("new7_note"):""}</div>
   <div class="hs">${WONDERS[WCUR].ids.map(byId).filter(Boolean).map((p,i)=>cardH(p,"",(i+1)+"")).join("")}</div>`; }
 
 /* ================= BUTUN DUNYO (Wikipedia) ================= */
@@ -545,7 +545,7 @@ function renderHome(){ if(LIFE) return renderLife(); if(SITE) return renderHomeS
   const near=PLACES.filter(p=>!p.dyn&&p.lat!=null&&p.id!==hero.id).sort((a,b)=>dist(a)-dist(b)).slice(0,4);
   const name=esc(U?.name||t("friend"));
   const dchips=TAGS.map(k=>{ const p=PLACES.find(x=>x.tags[0]===k&&x.img)||PLACES.find(x=>x.tags.includes(k)&&x.img)||PLACES.find(x=>x.tags.includes(k)); return p?`<button class="dchip" onclick="openMood('${k}')">${ph(p)}<span>${clean(C[k])}</span></button>`:""; }).join("");
-  const cats=NEWCATS.map(k=>{ const p=PLACES.find(x=>x.tags[0]===k&&x.img)||PLACES.find(x=>x.tags.includes(k)&&x.img); const n=PLACES.filter(x=>x.tags.includes(k)).length; return p?ph(p,"catt",`<div class="ci"><b>${catIcon(k)}</b><small>${esc(clean(C[k]))} · ${n}</small></div>`,false,`onclick="openMood('${k}')"`):""; }).join("");
+  const cats=NEWCATS.map(k=>{ const p=PLACES.find(x=>x.tags[0]===k&&x.img)||PLACES.find(x=>x.tags.includes(k)&&x.img); const n=PLACES.filter(x=>x.tags.includes(k)).length; return p?ph(p,"catt",`<div class="ci"><b>${catIcon(k)}</b><small>${esc(clean(C[k]))}${n>=20?` · ${fmtN(n)}`:""}</small></div>`,false,`onclick="openMood('${k}')"`):""; }).join("");
   const popular=list.filter(p=>p.id!==hero.id).slice(0,8);
   $("#home").innerHTML=`
    <header class="hd"><div class="avatar" onclick="go('profile')">${esc((U?.name||"S")[0].toUpperCase())}</div>
@@ -562,7 +562,7 @@ function renderHome(){ if(LIFE) return renderLife(); if(SITE) return renderHomeS
      <button class="tile" onclick="openChat()"><i>${ICON.spark}</i>${t("t_ai")}</button>
      <button class="tile" onclick="openTrips()"><i>${ICON.bag}</i>${t("t_trips")}</button>
    </div>
-   ${(()=>{ const dp=dailyPlace(); return dp?`<div class="sec"><h2>${t("daily")}<small>${t("daily_sub")}</small></h2></div><div class="daily" onclick="go('watch','${dp.id}')">${SET.video?`<video src="${pexels(VID[dp.id][0])}" autoplay muted loop playsinline preload="metadata"></video>`:img(dp,true)}<div class="dci"><b>${esc(pN(dp))}</b><small>${PIN}${esc(pCountry(dp))}</small></div><span class="dpl">${ICON.play}</span></div>`:""; })()}
+   ${(()=>{ const dp=dailyPlace(); return dp?`<div class="sec"><h2>${t("daily")}<small>${t("daily_sub")}</small></h2></div><div class="daily" onclick="go('watch','${dp.id}')">${img(dp,true)}${SET.video&&VID[dp.id]?.length?`<video src="${pexels(VID[dp.id][0])}" autoplay muted loop playsinline preload="metadata" onplaying="this.classList.add('on')"></video>`:""}<div class="dci"><b>${esc(pN(dp))}</b><small>${PIN}${esc(pCountry(dp))}</small></div><span class="dpl">${ICON.play}</span></div>`:""; })()}
    <div class="sec"><h2>${t("dirs")}</h2><span onclick="openCats()">${t("all")}</span></div>
    <div class="dchips">${dchips}</div>
    <div class="sec"><h2>${t("ctry_h")}<small>${t("ctry_sub")}</small></h2><span onclick="openCountries()">${t("all")}</span></div>
@@ -597,7 +597,7 @@ function openMood(k){ LRN.t[k]=(LRN.t[k]||0)+1; ls.set("olam_learn",LRN); X.tag=
 /* ================= KATEGORIYALAR ================= */
 function openCats(){ const C=CAT(); const O=$("#catv"); O.classList.add("on"); O.scrollTop=0;
   const tile=k=>{ const p=PLACES.find(x=>x.tags[0]===k&&x.img)||PLACES.find(x=>x.tags.includes(k)&&x.img)||PLACES.find(x=>x.tags.includes(k)); const n=PLACES.filter(x=>x.tags.includes(k)).length;
-    return p?ph(p,"catt",`<div class="ci"><b>${catIcon(k)}</b><small>${esc(clean(C[k]))} · ${n}</small></div>`,false,`onclick="closeCats();openMood('${k}')"`):""; };
+    return p?ph(p,"catt",`<div class="ci"><b>${catIcon(k)}</b><small>${esc(clean(C[k]))}${n>=20?` · ${fmtN(n)}`:""}</small></div>`,false,`onclick="closeCats();openMood('${k}')"`):""; };
   const wp=byId("giza"); const WN=tl("won");
   O.innerHTML=`<button class="ovx" onclick="closeCats()">${ICON.down}</button><div class="seth"><h1>${t("cats_all")}</h1><p class="sp">${t("cats_pick")}</p></div>
    <div class="cats" style="padding:0">${wp?ph(wp,"catt",`<div class="ci"><b>${catIcon("wonder")}</b><small>${esc(clean(t("won_chip")))} · ${new Set(Object.values(WONDERS).flatMap(w=>w.ids)).size}</small></div>`,false,`onclick="closeCats();X.tag='wonder';X.q='';X.reg='all';go('explore')"`):""}${TAGS.map(tile).join("")}</div><div class="foot"></div>`; }
@@ -706,7 +706,7 @@ function renderExplore(){
   $("#explore").innerHTML=`<div class="xhead"><div class="row" style="justify-content:space-between;align-items:center;margin-bottom:14px"><h1 style="margin:0">${t("exp_h")}</h1><div class="row"><button class="pill o2" onclick="openCats()" aria-label="${esc(t("cats_all"))}">${ICON.filter}</button><button class="pill g" onclick="openAdd()">＋</button></div></div><label class="search">${ICON.search}<input id="xq" placeholder="${esc(t("exp_ph"))}" value="${esc(X.q)}" oninput="X.q=this.value;renderMas()"></label></div>
    <div class="chips"><button class="chip ${X.tag==="all"?"on":""}" onclick="X.tag='all';renderExplore()">${t("all")}</button><button class="chip ${X.tag==="wonder"?"on":""}" onclick="X.tag='wonder';renderExplore()">${t("won_chip")}</button>${TAGS.map(k=>`<button class="chip ${X.tag===k?"on":""}" onclick="X.tag='${k}';renderExplore()">${C[k]}</button>`).join("")}</div>
    <div class="chips" style="padding-top:0"><button class="chip ${X.reg==="all"?"on":""}" onclick="X.reg='all';renderExplore()">${t("whole")}</button>${REGS.map(k=>`<button class="chip ${X.reg===k?"on":""}" onclick="X.reg='${k}';renderExplore()">${R[k]}</button>`).join("")}</div>
-   <div class="ainote" style="margin-top:2px">${t("n_places",{n:forYou().filter(matchX).length})}</div>
+   <div class="ainote" style="margin-top:2px" id="xcount">${t("n_places",{n:fmtN(forYou().filter(matchX).length)})}</div>
    <div id="mas"></div><div id="wres"></div><div class="foot"></div>`;
   renderMas();
   const s=$("#explore .chips .chip.on"); if(s) s.scrollIntoView({inline:"center",block:"nearest"});
@@ -865,11 +865,11 @@ async function openPlace(id){
      <div class="gtop"><div class="cnt" id="gc" style="display:none"></div><button class="gsnd ${SET.music?"on":""}" id="gsnd" onclick="placeSound()" aria-label="Music">${SET.music?ICON.music:ICON.mute}</button></div>
      <button class="gnav gp" onclick="galStep(-1)" aria-label="prev"><svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg></button><button class="gnav gn" onclick="galStep(1)" aria-label="next"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button>
      <div class="gdots" id="gdots"></div></div>
-   <div class="dt">${p.user?`<div class="wbadge">${t("ap_user")}</div>`:""}${wondersOf(p.id).map(w=>`<div class="wbadge">${WN[w][0]}</div>`).join("")}<div class="kicker">${p.tags.map(x=>C[x]?clean(C[x]):"").filter(Boolean).join(" · ")}</div><h1>${esc(pN(p))}</h1><div class="loc"><span>${PIN}${esc(pC(p))}</span><span class="r">${rate(p)}</span></div></div>
+   <div class="dt">${p.user?`<div class="wbadge">${t("ap_user")}</div>`:""}${wondersOf(p.id).map(w=>`<div class="wbadge">${WN[w][0]}</div>`).join("")}<div class="kicker">${p.tags.slice(0,3).map(x=>C[x]?clean(C[x]):"").filter(Boolean).join(" · ")}</div><h1>${esc(pN(p))}</h1><div class="loc"><span>${PIN}${esc(pC(p))}</span><span class="r">${rate(p)}</span></div></div>
    <div class="db">
      <div class="row"><button class="pill g" onclick="closePlace();go('watch','${p.id}')">${ICON.play} ${t("b_watch")}</button>
        ${p.animal?"":`<button class="pill o" onclick="closePlace();openMap('${p.id}')">${ICON.pin}<span>${clean(t("b_map"))}</span></button>`}
-       ${p.animal?"":`<button class="pill o" onclick="tripAdd('${p.id}')" aria-label="${esc(t("trip_add"))}">${ICON.bag}</button>`}
+       ${p.animal?"":`<button class="pill o tripb" onclick="tripAdd('${p.id}')" aria-label="${esc(clean(t("trip_add")))}" title="${esc(clean(t("trip_add")))}">${ICON.bag}<span class="tbl">${esc(clean(t("t_trips")))}</span></button>`}
        <button class="pill o sv ${saved.has(p.id)?"on":""}" onclick="save('${p.id}');this.classList.toggle('on',saved.has('${p.id}'));this.querySelector('span').textContent=clean(saved.has('${p.id}')?t('b_saved'):t('b_save'))">${ICON.save}<span>${clean(saved.has(p.id)?t("b_saved"):t("b_save"))}</span></button></div>
      <button class="ask" onclick="openChat('${p.id}')">${ICON.spark}<span>${clean(t("ask_guide"))}</span></button>
      <button class="pill o2" style="width:100%;margin-top:8px" onclick="openComments('${p.id}')">${ICON.chat}<span>${clean(t("cm_btn"))}</span></button>
@@ -912,7 +912,7 @@ async function galBuild(p){
   G.slides=slides; const bg=p.img?big(p.img):"";
   const el=$("#gal");
   el.innerHTML=slides.map((x,k)=>x.v
-    ?`<div class="gs vs" style="--bgimg:url('${bg}')"><video src="${x.v}" muted playsinline preload="${k===0?"auto":"metadata"}" ${slides.length===1?"loop":""} onloadedmetadata="galFit(this)"></video></div>`
+    ?`<div class="gs vs" style="--bgimg:url('${bg}');background:url('${bg}') center/cover,${grad(p)}"><video src="${x.v}" muted playsinline preload="${k===0?"auto":"metadata"}" ${slides.length===1?"loop":""} onloadedmetadata="galFit(this)"></video></div>`
     :`<div class="gs ph" style="background:url('${sm(x.i)}') center/cover,${grad(p)};--bgimg:url('${sm(x.i)}')"><img src="${x.i}" alt="" ${k>1?'loading="lazy"':""} decoding="async" onload="galFit(this)" onerror="const d=down(this.src);if(d){this.src=d}else{${FB}}"></div>`).join("");
   $("#gdots").innerHTML=slides.length>1?slides.map((x,k)=>`<button class="${x.v?"v":""}" onclick="galStep(${k},1)" aria-label="${k+1}"></button>`).join(""):"";
   $("#detail .dg").classList.toggle("multi",slides.length>1);
@@ -1133,7 +1133,7 @@ function openChat(id){
   const vp=p&&VID[p.id]?.length?p:forYou().find(x=>VID[x.id]?.length);
   $("#chat").innerHTML=`<div class="chh"><button class="x" onclick="closeChat()">${ICON.down}</button>
      <div><b>${t("guide")}</b><small>${p?esc(t("about_p",{p:pN(p)})):t("any_q")}</small></div></div>
-   ${vp&&SET.video?`<div class="chv"><video src="${pexels(VID[vp.id][0])}" autoplay muted loop playsinline></video><div class="chvt">${PIN}${esc(pN(vp))}</div></div>`:""}
+   ${vp&&SET.video?`<div class="chv" style="background:${vp.img?`url('${big(vp.img)}') center/cover,`:""}${grad(vp)}"><video src="${pexels(VID[vp.id][0])}" autoplay muted loop playsinline></video><div class="chvt">${PIN}${esc(pN(vp))}</div></div>`:""}
    <div class="msgs" id="msgs"></div>
    <div class="sugg">${sug.map(s=>`<button onclick="chatSend(this.textContent)">${esc(s)}</button>`).join("")}</div>
    <div class="cqr" id="cqr" hidden></div>
@@ -1148,7 +1148,7 @@ function drawMsgs(){
 }
 function placeCards(text){ const low=" "+String(text).toLowerCase()+" "; const out=[];
   for(const p of PLACES){ if(p.dyn&&!p.keep&&!(LIFE&&p.animal)) continue; if(LIFE&&!p.animal) continue; const ns=[pN(p),p.n,(p.nt||p.t).replace(/_/g," ").replace(/\s*\(.*?\)/g,""),LZ[p.id]?.n].filter(x=>x&&x.length>=4).map(x=>x.toLowerCase());
-    if(ns.some(n=>low.includes(n))&&!out.includes(p)) out.push(p); if(out.length>=6) break; }
+    if(ns.some(n=>{ const i=low.indexOf(n); if(i<0) return false; return new RegExp("(^|[^\\p{L}\\p{N}'ʻ’])"+n.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"($|[^\\p{L}\\p{N}])","u").test(low); })&&!out.includes(p)) out.push(p); if(out.length>=6) break; }
   return out.length?`<div class="pcards">${out.map(p=>`<div class="pcard" onclick="chatPlace('${p.id}')">${ph(p)}<div><b>${esc(pN(p))}</b><small>${t("open_app")}</small></div></div>`).join("")}</div>`:""; }
 const reqUser=()=>({name:U?.name,country:cname(U?.country||"UZ"),interests:userCtx()});
 /* ===== Gidga "reply": matn, bo'lim yoki faktni iqtibos qilib savol berish ===== */
@@ -1288,16 +1288,23 @@ async function openMap(focus){
     MAP=Lf.map("mapc",{zoomControl:false,worldCopyJump:true,minZoom:2}).setView([30,40],2);
     Lf.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",{attribution:'&copy; OpenStreetMap, &copy; CARTO',subdomains:"abcd",maxZoom:18}).addTo(MAP);
     const setZ=()=>{ $("#mapc").dataset.z=Math.min(6,MAP.getZoom()); }; MAP.on("zoomend",setZ); setZ();
-    MAP._mk=new Set();
-    MAP.addPin=p=>{ if(p.lat==null||MAP._mk.has(p.id)) return; MAP._mk.add(p.id);
-      const ic=Lf.divIcon({className:"",html:`<div class="mkw"><div class="mk ${p.dyn?"dy":""}" style="background:${grad(p)}">${p.img?`<img src="${thumb(p)}" alt="" loading="lazy" onerror="this.remove()">`:""}</div></div>`,iconSize:[44,44],iconAnchor:[22,22]});
-      Lf.marker([p.lat,p.lon],{icon:ic}).addTo(MAP).on("click",()=>mapPick(p.id)); };
-    PLACES.filter(p=>!p.dyn||(p.keep&&!p.cat)||(p.cat&&p.sl>=70)).forEach(MAP.addPin);
-    let nt; MAP.on("moveend",()=>{ clearTimeout(nt); const z=MAP.getZoom(), hint=$("#maphint"); if(z>=4){ const bb=MAP.getBounds(); PLACES.filter(p=>p.cat&&!MAP._mk.has(p.id)&&bb.contains([p.lat,p.lon])).slice(0,300).forEach(MAP.addPin); }
+    // belgilar ustma-ust tushmasin: har bir kichik katakda faqat eng mashhur joy; yaqinlashtirilganda ko'proq
+    MAP._wmAll=new Map(); MAP._wmOn=new Map();
+    const pri=p=>(saved.has(p.id)?1e6:0)+(p.dyn?0:1e5)+(p.sl||0);
+    const mkr=p=>Lf.marker([p.lat,p.lon],{icon:Lf.divIcon({className:"",html:`<div class="mkw"><div class="mk ${p.dyn?"dy":""}" style="background:${grad(p)}">${p.img?`<img src="${thumb(p)}" alt="" loading="lazy" onerror="this.remove()">`:""}</div></div>`,iconSize:[44,44],iconAnchor:[22,22]})}).addTo(MAP).on("click",()=>mapPick(p.id));
+    MAP.redraw=()=>{ const z=MAP.getZoom(), bb=MAP.getBounds().pad(0.25), cell=z>=12?46:56, seen=new Set(), keep=new Set();
+      const cand=[...MAP._wmAll.values()].filter(p=>bb.contains([p.lat,p.lon])).sort((a,b)=>pri(b)-pri(a));
+      for(const p of cand){ const pt=MAP.project([p.lat,p.lon],z), k=Math.floor(pt.x/cell)+","+Math.floor(pt.y/cell); if(seen.has(k)) continue; seen.add(k); keep.add(p.id); if(keep.size>=350) break; }
+      for(const [id,m] of MAP._wmOn) if(!keep.has(id)){ m.remove(); MAP._wmOn.delete(id); }
+      for(const id of keep) if(!MAP._wmOn.has(id)) MAP._wmOn.set(id,mkr(MAP._wmAll.get(id))); };
+    MAP.addPin=p=>{ if(p.lat!=null&&!MAP._wmAll.has(p.id)) MAP._wmAll.set(p.id,p); };
+    PLACES.forEach(MAP.addPin); MAP.redraw();
+    let nt, rt; MAP.on("moveend",()=>{ clearTimeout(nt); clearTimeout(rt); rt=setTimeout(MAP.redraw,60); const z=MAP.getZoom(), hint=$("#maphint");
       if(z<9){ if(hint) hint.textContent=t("zoom"); return; }
       if(hint) hint.textContent=t("area_load");
-      nt=setTimeout(async()=>{ const c=MAP.getCenter(); let r=[]; try{ r=await worldNear(c.lat.toFixed(4),c.lng.toFixed(4)); }catch(e){} r.forEach(MAP.addPin); if(hint) hint.textContent=r.length?t("area_n",{n:r.length}):t("area_0"); },500); });
+      nt=setTimeout(async()=>{ const c=MAP.getCenter(); let r=[]; try{ r=await worldNear(c.lat.toFixed(4),c.lng.toFixed(4)); }catch(e){} r.forEach(MAP.addPin); MAP.redraw(); if(hint) hint.textContent=r.length?t("area_n",{n:r.length}):t("area_0"); },500); });
   }
+  else { PLACES.forEach(MAP.addPin); MAP.redraw(); }
   setTimeout(()=>MAP.invalidateSize(),60);
   if(focus){ const p=byId(focus); if(p?.lat!=null){ MAP.setView([p.lat,p.lon],6); mapPick(focus); } }
 }
@@ -1391,7 +1398,7 @@ function wdCompact(r,code,reg){
   return [r.item.value.split("/").pop(),label,r.en?.value||"",r.loc?.value||"",r.itemDescription?.value||"",file,+(+m[2]).toFixed(5),+(+m[1]).toFixed(5),r.cls.value.split("/").pop(),+r.sl.value,code,reg==="uz"&&code!=="UZ"?"osiyo":reg];
 }
 function mkPlace(c,lang,cat){
-  const [qid,label,en,loc,desc,file,lat,lon,cls,sl,code,reg]=c; const id="q"+qid;
+  const [qid,label,en,loc,desc,file,lat,lon,cls,sl,code,reg0]=c, reg=REGFIX[code]||reg0; const id="q"+qid;
   if(IDX[id]){ if(cat){ IDX[id].keep=1; IDX[id].cat=1; } return IDX[id]; }
   let tags=[...(WDT[cls]||[])]; if(!tags.length) tags=guessTags(label+" "+desc+" "+en); if(cls==="Q9259"&&!tags.includes("tarix")) tags.push("tarix");
   const wl=loc?lang:"en", title=loc||en;
@@ -1435,6 +1442,8 @@ function renderCountry(){ const C=CAT(); const all=CT.list; if(!$("#ctb")) retur
 /* ================= DUNYO KATALOGI — ilovaga oldindan qo'shilgan ~3000+ joy =================
    Joylar GitHub'da har oy yig'iladi (scripts/build-catalog.mjs) va assets/catalog/<til>.json sifatida
    ilova bilan birga keladi. Foydalanuvchi qurilmasida alohida saqlanmaydi. */
+const REGFIX=(()=>{ const m={}; [["yevropa","AL AD AT BY BE BA BG HR CY CZ DK EE FI FR DE GR HU IS IE IT XK LV LI LT LU MT MD MC ME NL MK NO PL PT RO RU SM RS SK SI ES SE CH UA GB VA"],["amerika","AG AR BS BB BZ BO BR CA CL CO CR CU DM DO EC SV GD GT GY HT HN JM MX NI PA PY PE KN LC VC SR TT US UY VE"],["afrika","DZ AO BJ BW BF BI CV CM CF TD KM CG CD CI DJ EG GQ ER SZ ET GA GM GH GN GW KE LS LR LY MG MW ML MR MU MA MZ NA NE NG RW ST SN SC SL SO ZA SS SD TZ TG TN UG ZM ZW SA AE QA OM YE JO IL PS LB SY IQ KW BH"],["okeaniya","AU NZ PG FJ SB VU WS TO TV KI NR PW FM MH"]].forEach(([r,l])=>l.split(" ").forEach(c=>m[c]=r)); m.UZ="uz"; return m; })();   // davlat → mintaqa (aniq ro'yxat)
+CTRY.forEach(x=>{ if(REGFIX[x[0]]) x[2]=REGFIX[x[0]]; });
 const WC={busy:false,n:0};
 const catLang=()=>{ const l=WL(LANG); return l==="uzk"?"uz":l; };
 let ALLC=null;   // barcha mustaqil davlatlar: [ISO, QID, mintaqa]
@@ -1444,15 +1453,16 @@ function catDup(c){ if(!CURD) CURD={t:new Set(PLACES.filter(p=>!p.dyn).map(p=>(p
   if(c[2]&&CURD.t.has(c[2].toLowerCase())) return true;
   const k=Math.cos(c[6]*Math.PI/180); return CURD.g.some(p=>{ const dx=(p.lon-c[7])*k, dy=p.lat-c[6]; return dx*dx+dy*dy<1.6e-5; }); }   // ~450 m
 function catReset(){ for(let i=PLACES.length-1;i>=0;i--){ const p=PLACES[i]; if((p.cat||(p.animal&&p.dyn))&&!saved.has(p.id)){ delete IDX[p.id]; PLACES.splice(i,1); } } WC.n=0; }
-function catTxt(){ return WC.busy?t("ctry_load"):t("cat_st",{n:WC.n}); }
-function catUI(){ const N=PLACES.filter(p=>!p.dyn||p.cat).length; const h=$("#hN"); if(h) h.textContent=N+"+"; const s=$("#wcst"); if(s) s.textContent=catTxt(); }
+function catTxt(){ return WC.busy?t("ctry_load"):t("cat_st",{n:fmtN(WC.total||WC.n)}); }
+const fmtN=n=>String(n).replace(/\B(?=(\d{3})+(?!\d))/g,"\u00a0");
+function catUI(){ const N=Math.max(PLACES.filter(p=>!p.dyn||p.cat).length,WC.total||0); const h=$("#hN"); if(h) h.textContent=fmtN(N)+"+"; const c=$("#hC"); if(c) c.textContent=(ALLC||CTRY).length; const s=$("#wcst"); if(s) s.textContent=catTxt(); }
 async function catLoad(){
   if(WC.busy||LIFE) return; WC.busy=true; const lang=catLang();
   try{
     let r=await fetch("assets/catalog/"+lang+".json"); if(!r.ok&&lang!=="en") r=await fetch("assets/catalog/en.json");
     if(r.ok){ const d=await r.json(); if(lang===catLang()){
-      if(Array.isArray(d.countries)&&d.countries.length){ const known=new Set(CTRY.map(x=>x[0])); ALLC=[...CTRY,...d.countries.filter(x=>!known.has(x[0]))]; }
-      (d.items||[]).forEach(c=>{ if(!catDup(c)) mkPlace(c,lang,true); }); } }
+      if(Array.isArray(d.countries)&&d.countries.length){ const known=new Set(CTRY.map(x=>x[0])); ALLC=[...CTRY,...d.countries.filter(x=>!known.has(x[0])).map(x=>[x[0],x[1],REGFIX[x[0]]||x[2]])]; }
+      WC.total=d.total||0; (d.items||[]).forEach(c=>{ if(!catDup(c)) mkPlace(c,lang,true); }); } }
   }catch(e){}
   WC.busy=false; WC.n=PLACES.filter(p=>p.cat).length; refresh(); catUI(); tryQP();
 }
@@ -1544,10 +1554,10 @@ function renderLife(){
           <div class="hbtns"><button class="hbtn" onclick="go('watch')">${t("watch_now")}<span class="arw">${ICON.arrow}</span></button><button class="hbtn gl" onclick="openQuiz()">${t("quiz_h")}</button></div></div>
          <div class="hpanel"><form class="hsearch" onsubmit="event.preventDefault();X.q=this.q.value;X.tag='all';go('explore')">${ICON.search}<input name="q" placeholder="${esc(t("life_ph"))}" autocomplete="off"><button>${t("search_b")}</button></form>
           <div class="hchips">${groups.slice(0,8).map(g=>`<button onclick="X.tag='${g}';X.q='';X.n=0;go('explore')">${t("g_"+g)}</button>`).join("")}</div></div></div>
-        <div class="hfoot"><div class="hstat"><i>${CATI.zoo?SV(CATI.zoo):""}</i><b id="hN">${Math.max(all.length,LIFEG.total||0)}+</b><small>${t("life_n")}</small></div><div class="hstat"><i>${SV(CATI.tabiat)}</i><b>${groups.length}</b><small>${t("life_g")}</small></div><div class="hstat"><i>${ICON.spark}</i><b>AI</b><small>${t("t_ai")}</small></div>
+        <div class="hfoot"><div class="hstat"><i>${CATI.zoo?SV(CATI.zoo):""}</i><b id="hN">${fmtN(Math.max(all.length,LIFEG.total||0))}+</b><small>${t("life_n")}</small></div><div class="hstat"><i>${SV(CATI.tabiat)}</i><b>${groups.length}</b><small>${t("life_g")}</small></div><div class="hstat"><i>${ICON.spark}</i><b>AI</b><small>${t("t_ai")}</small></div>
          ${d?`<div class="hday" onclick="openPlace('${d.id}')"><div><small>${t("life_day")}</small><b>${esc(pN(d))}</b></div><span class="arw">${ICON.arrow}</span></div>`:""}</div></section><div id="hbody"></div>`;
       HB.pool=null; clearInterval(HB.timer); heroNext(); HB.timer=setInterval(()=>{ if(!document.hidden) heroNext(); },10000); }
-    $("#hN")&&($("#hN").textContent=Math.max(all.length,LIFEG.total||0)+"+");
+    $("#hN")&&($("#hN").textContent=fmtN(Math.max(all.length,LIFEG.total||0))+"+");
     $("#hbody").innerHTML=`<div class="sec"><div><span class="slabel">${t("life_g")}</span><h2>${t("life_sub2")}</h2></div></div><div class="dchips">${chips}</div>
       <div class="sec"><div><span class="slabel">${t("life_day")}</span><h2>${d?esc(pN(d)):""}</h2></div></div><div class="sfeat"><div style="grid-column:1/-1">${dayCard}</div></div>
       ${recsHTML()}<div class="sec"><div><span class="slabel">${t("for_you_f")}</span><h2>${t("best_h")}</h2></div><span onclick="X.tag='all';go('explore')">${t("all")} →</span></div><div class="grid2">${top.map(gcard).join("")}</div>
@@ -1589,14 +1599,14 @@ function renderHomeSite(){ setTimeout(fillAIPicks,0);
         <div class="hbtns"><button class="hbtn" onclick="go('watch')">${t("watch_now")}<span class="arw">${ICON.arrow}</span></button><button class="hbtn gl" onclick="openMap()">${clean(t("map_h"))}</button></div></div>
        <div class="hpanel"><form class="hsearch" onsubmit="event.preventDefault();heroSearch(this.q.value)">${ICON.search}<input name="q" placeholder="${esc(t("search_home"))}" autocomplete="off"><button>${t("search_b")}</button></form>
         <div class="hchips">${["dengiz","tog","tarix","islom","sharshara","shahar"].map(k=>`<button onclick="openMood('${k}')">${C[k]}</button>`).join("")}</div></div></div>
-      <div class="hfoot"><div class="hstat"><i>${ICON.pin}</i><b id="hN">${N}+</b><small>${t("places")}</small></div><div class="hstat"><i>${ICON.map}</i><b>${(ALLC||CTRY).length}</b><small>${t("st_ctry")}</small></div><div class="hstat"><i><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></i><b>${LANGS.length}</b><small>${t("st_lang")}</small></div><div class="hstat"><i>${ICON.spark}</i><b>AI</b><small>${t("t_ai")}</small></div>
+      <div class="hfoot"><div class="hstat"><i>${ICON.pin}</i><b id="hN">${fmtN(Math.max(N,WC.total||0))}+</b><small>${t("places")}</small></div><div class="hstat"><i>${ICON.map}</i><b id="hC">${(ALLC||CTRY).length}</b><small>${t("st_ctry")}</small></div><div class="hstat"><i><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></i><b>${LANGS.length}</b><small>${t("st_lang")}</small></div><div class="hstat"><i>${ICON.spark}</i><b>AI</b><small>${t("t_ai")}</small></div>
        ${(()=>{ const dp=dailyPlace(); return dp?`<div class="hday" onclick="go('watch','${dp.id}')"><div><small>${t("daily")}</small><b>${esc(pN(dp))} · ${esc(pCountry(dp))}</b></div><span class="arw">${ICON.play}</span></div>`:""; })()}</div>
       <div class="hscroll" aria-hidden="true"></div></section><div id="hbody"></div>`;
     HB.pool=null; clearInterval(HB.timer); heroNext(); HB.timer=setInterval(()=>{ if(!document.hidden) heroNext(); },10000);
   }
   const list=forYou(), hero=(U?.dream&&byId(U.dream))||list[0];
   const dirs=TAGS.map(k=>{ const p=PLACES.find(x=>x.tags[0]===k&&x.img)||PLACES.find(x=>x.tags.includes(k)&&x.img)||PLACES.find(x=>x.tags.includes(k)); return p?`<button onclick="openMood('${k}')">${ph(p)}${clean(C[k])}</button>`:""; }).join("");
-  const cats=NEWCATS.map(k=>{ const p=PLACES.find(x=>x.tags[0]===k&&x.img)||PLACES.find(x=>x.tags.includes(k)&&x.img)||PLACES.find(x=>x.tags.includes(k)); const n=PLACES.filter(x=>x.tags.includes(k)).length; return p?ph(p,"catt",`<div class="ci"><b>${catIcon(k)}</b><small>${esc(clean(C[k]))} · ${n}</small></div>`,false,`onclick="openMood('${k}')"`):""; }).join("");
+  const cats=NEWCATS.map(k=>{ const p=PLACES.find(x=>x.tags[0]===k&&x.img)||PLACES.find(x=>x.tags.includes(k)&&x.img)||PLACES.find(x=>x.tags.includes(k)); const n=PLACES.filter(x=>x.tags.includes(k)).length; return p?ph(p,"catt",`<div class="ci"><b>${catIcon(k)}</b><small>${esc(clean(C[k]))}${n>=20?` · ${fmtN(n)}`:""}</small></div>`,false,`onclick="openMood('${k}')"`):""; }).join("");
   const dcard=(p,cls="")=>`<div class="dcard ${cls}" onclick="openPlace('${p.id}')">${ph(p,"","",true)}<span class="dtag">${STAR}${rate(p)}</span><span class="arw">${ICON.arrow}</span><div class="dci2"><b>${esc(pN(p))}</b><small>${PIN}${esc(pCountry(p))}</small></div></div>`;
   const top=(l=>l.length>=7?l:list.filter(p=>p.id!==hero.id))(list.filter(p=>p.id!==hero.id&&p.img)).slice(0,7);
   const dp=dailyPlace();

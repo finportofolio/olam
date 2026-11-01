@@ -1161,3 +1161,16 @@ body.life .logo .bn em{color:#2fbf84} body.odam .logo .bn em{color:#e4572e} body
 .wtop .brand .logo .bn{font-size:16px;text-shadow:0 1px 10px rgba(0,0,0,.35)}
 .bigw{letter-spacing:-.05em}
 .wtop .brand{letter-spacing:0}
+/* onboarding: "Davom etish" tugmasi doim ko'rinib tursin (uzun ro'yxatda ham) */
+.ob .body:not(.splash) .obb{position:sticky;bottom:-22px;margin:18px -22px -22px;padding:14px 22px 22px;background:linear-gradient(180deg,rgba(243,246,251,0),rgba(243,246,251,.96) 34%);z-index:3}
+[data-theme=dark] .ob .body:not(.splash) .obb{background:linear-gradient(180deg,rgba(18,27,41,0),rgba(18,27,41,.96) 34%)}
+/* sayt: katta fon yozuvi ekranga sig'sin */
+.bigw{font-size:clamp(100px,16.5vw,300px)}
+/* video yuklanguncha rasm ko'rinadi */
+.daily{position:relative}
+.daily>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.daily video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .5s}
+.daily video.on{opacity:1}
+/* joy sahifasi: "Sayohatga qo'shish" — telefonda faqat belgi, kengroq ekranda yozuv ham */
+.tripb .tbl{display:none}
+@media (min-width:700px){ .tripb .tbl{display:inline} }
