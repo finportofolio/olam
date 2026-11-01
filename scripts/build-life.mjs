@@ -10,10 +10,10 @@ const DIR = "assets/catalog/life";
 // [guruh, Wikidata QID, min. sitelinks]: sut emizuvchilar, qushlar, nurqanotli/tog'ayli/pankanotli baliqlar, sudralib yuruvchilar,
 // suvda-quruqlikda yashovchilar, hasharotlar, o'rgimchaksimonlar, ko'poyoqlilar, chuvalchanglar, mollyuskalar, qisqichbaqasimonlar,
 // bo'shliqichlilar, ninatanlilar, g'ovaktanlilar, o'simliklar, zamburug'lar
-const ROOTS = [["mam","Q7377",1],["bird","Q5113",1],["fish","Q127282",2],["fish","Q25371",1],["rep","Q10811",1],["amph","Q10908",1],
-  ["ins","Q1390",2],["spider","Q1358",2],["spider","Q25823",2],["worm","Q25522",2],["worm","Q5185",2],["worm","Q124900",2],
-  ["sea","Q25326",2],["sea","Q25364",2],["sea","Q25441",2],["sea","Q44631",2],["sea","Q18960",2],
-  ["plant","Q756",2],["fungi","Q764",2]];
+const ROOTS = [["mam","Q7377",1],["bird","Q5113",1],["fish","Q127282",1],["fish","Q25371",1],["rep","Q10811",1],["amph","Q10908",1],
+  ["ins","Q1390",1],["spider","Q1358",1],["spider","Q25823",1],["worm","Q25522",1],["worm","Q5185",1],["worm","Q124900",1],
+  ["sea","Q25326",1],["sea","Q25364",1],["sea","Q25441",1],["sea","Q44631",1],["sea","Q18960",1],
+  ["plant","Q756",1],["fungi","Q764",1]];
 const LIM = 10000, MAXD = 14;   // bitta so'rovdan ko'pi bilan; bo'linish chuqurligi
 const GEN = "life4-" + hash(JSON.stringify([ROOTS, LIM]));
 const st = loadState(DIR, GEN);

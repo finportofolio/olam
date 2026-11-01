@@ -82,12 +82,12 @@ for(const [key, grp, cond, lim, min, opt] of tasks){ if(elapsed() > BUDGET*0.7){
 const split = st.split || [];   // [kalit, guruh, kasb QID, min, davlat] — holatda saqlanadi
 const splitKeys = new Set(split.map(x => x[0]));
 for(const [grp, label, lim, min, kind] of labelTasks){
-  const key = grp+":"+label.split("|")[0];
+  const key = grp+":"+label.split("|")[0]+(kind === "cls" ? "#2" : "");   // #2 — texnika/internet 2-bosqich (min. 1, rasmsiz 3+)
   if(done.has(key)) continue;
   if(elapsed() > BUDGET*0.7){ stopped = true; break; }
   const q = label.startsWith("sub:") ? label.slice(4) : await qidOf(label); if(q === undefined){ failed++; continue; } if(!q){ done.add(key); continue; }
   const cond = kind === "occ" ? `?item wdt:P106 wd:${q} ; wdt:P31 wd:Q5 .` : label.startsWith("sub:") ? `?item wdt:P31/wdt:P279* wd:${q} .` : `?item wdt:P31 wd:${q} .`;
-  const r = await collect(key, grp, cond, lim, min, { logo: ["web","ai","app"].includes(grp), famous: kind === "occ" ? 25 : 5 });
+  const r = await collect(key, grp, cond, lim, kind === "cls" ? 1 : min, { logo: ["web","ai","app"].includes(grp), famous: kind === "occ" ? 25 : 3 });
   if(!r) failed++;
   // chala yoki xato bo'lgan kasb → davlatlar bo'yicha
   if(kind === "occ" && r !== 1 && COUNTRIES.length){ done.add(key); if(!r) failed--;
