@@ -93,8 +93,9 @@ export function loadGroups(dir){
 }
 
 export function writeGroups(dir, items, meta, { part = 4000, top = 8000 } = {}){
-  const SVC = /^(Wikipedia|Wikidata|Template|Category|Module|Help|Portal|Draft):/;   // xizmat sahifalari
-  const rows = [...items.values()].filter(x => meta[x[0]] && meta[x[0]].l.some(Boolean) && !SVC.test(meta[x[0]].l[EN] || "")).sort((a,b) => b[3]-a[3]);
+  // xizmat sahifalari (Wikipedia:..., Vikipediya:..., Шаблон:... — istalgan tilda)
+  const SVC = /^(Wikipedia|Vikipediya|Vikipedi|Википедия|Уикипедия|Wikidata|Template|Category|Module|Help|Portal|Draft|Шаблон|Категория|Andoza|Turkum|ويكيبيديا|维基百科)\s*:/i;
+  const rows = [...items.values()].filter(x => meta[x[0]] && meta[x[0]].l.some(Boolean) && !meta[x[0]].l.some(v => SVC.test(v || ""))).sort((a,b) => b[3]-a[3]);
   const groups = {}; for(const x of rows) (groups[x[1]] = groups[x[1]] || []).push(x);
   rmSync(dir+"/g", { recursive: true, force: true }); mkdirSync(dir+"/g", { recursive: true });
   const parts = {};
@@ -109,7 +110,8 @@ export function writeGroups(dir, items, meta, { part = 4000, top = 8000 } = {}){
   const idx = rows.filter(x => pick.has(x[0]));
   const ts = new Date().toISOString().slice(0,10);
   for(const [li, lang] of LANGS.entries()){
-    const out = idx.map(x => { const m = meta[x[0]]; return [x[0], x[1], m.l[li] || m.l[EN] || m.l.find(Boolean), m.w[EN], lang==="en" ? "" : m.w[li], m.d[li] || "", x[2], x[3], x[4]||0]; });
+    // tavsif faqat shu tilda (inglizchaga qaytish yo'q — ilova o'zi toifa va davlatni ko'rsatadi)
+    const out = idx.map(x => { const m = meta[x[0]], d = packMeta(m)[1]; return [x[0], x[1], m.l[li] || m.l[EN] || m.l.find(Boolean), m.w[EN], lang==="en" ? "" : m.w[li], d[li] || "", x[2], x[3], x[4]||0]; });
     writeJSON(`${dir}/${lang}.json`, { v: 3, ts, total: rows.length, counts, parts, items: out });
     rmSync(`${dir}/${lang}`, { recursive: true, force: true });   // eski format papkasi
   }

@@ -404,3 +404,6 @@ ar:["الإنترنت","عالم الإنترنت","عالم الإنترنت و
 zh:["互联网","互联网世界","互联网、人工智能与应用的世界","网站、社交网络、即时通讯、人工智能和应用——Instagram、Telegram、ChatGPT、Claude 等。","我们探索哪个领域？","搜索任何网站或应用：Instagram、ChatGPT…","","分类","今日发现","这是哪个网站或应用？"]};
 for(const l in ODM) if(I18N[l]) K2.forEach((k,i)=>{ I18N[l]["odm_"+k]=ODM[l][i]; I18N[l]["bil_"+k]=BIL[l][i]; I18N[l]["tex_"+k]=TEX[l][i]; I18N[l]["net_"+k]=NET[l][i]; });
 })();
+/* ===== Davlat (eng yaxshi vaqt noma'lum bo'lsa) va tarjimani qayta urinish ===== */
+(()=>{const C={uz:"Davlat",en:"Country",ru:"Страна",tr:"Ülke",kk:"Ел",ky:"Өлкө",tg:"Кишвар",ar:"الدولة",zh:"国家"},R={uz:"Tarjima qilish",en:"Translate",ru:"Перевести",tr:"Çevir",kk:"Аудару",ky:"Которуу",tg:"Тарҷума кардан",ar:"ترجمة",zh:"翻译"};
+for(const l in I18N){ I18N[l].ctry_one=C[l]||C.en; I18N[l].tr_retry=R[l]||R.en; }})();

@@ -45,7 +45,7 @@ const NEWCATS=["taom","dam","islom","stadion","zoo","muzey","kutub","kosmos","za
 const REGS=["uz","osiyo","yevropa","amerika","afrika","okeaniya"];
 const COUNTRIES={UZ:[41.3,69.28],KZ:[43.24,76.89],KG:[42.87,74.6],TJ:[38.56,68.78],TM:[37.95,58.38],AF:[34.53,69.17],AZ:[40.41,49.87],RU:[55.75,37.62],TR:[41.0,28.97],AE:[25.2,55.27],SA:[24.71,46.68],CN:[39.9,116.4],IN:[28.61,77.2],KR:[37.57,126.98],DE:[52.52,13.4],GB:[51.5,-0.12],US:[40.71,-74.0],OTHER:[41.3,69.28]};
 const OLDC={"O'zbekiston":"UZ","Qozog'iston":"KZ","Qirg'iziston":"KG","Tojikiston":"TJ","Turkmaniston":"TM","Rossiya":"RU","Turkiya":"TR","AQSh":"US","Boshqa":"OTHER"};
-const UZC={UZ:"O'zbekiston",KZ:"Qozog'iston",KG:"Qirg'iziston",TJ:"Tojikiston",TM:"Turkmaniston",AF:"Afg'oniston",AZ:"Ozarbayjon",RU:"Rossiya",TR:"Turkiya",AE:"BAA",SA:"Saudiya Arabistoni",CN:"Xitoy",IN:"Hindiston",KR:"Janubiy Koreya",DE:"Germaniya",GB:"Buyuk Britaniya",US:"AQSh"};
+const UZC={UZ:"O'zbekiston",KZ:"Qozog'iston",KG:"Qirg'iziston",TJ:"Tojikiston",TM:"Turkmaniston",AF:"Afg'oniston",AZ:"Ozarbayjon",RU:"Rossiya",TR:"Turkiya",AE:"BAA",SA:"Saudiya Arabistoni",CN:"Xitoy",IN:"Hindiston",KR:"Janubiy Koreya",DE:"Germaniya",GB:"Buyuk Britaniya",US:"AQSh",ID:"Indoneziya",CA:"Kanada",JP:"Yaponiya",NO:"Norvegiya",IE:"Irlandiya",HU:"Vengriya",ES:"Ispaniya",BE:"Belgiya",LU:"Lyuksemburg",FI:"Finlandiya",SE:"Shvetsiya",PL:"Polsha",LT:"Litva",IT:"Italiya",CH:"Shveytsariya",AT:"Avstriya",GR:"Gretsiya",PT:"Portugaliya",UY:"Urugvay",EG:"Misr",MX:"Meksika",KE:"Keniya",ET:"Efiopiya",GH:"Gana",FR:"Fransiya",BR:"Braziliya",BY:"Belarus",IS:"Islandiya",EE:"Estoniya",LV:"Latviya",UA:"Ukraina",CZ:"Chexiya",SK:"Slovakiya",SI:"Sloveniya",MD:"Moldova",RO:"Ruminiya",BG:"Bolgariya",MK:"Shimoliy Makedoniya",AL:"Albaniya",HR:"Xorvatiya",BA:"Bosniya va Gertsegovina",AD:"Andorra",CY:"Kipr",GE:"Gruziya",MT:"Malta",MC:"Monako",ME:"Chernogoriya",VA:"Vatikan",SM:"San-Marino",CU:"Kuba",BZ:"Beliz",BB:"Barbados",SS:"Janubiy Sudan",BJ:"Benin",BW:"Botsvana",BF:"Burkina-Faso",BI:"Burundi",KM:"Komor orollari",CG:"Kongo – Brazzavil",CD:"Kongo – Kinshasa",DJ:"Jibuti",GQ:"Ekvatorial Gvineya",ER:"Eritreya",GA:"Gabon",GM:"Gambiya",GN:"Gvineya",GW:"Gvineya-Bisau",CI:"Kot-d'Ivuar",CM:"Kamerun",CV:"Kabo-Verde",LS:"Lesoto",LR:"Liberiya",LY:"Liviya",MG:"Madagaskar",MW:"Malavi",MR:"Mavritaniya",MU:"Mavrikiy",MA:"Marokash",MZ:"Mozambik",NA:"Namibiya",NE:"Niger",NG:"Nigeriya",UG:"Uganda",RW:"Ruanda",ST:"San-Tome va Prinsipi",SN:"Senegal",SC:"Seyshel orollari",SL:"Syerra-Leone",SO:"Somali",SD:"Sudan",SZ:"Svazilend",XK:"Kosovo",NL:"Niderlandiya",ZA:"Janubiy Afrika Respublikasi",DZ:"Jazoir",CL:"Chili",SG:"Singapur",LI:"Lixtenshteyn",BH:"Bahrayn",AM:"Armaniston",RS:"Serbiya",AU:"Avstraliya",AR:"Argentina",PE:"Peru",KP:"Shimoliy Koreya",KH:"Kambodja",TL:"Timor-Leste",TD:"Chad",NZ:"Yangi Zelandiya",TV:"Tuvalu",TO:"Tonga",WS:"Samoa",SB:"Solomon orollari",VU:"Vanuatu",PG:"Papua – Yangi Gvineya",PW:"Palau",NR:"Nauru",FM:"Mikroneziya",MH:"Marshall orollari",KI:"Kiribati",MN:"Mongoliya",FJ:"Fiji",VE:"Venesuela",SR:"Surinam",PY:"Paragvay",GY:"Gayana",EC:"Ekvador",CO:"Kolumbiya",BO:"Boliviya",TT:"Trinidad va Tobago",VC:"Sent-Vinsent va Grenadin",LC:"Sent-Lyusiya",KN:"Sent-Kits va Nevis",JM:"Yamayka",GD:"Grenada",GT:"Gvatemala",BS:"Bagama orollari",AG:"Antigua va Barbuda",HN:"Gonduras",DM:"Dominika",DO:"Dominikan Respublikasi",HT:"Gaiti",SV:"Salvador",IR:"Eron",IQ:"Iroq",CR:"Kosta-Rika",IL:"Isroil",PA:"Panama",YE:"Yaman",JO:"Iordaniya",NI:"Nikaragua",KW:"Quvayt",LA:"Laos",LB:"Livan",MV:"Maldiv orollari",MY:"Malayziya",MM:"Myanma (Birma)",NP:"Nepal",OM:"Ummon",PK:"Pokiston",QA:"Qatar",LK:"Shri-Lanka",SY:"Suriya",TW:"Tayvan",TH:"Tailand",VN:"Vyetnam",BD:"Bangladesh",ML:"Mali",AO:"Angola",BT:"Butan",BN:"Bruney",TZ:"Tanzaniya",PH:"Filippin",CF:"Markaziy Afrika Respublikasi",TG:"Togo",TN:"Tunis",ZM:"Zambiya",ZW:"Zimbabve",PS:"Falastin hududlari",HK:"Gonkong (Xitoy MMH)",MO:"Makao (Xitoy MMH)"};
 let DN=null; function cname(code){ if(code==="OTHER") return t("other");
   if(LANG==="uz"||LANG==="uzk"){ const s=UZC[code]; if(s) return LANG==="uzk"?cyr(s):s; }
   try{ if(!DN||DN._l!==LANG){ DN=new Intl.DisplayNames([LOC[LANG],"en"],{type:"region"}); DN._l=LANG; } const fix={HK:"HK",PS:"PS",AQ:"AQ"}; return DN.of(code)||code; }catch(e){ return UZC[code]||code; } }
@@ -57,7 +57,8 @@ lzLoad();
 const pN = p=>{ if(LANG==="uz") return p.n; if(LANG==="uzk") return cyr(p.n); if(p.dyn) return p.n; return LZ[p.id]?.n || (p.nt||p.t.replace(/_/g," ")).replace(/\s*\(.*?\)\s*/g,"").trim(); };
 const pC = p=>{ if(p.animal) return grpName(p); if(LANG==="uz") return p.c; if(LANG==="uzk") return cyr(p.c); if(p.dyn) return p.c; return (p.cc||"").split("/").map(cname).join(" / ")||p.c; };
 const pCountry = p=>{ if(p.animal) return grpName(p); if(LANG==="uz"||LANG==="uzk"){ const s=p.c.split(",").pop().trim(); return LANG==="uzk"?cyr(s):s; } return pC(p); };
-const pS = p=>{ if(LANG==="uz") return p.s; if(LANG==="uzk") return cyr(p.s); if(p.dyn) return p.s; return LZ[p.id]?.s || LZ[p.id]?.d || ""; };
+const pS = p=>{ const s=LANG==="uz"?p.s:LANG==="uzk"?cyr(p.s||""):p.dyn?p.s:(LZ[p.id]?.s||LZ[p.id]?.d||""); if(s||!p.dyn) return s||"";
+  if(p.animal) return grpName(p); return [CAT()[p.tags?.[0]],pC(p)].filter(Boolean).join(" · "); };
 const pDesc = p=>{ if(p.dyn) return p.desc||""; if(LANG==="uz") return DESC[p.id]||""; if(LANG==="uzk") return cyr(DESC[p.id]||""); return LZ[p.id]?.x || ""; };
 const WAPI="https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1";
 async function wikiNames(){
@@ -245,15 +246,34 @@ async function cmSend(id){ const inp=$("#cmq"); const x=(inp?.value||"").trim();
 
 /* ================= KO'RINISH YORDAMCHILARI ================= */
 const grad = p=>`linear-gradient(140deg,${p.g[0]},${p.g[1]})`;
+// ixcham MD5 (Wikimedia rasm manzili uchun)
+function md5(str){ const b=new TextEncoder().encode(str), n=((b.length+8>>6)+1)*16, w=new Array(n).fill(0);
+  for(let i=0;i<b.length;i++) w[i>>2]|=b[i]<<(i%4*8); w[b.length>>2]|=0x80<<(b.length%4*8); w[n-2]=b.length*8;
+  const K=[], S=[7,12,17,22,5,9,14,20,4,11,16,23,6,10,15,21]; for(let i=0;i<64;i++) K[i]=Math.floor(Math.abs(Math.sin(i+1))*4294967296)|0;
+  let a0=0x67452301,b0=0xefcdab89|0,c0=0x98badcfe|0,d0=0x10325476;
+  for(let o=0;o<n;o+=16){ let A=a0,B=b0,C=c0,D=d0;
+    for(let i=0;i<64;i++){ let F,g; const r=i>>4;
+      if(r===0){F=(B&C)|(~B&D);g=i;} else if(r===1){F=(D&B)|(~D&C);g=(5*i+1)%16;} else if(r===2){F=B^C^D;g=(3*i+5)%16;} else {F=C^(B|~D);g=(7*i)%16;}
+      const s=S[r*4+i%4], t=(A+F+K[i]+w[o+g])|0; A=D; D=C; C=B; B=(B+((t<<s)|(t>>>(32-s))))|0; }
+    a0=(a0+A)|0; b0=(b0+B)|0; c0=(c0+C)|0; d0=(d0+D)|0; }
+  return [a0,b0,c0,d0].map(x=>{ let h=""; for(let i=0;i<4;i++) h+=((x>>>(i*8))&255).toString(16).padStart(2,"0"); return h; }).join(""); }
+// Wikimedia rasmi — to'g'ridan-to'g'ri kichraytirilgan nusxa (Special:FilePath yo'naltirishisiz, tezroq)
+function cthumb(file,w){ const n=file.replace(/ /g,"_"), h=md5(n), e=encodeURIComponent(n), svg=/\.svg$/i.test(n);
+  return `https://upload.wikimedia.org/wikipedia/commons/thumb/${h[0]}/${h.slice(0,2)}/${e}/${w}px-${e}${svg?".png":""}`; }
+// nusxa topilmasa (asl rasm kichik bo'lsa) — Special:FilePath orqali
+const toFP=u=>{ const m=/\/commons\/thumb\/[0-9a-f]\/[0-9a-f]{2}\/([^/]+)\/(\d+)px-/.exec(u||""); return m?`https://commons.wikimedia.org/wiki/Special:FilePath/${m[1]}?width=${m[2]}`:null; };
+function imgErr(el){ if(!el.dataset.f){ el.dataset.f=1; const f=toFP(el.src); if(f){ el.src=f; return; } } el.remove(); }
+const sm = u=>u&&!u.startsWith("data:")?u.replace(/\/\d+px-/,"/500px-").replace(/([?&]width=)\d+/,"$1500"):u;
 const big = u=>u&&!u.startsWith("data:")?u.replace(/\/\d+px-/,"/1280px-").replace(/([?&]width=)\d+/,"$11280"):u;
 const uhd = u=>u&&!u.startsWith("data:")?u.replace(/\/\d+px-/,"/3840px-").replace(/([?&]width=)\d+/,"$13840"):u;
 const SCR=()=>Math.max(innerWidth,innerHeight)*(devicePixelRatio||1);
-const hq = u=>SCR()>2600?uhd(u):SCR()>1500?huge(u):big(u);   // 4K → Full HD → HD
+// telefon: Full HD yetarli (4K juda og'ir va sekin); 4K — faqat katta yuqori aniqlikdagi ekranlarda
+const hq = u=>{ const w=innerWidth*(devicePixelRatio||1); return innerWidth>=1400&&w>2600?uhd(u):w>1000?huge(u):big(u); };
 // rasm yuklanmasa bir pog'ona past sifatga tushish
 const down = u=>/3840px-|width=3840/.test(u)?u.replace("/3840px-","/1920px-").replace("width=3840","width=1920"):/1920px-|width=1920/.test(u)?u.replace("/1920px-","/1280px-").replace("width=1920","width=1280"):null;
-function loadBest(u,ok,fail){ const im=new Image(); im.decoding="async"; im.onload=()=>ok(u); im.onerror=()=>{ const d=down(u); d?loadBest(d,ok,fail):fail&&fail(); }; im.src=u; }
+function loadBest(u,ok,fail){ const im=new Image(); im.decoding="async"; im.onload=()=>ok(u); im.onerror=()=>{ const d=down(u)||toFP(u); d?loadBest(d,ok,fail):fail&&fail(); }; im.src=u; }
 const huge = u=>u&&!u.startsWith("data:")?u.replace(/\/\d+px-/,"/1920px-").replace(/([?&]width=)\d+/,"$11920"):u;
-const FB = "if(!this.dataset.f&&/1280px-/.test(this.src)){this.dataset.f=1;this.src=this.src.replace('/1280px-','/960px-')}else{this.remove()}";
+const FB = "imgErr(this)";
 const img = (p,lg)=>p.img?`<img${p.logo?' class="lg"':""} src="${lg?big(p.img):p.img}" alt="" loading="lazy" decoding="async" onerror="${FB}">`:"";
 const ph = (p,cls="",inner="",lg=false,extra="")=>`<div class="ph ${cls}" style="background:${grad(p)}" ${extra}>${img(p,lg)}${inner}</div>`;
 const ICON={
@@ -410,21 +430,22 @@ async function loadGallery(p){
   const add=arr=>arr.forEach(u=>{ if(u&&!g.some(x=>fname(x)===fname(u))) g.push(u); });
   const name=(p.nt||p.t).replace(/_/g," ").replace(/\s*\(.*?\)\s*/g,"").replace(/,.*$/,"").trim();
   const words=name.toLowerCase().split(/\s+/).filter(w=>w.length>=4);
-  // 1) Commons sifatli rasmlari (Quality images)
-  try{ const u="https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrnamespace=6&gsrlimit=20&gsrsearch="+encodeURIComponent('"'+name+'" incategory:Quality_images')+"&prop=imageinfo&iiprop=url|size|mime&iiurlwidth=1280";
+  // 1) Commons sifatli rasmlari, 2) Wikipedia maqola rasmlari, 3) Commons katta suratlari — uchalasi bir vaqtda so'raladi
+  const R1=[], R2=[], R3=[];
+  await Promise.all([
+    (async()=>{ try{ const u="https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrnamespace=6&gsrlimit=20&gsrsearch="+encodeURIComponent('"'+name+'" incategory:Quality_images')+"&prop=imageinfo&iiprop=url|size|mime&iiurlwidth=1280";
     const d=await (await fetch(u)).json();
-    add(Object.values(d.query?.pages||{}).sort((a,b)=>(a.index||0)-(b.index||0)).filter(x=>{ const ii=x.imageinfo?.[0]; return ii&&/jpeg/.test(ii.mime)&&ii.width>=1500&&!BADIMG.test(x.title)&&(!words.length||words.some(w=>x.title.toLowerCase().includes(w))); }).slice(0,8).map(x=>x.imageinfo[0].thumburl));
-  }catch(e){}
-  // 2) Wikipedia maqola rasmlari
-  if(g.length<6){ try{
+    R1.push(...Object.values(d.query?.pages||{}).sort((a,b)=>(a.index||0)-(b.index||0)).filter(x=>{ const ii=x.imageinfo?.[0]; return ii&&/jpeg/.test(ii.mime)&&ii.width>=1500&&!BADIMG.test(x.title)&&(!words.length||words.some(w=>x.title.toLowerCase().includes(w))); }).slice(0,8).map(x=>x.imageinfo[0].thumburl));
+  }catch(e){} })(),
+    (async()=>{ try{
     const d=await (await fetch(`https://${p.wl||"en"}.wikipedia.org/api/rest_v1/page/media-list/`+encodeURIComponent(p.t))).json();
-    add((d.items||[]).filter(i=>i.type==="image"&&i.srcset&&!/\.(svg|gif|png)$/i.test(i.title)&&!BADIMG.test(i.title)).slice(0,8).map(i=>{ const s=i.srcset[i.srcset.length-1].src; return s.startsWith("//")?"https:"+s:s; }));
-  }catch(e){} }
-  // 3) hali 7 tadan kam bo'lsa — Commons'dan katta o'lchamli (≥1600px) boshqa suratlar
-  if(g.length<7){ try{ const u="https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrnamespace=6&gsrlimit=40&gsrsearch="+encodeURIComponent('"'+name+'" filetype:bitmap')+"&prop=imageinfo&iiprop=url|size|mime&iiurlwidth=1280";
+    R2.push(...(d.items||[]).filter(i=>i.type==="image"&&i.srcset&&!/\.(svg|gif|png)$/i.test(i.title)&&!BADIMG.test(i.title)).slice(0,8).map(i=>{ const s=i.srcset[i.srcset.length-1].src; return s.startsWith("//")?"https:"+s:s; }));
+  }catch(e){} })(),
+    (async()=>{ try{ const u="https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrnamespace=6&gsrlimit=40&gsrsearch="+encodeURIComponent('"'+name+'" filetype:bitmap')+"&prop=imageinfo&iiprop=url|size|mime&iiurlwidth=1280";
     const d=await (await fetch(u)).json();
-    add(Object.values(d.query?.pages||{}).sort((a,b)=>(a.index||0)-(b.index||0)).filter(x=>{ const ii=x.imageinfo?.[0]; return ii&&/jpeg/.test(ii.mime)&&ii.width>=1600&&ii.height>=900&&!BADIMG.test(x.title)&&(!words.length||words.some(w=>x.title.toLowerCase().includes(w))); }).slice(0,12-g.length).map(x=>x.imageinfo[0].thumburl));
-  }catch(e){} }
+    R3.push(...Object.values(d.query?.pages||{}).sort((a,b)=>(a.index||0)-(b.index||0)).filter(x=>{ const ii=x.imageinfo?.[0]; return ii&&/jpeg/.test(ii.mime)&&ii.width>=1600&&ii.height>=900&&!BADIMG.test(x.title)&&(!words.length||words.some(w=>x.title.toLowerCase().includes(w))); }).slice(0,12-g.length).map(x=>x.imageinfo[0].thumburl));
+  }catch(e){} })()]);
+  add(R1); if(g.length<6) add(R2); if(g.length<7) add(R3);
   p.gallery=g.slice(0,14);
   return p.gallery;
 }
@@ -627,7 +648,9 @@ const WXI=c=>SV(WXS[c===0?"sun":c<=2?"part":c===3?"cloud":c<=48?"fog":c<=67?"rai
 async function loadWx(p){ const el=$("#wx"); if(!el||p.lat==null) { if(el) el.remove(); return; }
   try{ const d=await (await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lon}&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=auto&forecast_days=6`)).json();
     if(!$("#wx")||!d.current) return; let df; try{ df=new Intl.DateTimeFormat(LOC[LANG],{weekday:"short"}); }catch(e){ df=new Intl.DateTimeFormat("en",{weekday:"short"}); }
-    $("#wx").innerHTML=`<div class="sl">${t("wx_h")}</div><div class="wxr"><div class="wxn"><span>${WXI(d.current.weather_code)}</span><b>${Math.round(d.current.temperature_2m)}°</b><small>${t("now_t")}</small></div>${d.daily.time.slice(1).map((x,i)=>`<div><small>${df.format(new Date(x+"T12:00"))}</small><span>${WXI(d.daily.weather_code[i+1])}</span><b>${Math.round(d.daily.temperature_2m_max[i+1])}°</b><small>${Math.round(d.daily.temperature_2m_min[i+1])}°</small></div>`).join("")}</div>`;
+    const WDN={uz:["Yak","Dush","Sesh","Chor","Pay","Jum","Shan"],kk:["Жс","Дс","Сс","Ср","Бс","Жм","Сб"],ky:["Жек","Дүй","Шей","Шар","Бей","Жум","Ише"],tg:["Якш","Дшн","Сшн","Чшн","Пшн","Ҷмъ","Шнб"]};
+    const wd=dt=>{ const a=WDN[LANG==="uzk"?"uz":LANG]; if(a){ const n=a[dt.getDay()]; return LANG==="uzk"?cyr(n):n; } return df.format(dt); };
+    $("#wx").innerHTML=`<div class="sl">${t("wx_h")}</div><div class="wxr"><div class="wxn"><span>${WXI(d.current.weather_code)}</span><b>${Math.round(d.current.temperature_2m)}°</b><small>${t("now_t")}</small></div>${d.daily.time.slice(1).map((x,i)=>`<div><small>${wd(new Date(x+"T12:00"))}</small><span>${WXI(d.daily.weather_code[i+1])}</span><b>${Math.round(d.daily.temperature_2m_max[i+1])}°</b><small>${Math.round(d.daily.temperature_2m_min[i+1])}°</small></div>`).join("")}</div>`;
   }catch(e){ $("#wx")?.remove(); } }
 const CUR={UZ:"UZS",KG:"KGS",KZ:"KZT",TJ:"TJS",TM:"TMT",AF:"AFN",AZ:"AZN",RU:"RUB",TR:"TRY",AE:"AED",SA:"SAR",CN:"CNY",IN:"INR",KR:"KRW",DE:"EUR",GB:"GBP",US:"USD",GR:"EUR",FR:"EUR",PE:"PEN",MV:"MVR",JP:"JPY",IT:"EUR",JO:"JOD",PF:"XPF",CA:"CAD",AR:"ARS",BR:"BRL",KH:"KHR",ID:"IDR",NO:"NOK",IS:"ISK",ES:"EUR",HR:"EUR",VN:"VND",AT:"EUR",ZM:"ZMW",ZW:"USD",BO:"BOB",AU:"AUD",NZ:"NZD",CH:"CHF",SI:"EUR",CZ:"CZK",IE:"EUR",NL:"EUR",HU:"HUF",NP:"NPR",MY:"MYR",SG:"SGD",TH:"THB",MM:"MMK",HK:"HKD",PH:"PHP",BT:"BTN",GE:"GEL",CL:"CLP",MX:"MXN",EC:"USD",VE:"VES",EG:"EGP",MA:"MAD",ZA:"ZAR",TZ:"TZS",SC:"SCR",NA:"NAD",IQ:"IQD",VA:"EUR",QA:"QAR",KE:"KES",BE:"EUR",DK:"DKK",PT:"EUR",TW:"TWD",IR:"IRR",PK:"PKR",PS:"ILS",CU:"CUP",CO:"COP",BW:"BWP",MG:"MGA",YE:"YER",GT:"GTQ",LK:"LKR",FO:"DKK",OTHER:"USD"};
 let FX=ls.get("olam_fx",null);
@@ -833,7 +856,7 @@ async function openPlace(id){
   if(cur==="watch"&&!W.paused) wPause();
   const others=p.animal?shuffle(PLACES.filter(x=>x.animal&&x.id!==id&&x.grp===p.grp&&x.img)).slice(0,10):PLACES.filter(x=>x.id!==id&&(!x.dyn||x.keep)&&!x.animal).map(x=>({x,s:x.tags.filter(y=>p.tags.includes(y)).length*2+(x.reg===p.reg?1:0)+score(x)/10})).sort((a,b)=>b.s-a.s).slice(0,10).map(o=>o.x);
   const C=CAT(), R=REGN(), WN=tl("won"), desc=pDesc(p);
-  DD.innerHTML=`<div class="dg"><div class="gal" id="gal"><div class="gs ph act" style="background:${grad(p)}">${img(p,true)}</div></div>
+  DD.innerHTML=`<div class="dg"><div class="gal" id="gal"><div class="gs ph act" style="background:${p.img?`url('${sm(p.img)}') center/cover,`:""}${grad(p)}">${img(p,true)}</div></div>
      <button class="x" onclick="closePlace()">${ICON.down}</button>
      <div class="gtop"><div class="cnt" id="gc" style="display:none"></div><button class="gsnd ${SET.music?"on":""}" id="gsnd" onclick="placeSound()" aria-label="Music">${SET.music?ICON.music:ICON.mute}</button></div>
      <button class="gnav gp" onclick="galStep(-1)" aria-label="prev"><svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg></button><button class="gnav gn" onclick="galStep(1)" aria-label="next"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button>
@@ -850,10 +873,10 @@ async function openPlace(id){
      <div class="tagline">${esc(pS(p))}</div>
      <div id="ptours"></div>
      <div class="hook" id="phook"><div class="artsk"><i></i><i></i><i></i></div></div>
-     ${p.animal?"":`     <div class="facts"><div>${t("best_time")}<b>${bestTxt(p.best)}</b></div><div>${t("from_you")}<b>${km(dist(p))}</b></div><div>${t("region")}<b>${clean(R[p.reg])}</b></div></div>
-     <div class="sgrp wxb" id="wx"><div class="sl">\${t("wx_h")}</div><div class="sp">…</div></div><div class="sgrp" id="fx"></div>
-     <div class="gmap"><a class="pill gm" href="\${gmapsUrl(p)}" target="_blank" rel="noopener">\${ICON.pin}<span>\${t("gm_open")}</span></a><a class="pill gm g2" href="\${gdirUrl(p)}" target="_blank" rel="noopener">\${ICON.route}<span>\${t("gm_dir")}</span></a></div>
-     <a class="pill o2 wide" style="margin-top:8px" href="\${panoUrl(p)}" target="_blank" rel="noopener">\${ICON.eye}<span>\${clean(t("pano"))} · Google Maps</span></a>`}
+     ${p.animal?"":`     <div class="facts">${bestTxt(p.best)==="—"?`<div>${t("ctry_one")}<b>${esc(pC(p)||"—")}</b></div>`:`<div>${t("best_time")}<b>${bestTxt(p.best)}</b></div>`}<div>${t("from_you")}<b>${km(dist(p))}</b></div><div>${t("region")}<b>${clean(R[p.reg])}</b></div></div>
+     <div class="sgrp wxb" id="wx"><div class="sl">${t("wx_h")}</div><div class="sp">…</div></div><div class="sgrp" id="fx"></div>
+     <div class="gmap"><a class="pill gm" href="${gmapsUrl(p)}" target="_blank" rel="noopener">${ICON.pin}<span>${t("gm_open")}</span></a><a class="pill gm g2" href="${gdirUrl(p)}" target="_blank" rel="noopener">${ICON.route}<span>${t("gm_dir")}</span></a></div>
+     <a class="pill o2 wide" style="margin-top:8px" href="${panoUrl(p)}" target="_blank" rel="noopener">${ICON.eye}<span>${clean(t("pano"))} · Google Maps</span></a>`}
      <div class="sec" style="padding:14px 0 8px"><h2>${t("about_h")}</h2><span class="spk" onclick="speak(pN(byId('${p.id}'))+'. '+($('#pdesc')?.textContent||''),this)">${t("listen")}</span></div>
      <div class="wiki" id="pdesc">${desc?esc(desc):t("translating")}</div>
      <div class="wiki more" id="pmore"></div>
@@ -886,7 +909,7 @@ async function galBuild(p){
   const el=$("#gal");
   el.innerHTML=slides.map((x,k)=>x.v
     ?`<div class="gs vs" style="--bgimg:url('${bg}')"><video src="${x.v}" muted playsinline preload="${k===0?"auto":"metadata"}" ${slides.length===1?"loop":""} onloadedmetadata="galFit(this)"></video></div>`
-    :`<div class="gs ph" style="background:${grad(p)};--bgimg:url('${x.i}')"><img src="${x.i}" alt="" ${k>1?'loading="lazy"':""} decoding="async" onload="galFit(this)" onerror="const d=down(this.src);if(d){this.src=d}else{${FB}}"></div>`).join("");
+    :`<div class="gs ph" style="background:url('${sm(x.i)}') center/cover,${grad(p)};--bgimg:url('${sm(x.i)}')"><img src="${x.i}" alt="" ${k>1?'loading="lazy"':""} decoding="async" onload="galFit(this)" onerror="const d=down(this.src);if(d){this.src=d}else{${FB}}"></div>`).join("");
   $("#gdots").innerHTML=slides.length>1?slides.map((x,k)=>`<button class="${x.v?"v":""}" onclick="galStep(${k},1)" aria-label="${k+1}"></button>`).join(""):"";
   $("#detail .dg").classList.toggle("multi",slides.length>1);
   const hold=()=>{ G.hold=Date.now()+9000; };
@@ -1067,7 +1090,7 @@ async function loadMore(p){
 const CTP={};
 function ctryRows(d,code,lang){ const L=d.langs||[], li=L.indexOf(lang), en=L.indexOf("en"), out=[];
   for(const it of d.items||[]){ const [qid,file,lat,lon,cls,sl,reg,ls,ds,ws]=it; const label=(li>=0&&ls[li])||ls[en]||ls.find(Boolean); if(!label) continue;
-    out.push(mkPlace([qid,label,ws[en]||"",lang==="en"?"":(li>=0?ws[li]:"")||"",(li>=0?ds[li]:"")||ds[en]||"",file,lat,lon,cls,sl,code,reg],lang,false)); }
+    out.push(mkPlace([qid,label,ws[en]||"",lang==="en"?"":(li>=0?ws[li]:"")||"",li===en?(ds[en]||""):((li>=0?ds[li]:"")||""),file,lat,lon,cls,sl,code,reg],lang,false)); }
   return out; }
 async function ctryPart(code,n){ const lang=catLang(); const r=await fetch("assets/catalog/c/"+code+(n>1?"."+n:"")+".json"); if(!r.ok) throw new Error("no part");
   const d=await r.json(); CTP[code]={parts:d.parts||1,got:n,total:d.total||(d.items||[]).length}; return ctryRows(d,code,lang); }
@@ -1086,11 +1109,12 @@ async function fillDesc(p){
     if(title){ const d=await (await fetch(`https://${WL(lang)}.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1&prop=extracts&exintro=1&explaintext=1&exsentences=5${lang==="zh"?"&variant=zh-cn":""}&titles=`+encodeURIComponent(title))).json();
       txt=Object.values(d.query?.pages||{})[0]?.extract||""; }
   }catch(e){}
-  if(!txt&&p.wt?.en&&lang!=="en"){ try{ const d=await (await fetch("https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1&prop=extracts&exintro=1&explaintext=1&exsentences=5&titles="+encodeURIComponent(p.wt.en))).json(); const en=Object.values(d.query?.pages||{})[0]?.extract||""; if(en){ try{ txt=await aiTranslate(en); }catch(e){} if(!txt) txt=en; } }catch(e){} }
+  if(!txt&&p.wt?.en&&lang!=="en"){ try{ const d=await (await fetch("https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1&prop=extracts&exintro=1&explaintext=1&exsentences=5&titles="+encodeURIComponent(p.wt.en))).json(); const en=Object.values(d.query?.pages||{})[0]?.extract||""; if(en){ for(let a=0;a<2&&!txt;a++){ try{ txt=await aiTranslate(en); }catch(e){} if(!txt&&!a) await new Promise(r=>setTimeout(r,2500)); } if(!txt){ txt=en; var raw=1; } } }catch(e){} }
   if(!txt&&DESC[p.id]){ try{ txt=await aiTranslate(DESC[p.id]); }catch(e){} }
   if(!txt) txt=DESC[p.id]||"";
-  if(lang!==LANG) return; LZ[p.id]=LZ[p.id]||{}; LZ[p.id].x=txt; ls.set("olam_lz_"+LANG,LZ);
-  const el=$("#pdesc"); if(el&&$("#detail").classList.contains("on")&&$("#detail h1")?.textContent===pN(p)) el.textContent=txt;
+  if(lang!==LANG) return; if(!raw){ LZ[p.id]=LZ[p.id]||{}; LZ[p.id].x=txt; ls.set("olam_lz_"+LANG,LZ); }
+  const el=$("#pdesc"); if(el&&$("#detail").classList.contains("on")&&$("#detail h1")?.textContent===pN(p)){ el.textContent=txt; $(".trretry")?.remove();
+    if(raw) el.insertAdjacentHTML("afterend",`<button class="pill o2 trretry" style="margin-top:10px" onclick="this.remove();$('#pdesc').textContent=t('translating');fillDesc(byId('${p.id}'))">${ICON.spark}<span>${t("tr_retry")}</span></button>`); }
 }
 let PDW=null;
 function closePlace(){ const D=$("#detail"); if(!D.classList.contains("on")) return; D.classList.remove("on"); document.title=BASE_TITLE; try{ history.replaceState(null,"",location.pathname); }catch(e){} galStop(); if(TTSA){ TTSA.pause(); TTSA=null; ttsOff(); } if(PDW){ const dt=(Date.now()-PDW.t)/1000; learn(PDW.id,dt>90?3:dt>30?1.5:dt>12?0.5:dt<4?-0.6:0); PDW=null; } if(cur!=="watch"){ mPause(); ambStop(); } }
@@ -1368,8 +1392,8 @@ function mkPlace(c,lang,cat){
   let tags=[...(WDT[cls]||[])]; if(!tags.length) tags=guessTags(label+" "+desc+" "+en); if(cls==="Q9259"&&!tags.includes("tarix")) tags.push("tarix");
   const wl=loc?lang:"en", title=loc||en;
   const p={id,t:(en||label).replace(/ /g,"_"),q:en||label,n:LANG==="uzk"?cyr(label):label,c:cname(code),cc:code,reg,tags:[...new Set(tags)],best:"—",
-    s:desc?desc.charAt(0).toUpperCase()+desc.slice(1):cname(code),g:PAL2[hash(id)%PAL2.length],lat,lon,dyn:1,wd:1,wl,sl,
-    img:"https://commons.wikimedia.org/wiki/Special:FilePath/"+encodeURIComponent(file.replace(/ /g,"_"))+"?width=960",
+    s:desc?desc.charAt(0).toUpperCase()+desc.slice(1):"",g:PAL2[hash(id)%PAL2.length],lat,lon,dyn:1,wd:1,wl,sl,
+    img:cthumb(file,500),
     wt:{en,[lang]:loc||undefined},wurl:title?`https://${wl}.wikipedia.org/wiki/`+encodeURIComponent(title.replace(/ /g,"_")):"https://www.wikidata.org/wiki/"+qid};
   p.cls=cls; if(cat){ p.keep=1; p.cat=1; }
   PLACES.push(p); IDX[id]=p; return p;
@@ -1472,7 +1496,7 @@ const LIFEG={ld:{},counts:{},total:0,parts:{},got:{},v3:null};
 // v3: bir guruh — bir nechta bo'lak (g/<guruh>.json, g/<guruh>.2.json ...), har birida 9 til
 function v3rows(d,lang){ const L=d.langs||[], li=L.indexOf(lang), en=L.indexOf("en"), out=[];
   for(const [qid,grp,file,sl,logo,ls,ds,ws] of d.items||[]){ const label=(li>=0&&ls[li])||ls[en]||ls.find(Boolean); if(!label) continue;
-    out.push([qid,grp,label,ws[en]||"",lang==="en"?"":((li>=0&&ws[li])||""),(li>=0&&ds[li])||ds[en]||"",file,sl,logo]); } return out; }
+    out.push([qid,grp,label,ws[en]||"",lang==="en"?"":((li>=0&&ws[li])||""),li===en?(ds[en]||""):((li>=0&&ds[li])||""),file,sl,logo]); } return out; }
 async function lifePart(g,n){ const lang=catLang(); const r=await fetch(`assets/catalog/${COLDATA}/g/${g}${n>1?"."+n:""}.json`); if(!r.ok) throw new Error("no part");
   const d=await r.json(); if(lang!==catLang()) return; LIFEG.parts[g]=d.parts||1; LIFEG.got[g]=n; lifeAdd(v3rows(d,lang),lang); refresh(); }
 async function lifeGroup(g){ if(!LIFE||LIFEG.ld[g]) return; LIFEG.ld[g]=1; const lang=catLang();
@@ -1481,11 +1505,11 @@ async function lifeGroup(g){ if(!LIFE||LIFEG.ld[g]) return; LIFEG.ld[g]=1; const
 const lifeHasMore=g=>!!g&&g!=="all"&&(LIFEG.got[g]||0)<(LIFEG.parts[g]||0);
 async function lifeMore(g){ if(!lifeHasMore(g)||LIFEG.busy) return; LIFEG.busy=1; try{ await lifePart(g,(LIFEG.got[g]||0)+1); }catch(e){} LIFEG.busy=0; }
 function lifeAdd(items,lang){ const have=new Set(PLACES.filter(p=>p.animal&&!p.dyn).map(p=>p.nt.toLowerCase()));
-  for(let [qid,grp,label,en,loc,desc,file,sl,logo] of items){ if(!GRPS.includes(grp)) continue; const id="q"+qid; if(IDX[id]||(en&&have.has(en.toLowerCase()))) continue;
+  for(let [qid,grp,label,en,loc,desc,file,sl,logo] of items){ if(!GRPS.includes(grp)||/^(Wikipedia|Vikipediya|Vikipedi|Википедия|Уикипедия|Template|Portal|Шаблон)\s*:/i.test(label||"")) continue; const id="q"+qid; if(IDX[id]||(en&&have.has(en.toLowerCase()))) continue;
     const wl=loc?lang:"en", title=loc||en;
     if(/^[A-Z][a-z]+ [a-z]+$/.test(label)&&en&&!/^[A-Z][a-z]+ [a-z]+$/.test(en)) label=en.replace(/\s*\(.*?\)\s*/g,"");   // lotincha nom o'rniga tushunarli nom
     const p={id,t:(en||label).replace(/ /g,"_"),nt:en||label,q:en||label,n:LANG==="uzk"?cyr(label):label,c:"",cc:"",reg:"",tags:["hayvon"],grp,best:"—",s:desc?desc.charAt(0).toUpperCase()+desc.slice(1):"",g:PAL2[hash(id)%PAL2.length],animal:1,dyn:1,wd:1,keep:0,wl,sl,see:[],
-      img:file?"https://commons.wikimedia.org/wiki/Special:FilePath/"+encodeURIComponent(file.replace(/ /g,"_"))+"?width=960":undefined,logo:logo?1:0,person:COL==="odam"?1:0,wt:{en,[lang]:loc||undefined},wurl:title?`https://${wl}.wikipedia.org/wiki/`+encodeURIComponent(title.replace(/ /g,"_")):""};
+      img:file?cthumb(file,500):undefined,logo:logo?1:0,person:COL==="odam"?1:0,wt:{en,[lang]:loc||undefined},wurl:title?`https://${wl}.wikipedia.org/wiki/`+encodeURIComponent(title.replace(/ /g,"_")):""};
     PLACES.push(p); IDX[id]=p; } }
 async function lifeLoad(){ if(!LIFE) return; const lang=catLang(); try{ let r=await fetch(`assets/catalog/${COLDATA}/${lang}.json`); if(!r.ok&&lang!=="en") r=await fetch(`assets/catalog/${COLDATA}/en.json`); if(!r.ok) return; const d=await r.json(); if(lang!==catLang()) return;
   LIFEG.ld={}; LIFEG.got={}; LIFEG.v3=d.v===3; if(d.parts) LIFEG.parts=d.parts; LIFEG.counts=Object.fromEntries(Object.entries(d.counts||{}).filter(([g])=>GRPS.includes(g))); LIFEG.total=Object.values(LIFEG.counts).reduce((a,b)=>a+b,0)||d.total||0; lifeAdd(d.items||[],lang); refresh(); tryQP(); return;
@@ -1550,7 +1574,7 @@ function heroNext(){ const H=$("#shero"); if(!H||cur!=="home") return; const poo
   const swapVideo=()=>{ if(!v) return; if(!useV){ if(v.classList.contains("on")){ v.classList.remove("on"); setTimeout(()=>{ if(!v.classList.contains("on")){ v.pause(); v.removeAttribute("src"); } },1300); } return; }
     const go=()=>{ v.onplaying=()=>{ v.classList.add("on"); }; v.src=pexels(land[Math.floor(Math.random()*land.length)]); v.play().catch(()=>{}); };
     if(v.classList.contains("on")){ v.classList.remove("on"); setTimeout(go,1250); } else go(); };
-  loadBest(SCR()>2600?uhd(p.img):huge(p.img),u=>{ show(`url("${u}")`); swapVideo(); },()=>{ show(`url("${big(p.img)}"), ${grad(p)}`); swapVideo(); }); }
+  loadBest(hq(p.img),u=>{ show(`url("${u}")`); swapVideo(); },()=>{ show(`url("${big(p.img)}"), ${grad(p)}`); swapVideo(); }); }
 function heroSearch(q){ q=(q||"").trim(); X.q=q; X.tag="all"; X.reg="all"; go("explore"); }
 function renderHomeSite(){ setTimeout(fillAIPicks,0);
   const H=$("#home"), C=CAT(), R=REGN(), PR=PER(), N=PLACES.filter(p=>!p.dyn||p.cat).length;
