@@ -1,6 +1,10 @@
 const SITE=document.body.classList.contains("site");
 const LIFE=document.body.classList.contains("life");   // to'plam ilovalari: Tirik olam va Bilim
 const COL=["odam","texnika","internet"].find(c=>document.body.classList.contains(c))||"life";   // qaysi to'plam
+// Wonderly brendi: Travel, Nature, People, Tech, Web
+const APPNM=LIFE?{life:"Nature",odam:"People",texnika:"Tech",internet:"Web"}[COL]:"Travel", BRAND="Wonderly "+APPNM;
+const WMARK=`<svg viewBox="205.3 203.8 451 323.3" aria-hidden="true"><path d="M256 240 C240 310 228 390 238 444 C246 484 268 500 294 498 C334 496 358 446 366 396 C370 364 372 330 373 298 C376 360 384 430 404 470 C418 496 446 504 470 490 C504 470 530 418 548 356 C564 300 574 250 540 236 C504 222 464 256 466 308 C468 356 500 380 542 378 C578 376 606 366 628 350" fill="none" stroke="currentColor" stroke-width="58" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const LOGO=(cls="")=>`<div class="logo ${cls}"><i class="wm">${WMARK}</i><span class="bn">Wonderly <em>${APPNM}</em></span></div>`;
 const COLDIR={odam:"insonlar",texnika:"texnika",internet:"internet",life:"tirik"}[COL], COLDATA=COL==="life"?"life":"bilim";   // insonlar, texnika, internet — bitta katalogdan
 const HOME_URL=LIFE?COLDIR+"/":"./", APP_URL=LIFE?COLDIR+"/app/":"app/";
 const clean = s=>String(s).replace(/^[^\p{L}\p{N}]+/u,"").trim();
@@ -353,8 +357,8 @@ function score(p,w,tot){
 }
 const wondersOf = id=>Object.keys(WONDERS).filter(k=>WONDERS[k].ids.includes(id));
 let WCUR="new7";
-function wondersHTML(){ const W2=tl("won"); return `<div class="chips" style="padding-top:0">${Object.keys(WONDERS).map(k=>`<button class="chip ${WCUR===k?"on":""}" onclick="WCUR='${k}';$('#wond').innerHTML=wondersHTML()">${W2[k][0]}</button>`).join("")}</div>
-  <div class="ainote">${W2[WCUR][1]}${WCUR==="new7"?t("new7_note"):""}</div>
+function wondersHTML(){ const W2=tl("won"); return `<div class="chips" style="padding-top:0">${Object.keys(WONDERS).map(k=>`<button class="chip ${WCUR===k?"on":""}" onclick="WCUR='${k}';$('#wond').innerHTML=wondersHTML()">${esc(clean(W2[k][0]))}</button>`).join("")}</div>
+  <div class="ainote">${W2[WCUR][1]}${WCUR==="new7"?" "+t("new7_note"):""}</div>
   <div class="hs">${WONDERS[WCUR].ids.map(byId).filter(Boolean).map((p,i)=>cardH(p,"",(i+1)+"")).join("")}</div>`; }
 
 /* ================= BUTUN DUNYO (Wikipedia) ================= */
@@ -481,7 +485,7 @@ function startOb(){ obStep=0; if(LIFE){ obData={name:U?.name||"",country:U?.coun
 const steps=n=>`<div class="steps">${[1,2,3,4].map(i=>`<i class="${i<=n?"on":""}"></i>`).join("")}</div>`;
 const langChips=(fn)=>`<div class="opts lng">${LANGS.map(([k,n,f])=>`<button class="opt ${LANG===k?"on":""}" onclick="setLang('${k}');${fn}">${n}</button>`).join("")}</div>`;
 function renderObCol(){ const B=$("#obB")?$("#obBody"):$("#obBody"), Dd=obData; B.classList.toggle("splash",obStep===0);
-  if(obStep===0){ B.innerHTML=`<div class="logo">${t("life_brand")}</div><h1>${t("life_h1")}</h1><p class="sub">${t("life_sub")}</p>${langChips("renderOb()")}<div class="obb"><button class="btn g" onclick="obNext()">${t("start")}</button></div>`; return; }
+  if(obStep===0){ B.innerHTML=`${LOGO()}<h1>${t("life_h1")}</h1><p class="sub">${t("life_sub")}</p>${langChips("renderOb()")}<div class="obb"><button class="btn g" onclick="obNext()">${t("start")}</button></div>`; return; }
   const all=PLACES.filter(p=>p.animal); const gs=GRPS.filter(g=>all.some(p=>p.grp===g)||LIFEG.counts[g]||true);
   B.innerHTML=`<div class="steps"><i class="on"></i><i class="on"></i></div><h1>${t("ob_col_h")}</h1><p class="sub">${t("ob_col_sub")}</p>
     <label class="f">${t("name")}</label><input class="t" id="nm" placeholder="${esc(t("name_ph"))}" value="${esc(Dd.name||"")}" oninput="obData.name=this.value">
@@ -492,7 +496,7 @@ function renderOb(){ if(LIFE) return renderObCol();
   const B=$("#obBody"), Dd=obData; B.classList.toggle("splash",obStep===0);
   const back=`<button class="btn o" onclick="obStep--;renderOb()">←</button>`;
   if(obStep===0){
-    B.innerHTML=`<div class="logo">OLAM</div><h1>${t("ob_h1")}</h1><p class="sub">${t("ob_sub")}</p>${langChips("renderOb()")}
+    B.innerHTML=`${LOGO()}<h1>${t("ob_h1")}</h1><p class="sub">${t("ob_sub")}</p>${langChips("renderOb()")}
       <div class="obb"><button class="btn g" onclick="mPlay();obNext()">${t("start")}</button></div>`;
   } else if(obStep===1){
     B.innerHTML=`${steps(1)}<h1>${t("ob1_h")}</h1><p class="sub">${t("ob1_sub")}</p>
@@ -541,7 +545,7 @@ function renderHome(){ if(LIFE) return renderLife(); if(SITE) return renderHomeS
   const near=PLACES.filter(p=>!p.dyn&&p.lat!=null&&p.id!==hero.id).sort((a,b)=>dist(a)-dist(b)).slice(0,4);
   const name=esc(U?.name||t("friend"));
   const dchips=TAGS.map(k=>{ const p=PLACES.find(x=>x.tags[0]===k&&x.img)||PLACES.find(x=>x.tags.includes(k)&&x.img)||PLACES.find(x=>x.tags.includes(k)); return p?`<button class="dchip" onclick="openMood('${k}')">${ph(p)}<span>${clean(C[k])}</span></button>`:""; }).join("");
-  const cats=NEWCATS.map(k=>{ const p=PLACES.find(x=>x.tags[0]===k&&x.img)||PLACES.find(x=>x.tags.includes(k)&&x.img); const n=PLACES.filter(x=>x.tags.includes(k)).length; return p?ph(p,"catt",`<div class="ci"><b>${catIcon(k)}</b><small>${esc(clean(C[k]))} · ${n}</small></div>`,false,`onclick="openMood('${k}')"`):""; }).join("");
+  const cats=NEWCATS.map(k=>{ const p=PLACES.find(x=>x.tags[0]===k&&x.img)||PLACES.find(x=>x.tags.includes(k)&&x.img); const n=PLACES.filter(x=>x.tags.includes(k)).length; return p?ph(p,"catt",`<div class="ci"><b>${catIcon(k)}</b><small>${esc(clean(C[k]))}${n>=20?` · ${fmtN(n)}`:""}</small></div>`,false,`onclick="openMood('${k}')"`):""; }).join("");
   const popular=list.filter(p=>p.id!==hero.id).slice(0,8);
   $("#home").innerHTML=`
    <header class="hd"><div class="avatar" onclick="go('profile')">${esc((U?.name||"S")[0].toUpperCase())}</div>
@@ -558,7 +562,7 @@ function renderHome(){ if(LIFE) return renderLife(); if(SITE) return renderHomeS
      <button class="tile" onclick="openChat()"><i>${ICON.spark}</i>${t("t_ai")}</button>
      <button class="tile" onclick="openTrips()"><i>${ICON.bag}</i>${t("t_trips")}</button>
    </div>
-   ${(()=>{ const dp=dailyPlace(); return dp?`<div class="sec"><h2>${t("daily")}<small>${t("daily_sub")}</small></h2></div><div class="daily" onclick="go('watch','${dp.id}')">${SET.video?`<video src="${pexels(VID[dp.id][0])}" autoplay muted loop playsinline preload="metadata"></video>`:img(dp,true)}<div class="dci"><b>${esc(pN(dp))}</b><small>${PIN}${esc(pCountry(dp))}</small></div><span class="dpl">${ICON.play}</span></div>`:""; })()}
+   ${(()=>{ const dp=dailyPlace(); return dp?`<div class="sec"><h2>${t("daily")}<small>${t("daily_sub")}</small></h2></div><div class="daily" onclick="go('watch','${dp.id}')">${img(dp,true)}${SET.video&&VID[dp.id]?.length?`<video src="${pexels(VID[dp.id][0])}" autoplay muted loop playsinline preload="metadata" onplaying="this.classList.add('on')"></video>`:""}<div class="dci"><b>${esc(pN(dp))}</b><small>${PIN}${esc(pCountry(dp))}</small></div><span class="dpl">${ICON.play}</span></div>`:""; })()}
    <div class="sec"><h2>${t("dirs")}</h2><span onclick="openCats()">${t("all")}</span></div>
    <div class="dchips">${dchips}</div>
    <div class="sec"><h2>${t("ctry_h")}<small>${t("ctry_sub")}</small></h2><span onclick="openCountries()">${t("all")}</span></div>
@@ -593,7 +597,7 @@ function openMood(k){ LRN.t[k]=(LRN.t[k]||0)+1; ls.set("olam_learn",LRN); X.tag=
 /* ================= KATEGORIYALAR ================= */
 function openCats(){ const C=CAT(); const O=$("#catv"); O.classList.add("on"); O.scrollTop=0;
   const tile=k=>{ const p=PLACES.find(x=>x.tags[0]===k&&x.img)||PLACES.find(x=>x.tags.includes(k)&&x.img)||PLACES.find(x=>x.tags.includes(k)); const n=PLACES.filter(x=>x.tags.includes(k)).length;
-    return p?ph(p,"catt",`<div class="ci"><b>${catIcon(k)}</b><small>${esc(clean(C[k]))} · ${n}</small></div>`,false,`onclick="closeCats();openMood('${k}')"`):""; };
+    return p?ph(p,"catt",`<div class="ci"><b>${catIcon(k)}</b><small>${esc(clean(C[k]))}${n>=20?` · ${fmtN(n)}`:""}</small></div>`,false,`onclick="closeCats();openMood('${k}')"`):""; };
   const wp=byId("giza"); const WN=tl("won");
   O.innerHTML=`<button class="ovx" onclick="closeCats()">${ICON.down}</button><div class="seth"><h1>${t("cats_all")}</h1><p class="sp">${t("cats_pick")}</p></div>
    <div class="cats" style="padding:0">${wp?ph(wp,"catt",`<div class="ci"><b>${catIcon("wonder")}</b><small>${esc(clean(t("won_chip")))} · ${new Set(Object.values(WONDERS).flatMap(w=>w.ids)).size}</small></div>`,false,`onclick="closeCats();X.tag='wonder';X.q='';X.reg='all';go('explore')"`):""}${TAGS.map(tile).join("")}</div><div class="foot"></div>`; }
@@ -702,7 +706,7 @@ function renderExplore(){
   $("#explore").innerHTML=`<div class="xhead"><div class="row" style="justify-content:space-between;align-items:center;margin-bottom:14px"><h1 style="margin:0">${t("exp_h")}</h1><div class="row"><button class="pill o2" onclick="openCats()" aria-label="${esc(t("cats_all"))}">${ICON.filter}</button><button class="pill g" onclick="openAdd()">＋</button></div></div><label class="search">${ICON.search}<input id="xq" placeholder="${esc(t("exp_ph"))}" value="${esc(X.q)}" oninput="X.q=this.value;renderMas()"></label></div>
    <div class="chips"><button class="chip ${X.tag==="all"?"on":""}" onclick="X.tag='all';renderExplore()">${t("all")}</button><button class="chip ${X.tag==="wonder"?"on":""}" onclick="X.tag='wonder';renderExplore()">${t("won_chip")}</button>${TAGS.map(k=>`<button class="chip ${X.tag===k?"on":""}" onclick="X.tag='${k}';renderExplore()">${C[k]}</button>`).join("")}</div>
    <div class="chips" style="padding-top:0"><button class="chip ${X.reg==="all"?"on":""}" onclick="X.reg='all';renderExplore()">${t("whole")}</button>${REGS.map(k=>`<button class="chip ${X.reg===k?"on":""}" onclick="X.reg='${k}';renderExplore()">${R[k]}</button>`).join("")}</div>
-   <div class="ainote" style="margin-top:2px">${t("n_places",{n:forYou().filter(matchX).length})}</div>
+   <div class="ainote" style="margin-top:2px" id="xcount">${t("n_places",{n:fmtN(forYou().filter(matchX).length)})}</div>
    <div id="mas"></div><div id="wres"></div><div class="foot"></div>`;
   renderMas();
   const s=$("#explore .chips .chip.on"); if(s) s.scrollIntoView({inline:"center",block:"nearest"});
@@ -763,7 +767,7 @@ function renderSettings(){
    <div class="sgrp"><div class="sl">${t("s_speed")}</div>${seg("speed",[[1,t("sp1")],[2,t("sp2")],[3,t("sp3")]])}</div>
    <div class="sgrp"><div class="sl">${t("loc_q")}</div><button class="locb ${U?.lat!=null?"on":""}" onclick="locate(()=>renderSettings())">${ICON.locate}<span>${U?.lat!=null?t("loc_ok")+" · "+U.lat+", "+U.lon:t("loc_b")}</span></button></div>
    <div class="sgrp"><div class="sl">${t("s_prof")}</div><p class="sp">${esc(U?.name||"")} · ${esc(cname(U?.country||"UZ"))}</p><button class="pill o2 wide" onclick="closeSettings();startOb()">${t("edit")}</button></div>
-   <div class="sgrp"><div class="sl">${t("s_share")}</div><button class="pill o2 wide" onclick="shareApp()">${ICON.share} OLAM</button></div>${SITE?"":`<div class="sgrp"><a class="pill o2 wide" href="${HOME_URL}">${t("open_site")}</a></div>`}
+   <div class="sgrp"><div class="sl">${t("s_share")}</div><button class="pill o2 wide" onclick="shareApp()">${ICON.share} ${BRAND}</button></div>${SITE?"":`<div class="sgrp"><a class="pill o2 wide" href="${HOME_URL}">${t("open_site")}</a></div>`}
    <div class="sgrp"><div class="sl">${t("s_install")}</div><p class="sp">${t("install_t")}</p></div>
    <div class="sgrp"><div class="sl">${t("s_clear")}</div><div id="clr"><button class="pill o2 wide" onclick="askClear()">${t("clear_b")}</button></div></div>
    <div class="sgrp"><div class="sl">${t("s_about")}</div><p class="sp">${t("about_t")}</p><p class="sp">v3.0 · ${PLACES.filter(p=>!p.dyn||p.cat).length} ${t("places")}</p></div>
@@ -788,7 +792,7 @@ function applyLang(){ try{ ttsCheck(); }catch(e){} document.documentElement.lang
   document.querySelectorAll("[data-t]").forEach(e=>{ e.textContent=t(e.dataset.t); }); const lb=$("#tlang"); if(lb){ const L=LANGS.find(x=>x[0]===LANG); lb.innerHTML=catIcon("globe")+(LANG==="uzk"?"ЎЗ":LANG.toUpperCase()); } }
 function askClear(){ $("#clr").innerHTML=`<p class="sp">${t("clear_q")}</p><div class="row"><button class="pill g" onclick="clearData()">${t("yes")}</button><button class="pill o2" onclick="renderSettings()">${t("no")}</button></div>`; }
 function clearData(){ ["olam_saved","olam_liked","olam_learn","olam_aipick","olam_dyn"].forEach(k=>{ try{localStorage.removeItem(k)}catch(e){} }); saved.clear(); liked.clear(); LRN.t={}; LRN.r={}; LRN.v={}; AIP=null; toast(t("cleared")); renderSettings(); }
-async function shareApp(){ const url=location.href.split("#")[0]; try{ if(navigator.share){ await navigator.share({title:"OLAM",text:t("ob_sub"),url}); return; } await navigator.clipboard.writeText(url); toast(t("copied")); }catch(e){} }
+async function shareApp(){ const url=location.href.split("#")[0]; try{ if(navigator.share){ await navigator.share({title:BRAND,text:t("ob_sub"),url}); return; } await navigator.clipboard.writeText(url); toast(t("copied")); }catch(e){} }
 
 /* ================= TOMOSHA ================= */
 const W={list:[],i:0,t:null,paused:false,dur:9000,start:0,left:0};
@@ -797,7 +801,7 @@ function renderWatch(startId){
   W.list=forYou(); if(startId){ const i=W.list.findIndex(p=>p.id===startId); if(i>=0) W.list.unshift(...W.list.splice(i,1)); else if(byId(startId)) W.list.unshift(byId(startId)); } W.i=0;
   $("#watch").innerHTML=`<div class="layer" id="la"></div><div class="layer" id="lb"></div><video id="wv" playsinline muted loop></video><div class="wshade"></div>
    <div class="wbar"><i id="wbi"></i></div>
-   <div class="wtop"><div class="brand">OLAM</div><div class="wnext" id="wn"></div><button class="ib ${SET.vsound?"on":""}" id="wvs" onclick="vSound()" aria-label="Video">${SET.vsound?ICON.sound:ICON.mute}</button><button class="ib" onclick="openMusic()" id="wm" aria-label="Music"></button></div>
+   <div class="wtop"><div class="brand">${LOGO("w")}</div><div class="wnext" id="wn"></div><button class="ib ${SET.vsound?"on":""}" id="wvs" onclick="vSound()" aria-label="Video">${SET.vsound?ICON.sound:ICON.mute}</button><button class="ib" onclick="openMusic()" id="wm" aria-label="Music"></button></div>
    <button class="wnav wpv" onclick="wGo(-1)" aria-label="prev"><svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg></button><button class="wnav wnx" onclick="wGo(1)" aria-label="next"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button>
    <div class="wtap" id="wtap"></div><div class="paused" id="wp"><div>${ICON.pause}</div></div><div class="hint" id="wh">${t("hint")}</div>
    <div class="wtxt" id="wt"></div><div class="wfact" id="wf"></div>
@@ -852,7 +856,7 @@ document.addEventListener("visibilitychange",()=>{ if(document.hidden&&cur==="wa
 
 /* ================= JOY SAHIFASI ================= */
 async function openPlace(id){
-  const p=byId(id), DD=$("#detail"); if(!p) return; dynKeep(p); learn(id,1); document.title=pN(p)+" — "+(LIFE?t("life_brand"):"OLAM"); try{ history.replaceState(null,"",placeUrl(id)); }catch(e){} if(PDW&&PDW.id!==id){ const dt=(Date.now()-PDW.t)/1000; learn(PDW.id,dt>90?3:dt>30?1.5:dt>12?0.5:0); } PDW={id,t:Date.now()};
+  const p=byId(id), DD=$("#detail"); if(!p) return; dynKeep(p); learn(id,1); document.title=pN(p)+" — "+BRAND; try{ history.replaceState(null,"",placeUrl(id)); }catch(e){} if(PDW&&PDW.id!==id){ const dt=(Date.now()-PDW.t)/1000; learn(PDW.id,dt>90?3:dt>30?1.5:dt>12?0.5:0); } PDW={id,t:Date.now()};
   if(cur==="watch"&&!W.paused) wPause();
   const others=p.animal?shuffle(PLACES.filter(x=>x.animal&&x.id!==id&&x.grp===p.grp&&x.img)).slice(0,10):PLACES.filter(x=>x.id!==id&&(!x.dyn||x.keep)&&!x.animal).map(x=>({x,s:x.tags.filter(y=>p.tags.includes(y)).length*2+(x.reg===p.reg?1:0)+score(x)/10})).sort((a,b)=>b.s-a.s).slice(0,10).map(o=>o.x);
   const C=CAT(), R=REGN(), WN=tl("won"), desc=pDesc(p);
@@ -861,11 +865,11 @@ async function openPlace(id){
      <div class="gtop"><div class="cnt" id="gc" style="display:none"></div><button class="gsnd ${SET.music?"on":""}" id="gsnd" onclick="placeSound()" aria-label="Music">${SET.music?ICON.music:ICON.mute}</button></div>
      <button class="gnav gp" onclick="galStep(-1)" aria-label="prev"><svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg></button><button class="gnav gn" onclick="galStep(1)" aria-label="next"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button>
      <div class="gdots" id="gdots"></div></div>
-   <div class="dt">${p.user?`<div class="wbadge">${t("ap_user")}</div>`:""}${wondersOf(p.id).map(w=>`<div class="wbadge">${WN[w][0]}</div>`).join("")}<div class="kicker">${p.tags.map(x=>C[x]?clean(C[x]):"").filter(Boolean).join(" · ")}</div><h1>${esc(pN(p))}</h1><div class="loc"><span>${PIN}${esc(pC(p))}</span><span class="r">${rate(p)}</span></div></div>
+   <div class="dt">${p.user?`<div class="wbadge">${t("ap_user")}</div>`:""}${wondersOf(p.id).map(w=>`<div class="wbadge">${WN[w][0]}</div>`).join("")}<div class="kicker">${p.tags.slice(0,3).map(x=>C[x]?clean(C[x]):"").filter(Boolean).join(" · ")}</div><h1>${esc(pN(p))}</h1><div class="loc"><span>${PIN}${esc(pC(p))}</span><span class="r">${rate(p)}</span></div></div>
    <div class="db">
      <div class="row"><button class="pill g" onclick="closePlace();go('watch','${p.id}')">${ICON.play} ${t("b_watch")}</button>
        ${p.animal?"":`<button class="pill o" onclick="closePlace();openMap('${p.id}')">${ICON.pin}<span>${clean(t("b_map"))}</span></button>`}
-       ${p.animal?"":`<button class="pill o" onclick="tripAdd('${p.id}')" aria-label="${esc(t("trip_add"))}">${ICON.bag}</button>`}
+       ${p.animal?"":`<button class="pill o tripb" onclick="tripAdd('${p.id}')" aria-label="${esc(clean(t("trip_add")))}" title="${esc(clean(t("trip_add")))}">${ICON.bag}<span class="tbl">${esc(clean(t("t_trips")))}</span></button>`}
        <button class="pill o sv ${saved.has(p.id)?"on":""}" onclick="save('${p.id}');this.classList.toggle('on',saved.has('${p.id}'));this.querySelector('span').textContent=clean(saved.has('${p.id}')?t('b_saved'):t('b_save'))">${ICON.save}<span>${clean(saved.has(p.id)?t("b_saved"):t("b_save"))}</span></button></div>
      <button class="ask" onclick="openChat('${p.id}')">${ICON.spark}<span>${clean(t("ask_guide"))}</span></button>
      <button class="pill o2" style="width:100%;margin-top:8px" onclick="openComments('${p.id}')">${ICON.chat}<span>${clean(t("cm_btn"))}</span></button>
@@ -908,7 +912,7 @@ async function galBuild(p){
   G.slides=slides; const bg=p.img?big(p.img):"";
   const el=$("#gal");
   el.innerHTML=slides.map((x,k)=>x.v
-    ?`<div class="gs vs" style="--bgimg:url('${bg}')"><video src="${x.v}" muted playsinline preload="${k===0?"auto":"metadata"}" ${slides.length===1?"loop":""} onloadedmetadata="galFit(this)"></video></div>`
+    ?`<div class="gs vs" style="--bgimg:url('${bg}');background:url('${bg}') center/cover,${grad(p)}"><video src="${x.v}" muted playsinline preload="${k===0?"auto":"metadata"}" ${slides.length===1?"loop":""} onloadedmetadata="galFit(this)"></video></div>`
     :`<div class="gs ph" style="background:url('${sm(x.i)}') center/cover,${grad(p)};--bgimg:url('${sm(x.i)}')"><img src="${x.i}" alt="" ${k>1?'loading="lazy"':""} decoding="async" onload="galFit(this)" onerror="const d=down(this.src);if(d){this.src=d}else{${FB}}"></div>`).join("");
   $("#gdots").innerHTML=slides.length>1?slides.map((x,k)=>`<button class="${x.v?"v":""}" onclick="galStep(${k},1)" aria-label="${k+1}"></button>`).join(""):"";
   $("#detail .dg").classList.toggle("multi",slides.length>1);
@@ -1129,7 +1133,7 @@ function openChat(id){
   const vp=p&&VID[p.id]?.length?p:forYou().find(x=>VID[x.id]?.length);
   $("#chat").innerHTML=`<div class="chh"><button class="x" onclick="closeChat()">${ICON.down}</button>
      <div><b>${t("guide")}</b><small>${p?esc(t("about_p",{p:pN(p)})):t("any_q")}</small></div></div>
-   ${vp&&SET.video?`<div class="chv"><video src="${pexels(VID[vp.id][0])}" autoplay muted loop playsinline></video><div class="chvt">${PIN}${esc(pN(vp))}</div></div>`:""}
+   ${vp&&SET.video?`<div class="chv" style="background:${vp.img?`url('${big(vp.img)}') center/cover,`:""}${grad(vp)}"><video src="${pexels(VID[vp.id][0])}" autoplay muted loop playsinline></video><div class="chvt">${PIN}${esc(pN(vp))}</div></div>`:""}
    <div class="msgs" id="msgs"></div>
    <div class="sugg">${sug.map(s=>`<button onclick="chatSend(this.textContent)">${esc(s)}</button>`).join("")}</div>
    <div class="cqr" id="cqr" hidden></div>
@@ -1144,7 +1148,7 @@ function drawMsgs(){
 }
 function placeCards(text){ const low=" "+String(text).toLowerCase()+" "; const out=[];
   for(const p of PLACES){ if(p.dyn&&!p.keep&&!(LIFE&&p.animal)) continue; if(LIFE&&!p.animal) continue; const ns=[pN(p),p.n,(p.nt||p.t).replace(/_/g," ").replace(/\s*\(.*?\)/g,""),LZ[p.id]?.n].filter(x=>x&&x.length>=4).map(x=>x.toLowerCase());
-    if(ns.some(n=>low.includes(n))&&!out.includes(p)) out.push(p); if(out.length>=6) break; }
+    if(ns.some(n=>{ const i=low.indexOf(n); if(i<0) return false; return new RegExp("(^|[^\\p{L}\\p{N}'ʻ’])"+n.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"($|[^\\p{L}\\p{N}])","u").test(low); })&&!out.includes(p)) out.push(p); if(out.length>=6) break; }
   return out.length?`<div class="pcards">${out.map(p=>`<div class="pcard" onclick="chatPlace('${p.id}')">${ph(p)}<div><b>${esc(pN(p))}</b><small>${t("open_app")}</small></div></div>`).join("")}</div>`:""; }
 const reqUser=()=>({name:U?.name,country:cname(U?.country||"UZ"),interests:userCtx()});
 /* ===== Gidga "reply": matn, bo'lim yoki faktni iqtibos qilib savol berish ===== */
@@ -1217,7 +1221,7 @@ async function chatSend(text){
   let ans, found=null;
   try{ found=await findPlaces(text); }catch(e){}
   try{ const p=CH.place?byId(CH.place):null;
-    const msgs=CH.msgs.slice(-10).map(m=>({role:m.role,text:m.quote?`[The user quotes this text from the OLAM app${p?" about "+pN(p):""}: "${m.quote}"]\n${m.text}`:m.text}));
+    const msgs=CH.msgs.slice(-10).map(m=>({role:m.role,text:m.quote?`[The user quotes this text from the ${BRAND} app${p?" about "+pN(p):""}: "${m.quote}"]\n${m.text}`:m.text}));
     const style="\n\n[Style: reply in the user's language, warm and friendly, with fitting emojis 🌍✨, short paragraphs or a short list, exact place names.]";
     const ctx=found&&found.length?(LIFE?`\n[Items found in this app for the request (shown to the user as tappable cards): ${found.map(x=>pN(x)+" — "+(pS(x)||grpName(x))).join("; ")}. Recommend from these first, writing their names exactly as given, one line each with an emoji; you may add brief general advice.]`:`\n[Places found in the OLAM app for this request (they are shown to the user as cards): ${found.map(x=>pN(x)+" ("+pCountry(x)+")").join("; ")}. Describe each one in one line with an emoji, in the same order. Do not invent other places.]`):"";
     msgs[msgs.length-1].text+=ctx+style;
@@ -1284,16 +1288,23 @@ async function openMap(focus){
     MAP=Lf.map("mapc",{zoomControl:false,worldCopyJump:true,minZoom:2}).setView([30,40],2);
     Lf.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",{attribution:'&copy; OpenStreetMap, &copy; CARTO',subdomains:"abcd",maxZoom:18}).addTo(MAP);
     const setZ=()=>{ $("#mapc").dataset.z=Math.min(6,MAP.getZoom()); }; MAP.on("zoomend",setZ); setZ();
-    MAP._mk=new Set();
-    MAP.addPin=p=>{ if(p.lat==null||MAP._mk.has(p.id)) return; MAP._mk.add(p.id);
-      const ic=Lf.divIcon({className:"",html:`<div class="mkw"><div class="mk ${p.dyn?"dy":""}" style="background:${grad(p)}">${p.img?`<img src="${thumb(p)}" alt="" loading="lazy" onerror="this.remove()">`:""}</div></div>`,iconSize:[44,44],iconAnchor:[22,22]});
-      Lf.marker([p.lat,p.lon],{icon:ic}).addTo(MAP).on("click",()=>mapPick(p.id)); };
-    PLACES.filter(p=>!p.dyn||(p.keep&&!p.cat)||(p.cat&&p.sl>=70)).forEach(MAP.addPin);
-    let nt; MAP.on("moveend",()=>{ clearTimeout(nt); const z=MAP.getZoom(), hint=$("#maphint"); if(z>=4){ const bb=MAP.getBounds(); PLACES.filter(p=>p.cat&&!MAP._mk.has(p.id)&&bb.contains([p.lat,p.lon])).slice(0,300).forEach(MAP.addPin); }
+    // belgilar ustma-ust tushmasin: har bir kichik katakda faqat eng mashhur joy; yaqinlashtirilganda ko'proq
+    MAP._wmAll=new Map(); MAP._wmOn=new Map();
+    const pri=p=>(saved.has(p.id)?1e6:0)+(p.dyn?0:1e5)+(p.sl||0);
+    const mkr=p=>Lf.marker([p.lat,p.lon],{icon:Lf.divIcon({className:"",html:`<div class="mkw"><div class="mk ${p.dyn?"dy":""}" style="background:${grad(p)}">${p.img?`<img src="${thumb(p)}" alt="" loading="lazy" onerror="this.remove()">`:""}</div></div>`,iconSize:[44,44],iconAnchor:[22,22]})}).addTo(MAP).on("click",()=>mapPick(p.id));
+    MAP.redraw=()=>{ const z=MAP.getZoom(), bb=MAP.getBounds().pad(0.25), cell=z>=12?46:56, seen=new Set(), keep=new Set();
+      const cand=[...MAP._wmAll.values()].filter(p=>bb.contains([p.lat,p.lon])).sort((a,b)=>pri(b)-pri(a));
+      for(const p of cand){ const pt=MAP.project([p.lat,p.lon],z), k=Math.floor(pt.x/cell)+","+Math.floor(pt.y/cell); if(seen.has(k)) continue; seen.add(k); keep.add(p.id); if(keep.size>=350) break; }
+      for(const [id,m] of MAP._wmOn) if(!keep.has(id)){ m.remove(); MAP._wmOn.delete(id); }
+      for(const id of keep) if(!MAP._wmOn.has(id)) MAP._wmOn.set(id,mkr(MAP._wmAll.get(id))); };
+    MAP.addPin=p=>{ if(p.lat!=null&&!MAP._wmAll.has(p.id)) MAP._wmAll.set(p.id,p); };
+    PLACES.forEach(MAP.addPin); MAP.redraw();
+    let nt, rt; MAP.on("moveend",()=>{ clearTimeout(nt); clearTimeout(rt); rt=setTimeout(MAP.redraw,60); const z=MAP.getZoom(), hint=$("#maphint");
       if(z<9){ if(hint) hint.textContent=t("zoom"); return; }
       if(hint) hint.textContent=t("area_load");
-      nt=setTimeout(async()=>{ const c=MAP.getCenter(); let r=[]; try{ r=await worldNear(c.lat.toFixed(4),c.lng.toFixed(4)); }catch(e){} r.forEach(MAP.addPin); if(hint) hint.textContent=r.length?t("area_n",{n:r.length}):t("area_0"); },500); });
+      nt=setTimeout(async()=>{ const c=MAP.getCenter(); let r=[]; try{ r=await worldNear(c.lat.toFixed(4),c.lng.toFixed(4)); }catch(e){} r.forEach(MAP.addPin); MAP.redraw(); if(hint) hint.textContent=r.length?t("area_n",{n:r.length}):t("area_0"); },500); });
   }
+  else { PLACES.forEach(MAP.addPin); MAP.redraw(); }
   setTimeout(()=>MAP.invalidateSize(),60);
   if(focus){ const p=byId(focus); if(p?.lat!=null){ MAP.setView([p.lat,p.lon],6); mapPick(focus); } }
 }
@@ -1387,7 +1398,7 @@ function wdCompact(r,code,reg){
   return [r.item.value.split("/").pop(),label,r.en?.value||"",r.loc?.value||"",r.itemDescription?.value||"",file,+(+m[2]).toFixed(5),+(+m[1]).toFixed(5),r.cls.value.split("/").pop(),+r.sl.value,code,reg==="uz"&&code!=="UZ"?"osiyo":reg];
 }
 function mkPlace(c,lang,cat){
-  const [qid,label,en,loc,desc,file,lat,lon,cls,sl,code,reg]=c; const id="q"+qid;
+  const [qid,label,en,loc,desc,file,lat,lon,cls,sl,code,reg0]=c, reg=REGFIX[code]||reg0; const id="q"+qid;
   if(IDX[id]){ if(cat){ IDX[id].keep=1; IDX[id].cat=1; } return IDX[id]; }
   let tags=[...(WDT[cls]||[])]; if(!tags.length) tags=guessTags(label+" "+desc+" "+en); if(cls==="Q9259"&&!tags.includes("tarix")) tags.push("tarix");
   const wl=loc?lang:"en", title=loc||en;
@@ -1431,6 +1442,8 @@ function renderCountry(){ const C=CAT(); const all=CT.list; if(!$("#ctb")) retur
 /* ================= DUNYO KATALOGI — ilovaga oldindan qo'shilgan ~3000+ joy =================
    Joylar GitHub'da har oy yig'iladi (scripts/build-catalog.mjs) va assets/catalog/<til>.json sifatida
    ilova bilan birga keladi. Foydalanuvchi qurilmasida alohida saqlanmaydi. */
+const REGFIX=(()=>{ const m={}; [["yevropa","AL AD AT BY BE BA BG HR CY CZ DK EE FI FR DE GR HU IS IE IT XK LV LI LT LU MT MD MC ME NL MK NO PL PT RO RU SM RS SK SI ES SE CH UA GB VA"],["amerika","AG AR BS BB BZ BO BR CA CL CO CR CU DM DO EC SV GD GT GY HT HN JM MX NI PA PY PE KN LC VC SR TT US UY VE"],["afrika","DZ AO BJ BW BF BI CV CM CF TD KM CG CD CI DJ EG GQ ER SZ ET GA GM GH GN GW KE LS LR LY MG MW ML MR MU MA MZ NA NE NG RW ST SN SC SL SO ZA SS SD TZ TG TN UG ZM ZW SA AE QA OM YE JO IL PS LB SY IQ KW BH"],["okeaniya","AU NZ PG FJ SB VU WS TO TV KI NR PW FM MH"]].forEach(([r,l])=>l.split(" ").forEach(c=>m[c]=r)); m.UZ="uz"; return m; })();   // davlat → mintaqa (aniq ro'yxat)
+CTRY.forEach(x=>{ if(REGFIX[x[0]]) x[2]=REGFIX[x[0]]; });
 const WC={busy:false,n:0};
 const catLang=()=>{ const l=WL(LANG); return l==="uzk"?"uz":l; };
 let ALLC=null;   // barcha mustaqil davlatlar: [ISO, QID, mintaqa]
@@ -1440,15 +1453,16 @@ function catDup(c){ if(!CURD) CURD={t:new Set(PLACES.filter(p=>!p.dyn).map(p=>(p
   if(c[2]&&CURD.t.has(c[2].toLowerCase())) return true;
   const k=Math.cos(c[6]*Math.PI/180); return CURD.g.some(p=>{ const dx=(p.lon-c[7])*k, dy=p.lat-c[6]; return dx*dx+dy*dy<1.6e-5; }); }   // ~450 m
 function catReset(){ for(let i=PLACES.length-1;i>=0;i--){ const p=PLACES[i]; if((p.cat||(p.animal&&p.dyn))&&!saved.has(p.id)){ delete IDX[p.id]; PLACES.splice(i,1); } } WC.n=0; }
-function catTxt(){ return WC.busy?t("ctry_load"):t("cat_st",{n:WC.n}); }
-function catUI(){ const N=PLACES.filter(p=>!p.dyn||p.cat).length; const h=$("#hN"); if(h) h.textContent=N+"+"; const s=$("#wcst"); if(s) s.textContent=catTxt(); }
+function catTxt(){ return WC.busy?t("ctry_load"):t("cat_st",{n:fmtN(WC.total||WC.n)}); }
+const fmtN=n=>String(n).replace(/\B(?=(\d{3})+(?!\d))/g,"\u00a0");
+function catUI(){ const N=Math.max(PLACES.filter(p=>!p.dyn||p.cat).length,WC.total||0); const h=$("#hN"); if(h) h.textContent=fmtN(N)+"+"; const c=$("#hC"); if(c) c.textContent=WC.nc||(ALLC||CTRY).length; const s=$("#wcst"); if(s) s.textContent=catTxt(); }
 async function catLoad(){
   if(WC.busy||LIFE) return; WC.busy=true; const lang=catLang();
   try{
     let r=await fetch("assets/catalog/"+lang+".json"); if(!r.ok&&lang!=="en") r=await fetch("assets/catalog/en.json");
     if(r.ok){ const d=await r.json(); if(lang===catLang()){
-      if(Array.isArray(d.countries)&&d.countries.length){ const known=new Set(CTRY.map(x=>x[0])); ALLC=[...CTRY,...d.countries.filter(x=>!known.has(x[0]))]; }
-      (d.items||[]).forEach(c=>{ if(!catDup(c)) mkPlace(c,lang,true); }); } }
+      if(Array.isArray(d.countries)&&d.countries.length){ const known=new Set(CTRY.map(x=>x[0])); ALLC=[...CTRY,...d.countries.filter(x=>!known.has(x[0])).map(x=>[x[0],x[1],REGFIX[x[0]]||x[2]])]; }
+      WC.total=d.total||0; WC.nc=(d.countries||[]).length; (d.items||[]).forEach(c=>{ if(!catDup(c)) mkPlace(c,lang,true); }); } }
   }catch(e){}
   WC.busy=false; WC.n=PLACES.filter(p=>p.cat).length; refresh(); catUI(); tryQP();
 }
@@ -1540,14 +1554,14 @@ function renderLife(){
           <div class="hbtns"><button class="hbtn" onclick="go('watch')">${t("watch_now")}<span class="arw">${ICON.arrow}</span></button><button class="hbtn gl" onclick="openQuiz()">${t("quiz_h")}</button></div></div>
          <div class="hpanel"><form class="hsearch" onsubmit="event.preventDefault();X.q=this.q.value;X.tag='all';go('explore')">${ICON.search}<input name="q" placeholder="${esc(t("life_ph"))}" autocomplete="off"><button>${t("search_b")}</button></form>
           <div class="hchips">${groups.slice(0,8).map(g=>`<button onclick="X.tag='${g}';X.q='';X.n=0;go('explore')">${t("g_"+g)}</button>`).join("")}</div></div></div>
-        <div class="hfoot"><div class="hstat"><i>${CATI.zoo?SV(CATI.zoo):""}</i><b id="hN">${Math.max(all.length,LIFEG.total||0)}+</b><small>${t("life_n")}</small></div><div class="hstat"><i>${SV(CATI.tabiat)}</i><b>${groups.length}</b><small>${t("life_g")}</small></div><div class="hstat"><i>${ICON.spark}</i><b>AI</b><small>${t("t_ai")}</small></div>
+        <div class="hfoot"><div class="hstat"><i>${CATI.zoo?SV(CATI.zoo):""}</i><b id="hN">${fmtN(Math.max(all.length,LIFEG.total||0))}+</b><small>${t("life_n")}</small></div><div class="hstat"><i>${SV(CATI.tabiat)}</i><b>${groups.length}</b><small>${t("life_g")}</small></div><div class="hstat"><i>${ICON.spark}</i><b>AI</b><small>${t("t_ai")}</small></div>
          ${d?`<div class="hday" onclick="openPlace('${d.id}')"><div><small>${t("life_day")}</small><b>${esc(pN(d))}</b></div><span class="arw">${ICON.arrow}</span></div>`:""}</div></section><div id="hbody"></div>`;
       HB.pool=null; clearInterval(HB.timer); heroNext(); HB.timer=setInterval(()=>{ if(!document.hidden) heroNext(); },10000); }
-    $("#hN")&&($("#hN").textContent=Math.max(all.length,LIFEG.total||0)+"+");
+    $("#hN")&&($("#hN").textContent=fmtN(Math.max(all.length,LIFEG.total||0))+"+");
     $("#hbody").innerHTML=`<div class="sec"><div><span class="slabel">${t("life_g")}</span><h2>${t("life_sub2")}</h2></div></div><div class="dchips">${chips}</div>
       <div class="sec"><div><span class="slabel">${t("life_day")}</span><h2>${d?esc(pN(d)):""}</h2></div></div><div class="sfeat"><div style="grid-column:1/-1">${dayCard}</div></div>
       ${recsHTML()}<div class="sec"><div><span class="slabel">${t("for_you_f")}</span><h2>${t("best_h")}</h2></div><span onclick="X.tag='all';go('explore')">${t("all")} →</span></div><div class="grid2">${top.map(gcard).join("")}</div>
-      ${rows}<footer class="sfooter"><div><div class="logo dark"><i>T</i>${t("life_brand")}</div><p>${t("life_sub")}</p></div><div><h4>${t("life_brand")}</h4><button onclick="go('explore')">${clean(t("nav_exp"))}</button><button onclick="go('watch')">${clean(t("nav_watch"))}</button><button onclick="openQuiz()">${t("quiz_h")}</button><a href="./">OLAM</a></div><div><h4>${clean(t("s_lang"))}</h4>${LANGS.slice(0,6).map(([k,n])=>`<button onclick="setLang('${k}')">${n}</button>`).join("")}<a href="${APP_URL}">${t("get_app")}</a></div><div class="copy"><span>© ${new Date().getFullYear()} ${t("life_brand")}</span><span>Wikipedia · Wikidata · Wikimedia Commons</span></div></footer>`;
+      ${rows}<footer class="sfooter"><div>${LOGO("dark")}<p>${t("life_sub")}</p></div><div><h4>${t("life_brand")}</h4><button onclick="go('explore')">${clean(t("nav_exp"))}</button><button onclick="go('watch')">${clean(t("nav_watch"))}</button><button onclick="openQuiz()">${t("quiz_h")}</button><a href="./">OLAM</a></div><div><h4>${clean(t("s_lang"))}</h4>${LANGS.slice(0,6).map(([k,n])=>`<button onclick="setLang('${k}')">${n}</button>`).join("")}<a href="${APP_URL}">${t("get_app")}</a></div><div class="copy"><span>© ${new Date().getFullYear()} ${t("life_brand")}</span><span>Wikipedia · Wikidata · Wikimedia Commons</span></div></footer>`;
     return; }
   H.innerHTML=`<header class="hd"><div class="avatar" onclick="go('profile')">${esc((U?.name||"S")[0].toUpperCase())}</div><div class="hdt"><small>${t("life_brand")}</small><b>${t("hello",{name})}</b></div>
      <button class="ibtn" aria-label="${esc(t("settings"))}" onclick="openSettings()">${ICON.gear}</button></header>
@@ -1580,24 +1594,24 @@ function renderHomeSite(){ setTimeout(fillAIPicks,0);
   const H=$("#home"), C=CAT(), R=REGN(), PR=PER(), N=PLACES.filter(p=>!p.dyn||p.cat).length;
   if(!$("#shero")||H.dataset.l!==LANG){ H.dataset.l=LANG;
     H.innerHTML=`<section class="shero" id="shero"><div class="bgl" id="hbA"></div><div class="bgl" id="hbB"></div><video id="hbV" muted playsinline loop preload="none"></video>
-      <div class="bigw" aria-hidden="true">OLAM</div><button class="hcap" id="hcap"></button>
+      <div class="bigw" aria-hidden="true">Wonderly</div><button class="hcap" id="hcap"></button>
       <div class="hgrid"><div><span class="hkick"><i></i>${esc(t("hd_sub"))}</span><h1 class="htitle">${t("ob_h1")}</h1><p class="hsub">${t("ob_sub")}</p>
         <div class="hbtns"><button class="hbtn" onclick="go('watch')">${t("watch_now")}<span class="arw">${ICON.arrow}</span></button><button class="hbtn gl" onclick="openMap()">${clean(t("map_h"))}</button></div></div>
        <div class="hpanel"><form class="hsearch" onsubmit="event.preventDefault();heroSearch(this.q.value)">${ICON.search}<input name="q" placeholder="${esc(t("search_home"))}" autocomplete="off"><button>${t("search_b")}</button></form>
         <div class="hchips">${["dengiz","tog","tarix","islom","sharshara","shahar"].map(k=>`<button onclick="openMood('${k}')">${C[k]}</button>`).join("")}</div></div></div>
-      <div class="hfoot"><div class="hstat"><i>${ICON.pin}</i><b id="hN">${N}+</b><small>${t("places")}</small></div><div class="hstat"><i>${ICON.map}</i><b>${(ALLC||CTRY).length}</b><small>${t("st_ctry")}</small></div><div class="hstat"><i><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></i><b>${LANGS.length}</b><small>${t("st_lang")}</small></div><div class="hstat"><i>${ICON.spark}</i><b>AI</b><small>${t("t_ai")}</small></div>
+      <div class="hfoot"><div class="hstat"><i>${ICON.pin}</i><b id="hN">${fmtN(Math.max(N,WC.total||0))}+</b><small>${t("places")}</small></div><div class="hstat"><i>${ICON.map}</i><b id="hC">${WC.nc||(ALLC||CTRY).length}</b><small>${t("st_ctry")}</small></div><div class="hstat"><i><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></i><b>${LANGS.length}</b><small>${t("st_lang")}</small></div><div class="hstat"><i>${ICON.spark}</i><b>AI</b><small>${t("t_ai")}</small></div>
        ${(()=>{ const dp=dailyPlace(); return dp?`<div class="hday" onclick="go('watch','${dp.id}')"><div><small>${t("daily")}</small><b>${esc(pN(dp))} · ${esc(pCountry(dp))}</b></div><span class="arw">${ICON.play}</span></div>`:""; })()}</div>
       <div class="hscroll" aria-hidden="true"></div></section><div id="hbody"></div>`;
     HB.pool=null; clearInterval(HB.timer); heroNext(); HB.timer=setInterval(()=>{ if(!document.hidden) heroNext(); },10000);
   }
   const list=forYou(), hero=(U?.dream&&byId(U.dream))||list[0];
   const dirs=TAGS.map(k=>{ const p=PLACES.find(x=>x.tags[0]===k&&x.img)||PLACES.find(x=>x.tags.includes(k)&&x.img)||PLACES.find(x=>x.tags.includes(k)); return p?`<button onclick="openMood('${k}')">${ph(p)}${clean(C[k])}</button>`:""; }).join("");
-  const cats=NEWCATS.map(k=>{ const p=PLACES.find(x=>x.tags[0]===k&&x.img)||PLACES.find(x=>x.tags.includes(k)&&x.img)||PLACES.find(x=>x.tags.includes(k)); const n=PLACES.filter(x=>x.tags.includes(k)).length; return p?ph(p,"catt",`<div class="ci"><b>${catIcon(k)}</b><small>${esc(clean(C[k]))} · ${n}</small></div>`,false,`onclick="openMood('${k}')"`):""; }).join("");
+  const cats=NEWCATS.map(k=>{ const p=PLACES.find(x=>x.tags[0]===k&&x.img)||PLACES.find(x=>x.tags.includes(k)&&x.img)||PLACES.find(x=>x.tags.includes(k)); const n=PLACES.filter(x=>x.tags.includes(k)).length; return p?ph(p,"catt",`<div class="ci"><b>${catIcon(k)}</b><small>${esc(clean(C[k]))}${n>=20?` · ${fmtN(n)}`:""}</small></div>`,false,`onclick="openMood('${k}')"`):""; }).join("");
   const dcard=(p,cls="")=>`<div class="dcard ${cls}" onclick="openPlace('${p.id}')">${ph(p,"","",true)}<span class="dtag">${STAR}${rate(p)}</span><span class="arw">${ICON.arrow}</span><div class="dci2"><b>${esc(pN(p))}</b><small>${PIN}${esc(pCountry(p))}</small></div></div>`;
   const top=(l=>l.length>=7?l:list.filter(p=>p.id!==hero.id))(list.filter(p=>p.id!==hero.id&&p.img)).slice(0,7);
   const dp=dailyPlace();
   $("#hbody").innerHTML=`
-   <div class="sec"><div><span class="slabel">${t("dirs")}</span><h2>${t("cats_sub")}</h2></div><span onclick="openCats()">${t("all")} →</span></div>
+   <div class="sec"><div><span class="slabel">${t("dirs")}</span><h2>${t("cats_h")}</h2><small>${t("cats_sub")}</small></div><span onclick="openCats()">${t("all")} →</span></div>
    <div class="dirs">${dirs}</div>
    <div class="sec"><div><span class="slabel">${U?.dream===hero.id?t("dream_place"):t("today")}</span><h2>${t("best_h")}</h2><small>${PR[topTags(1)[0]]||t("based")}</small></div><span onclick="go('explore')">${t("all")} →</span></div>
    <div class="dgrid">${top.map((p,i)=>dcard(p,i===0?"big":"")).join("")}</div>
@@ -1608,7 +1622,7 @@ function renderHomeSite(){ setTimeout(fillAIPicks,0);
       <div class="aipick"><div class="aiph" id="aisec">${clean(t("ai_rec"))}<span onclick="openChat()">${t("ask")} →</span></div><div id="aipick"><div class="ld">${t("ai_loading")}</div></div></div></div></div>
    <div class="sec"><div><span class="slabel">${catIcon("globe")}${t("ctry_h")}</span><h2>${t("ctry_sub")}</h2></div><span onclick="openCountries()">${t("all")} · ${CTRY.length} →</span></div>
    <div class="chips" style="padding-top:0">${ctryChips()}</div>
-   <div class="sec"><div><span class="slabel">${t("cats_h")}</span><h2>${t("cats_sub")}</h2></div><span onclick="openCats()">${t("all")} →</span></div>
+   <div class="sec"><div><span class="slabel">${t("dirs")}</span><h2>${t("cats_h")}</h2><small>${t("cats_sub")}</small></div><span onclick="openCats()">${t("all")} →</span></div>
    <div class="cats">${cats}</div>
    <div class="sec"><div><span class="slabel">${catIcon("wonder")}${clean(t("won_chip"))}</span><h2>${t("won_h")}</h2><small>${t("won_sub")}</small></div><span onclick="X.tag='wonder';X.q='';X.reg='all';go('explore')">${t("all")} →</span></div>
    <div id="wond">${wondersHTML()}</div>
@@ -1616,15 +1630,15 @@ function renderHomeSite(){ setTimeout(fillAIPicks,0);
    ${animalsRow()}
    <div class="sec"><div><span class="slabel">${t("for_you_f")}</span><h2>${t("best_h")}</h2></div><span onclick="go('explore')">${t("all")} →</span></div>
    <div class="grid2">${list.filter(p=>p.id!==hero.id).slice(7,19).map(gcard).join("")}</div>
-   <div class="sec"><div><span class="slabel">${catIcon("globe")}OLAM</span><h2>${clean(t("world_h"))}</h2><small>${t("world_sub")}</small></div><span onclick="go('explore');setTimeout(()=>$('#xq')?.focus(),60)">${t("search_b")} →</span></div>
+   <div class="sec"><div><span class="slabel">${catIcon("globe")}Wonderly</span><h2>${clean(t("world_h"))}</h2><small>${t("world_sub")}</small></div><span onclick="go('explore');setTimeout(()=>$('#xq')?.focus(),60)">${t("search_b")} →</span></div>
    ${["yevropa","osiyo","amerika","afrika","okeaniya","uz"].map(r=>{ const l=list.filter(p=>p.reg===r).slice(0,14); return `<div class="sec" style="padding-top:18px;padding-bottom:12px"><h2 style="font-size:20px;letter-spacing:-.4px">${R[r]}</h2><span onclick="X.reg='${r}';X.tag='all';go('explore')">${PLACES.filter(p=>p.reg===r).length} ${t("places")} →</span></div><div class="hs">${l.map(p=>cardH(p,"sm")).join("")}</div>`; }).join("")}
-   <section class="sapp"><div><span class="slabel" style="background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.3);color:#fff">OLAM App</span><h2>${t("app_h")}</h2><p>${t("app_p")}</p>
+   <section class="sapp"><div><span class="slabel" style="background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.3);color:#fff">${BRAND}</span><h2>${t("app_h")}</h2><p>${t("app_p")}</p>
      <div class="hbtns"><a class="hbtn" href="${APP_URL}">${t("get_app")}<span class="arw">${ICON.arrow}</span></a><button class="hbtn gl" onclick="shareApp()">${clean(t("s_share"))}</button></div></div>
      <div class="phone ph" style="position:relative">${hero.img?ph(hero,"","",true):""}<div class="pui"><b>${esc(pN(hero))}</b>${PIN}${esc(pCountry(hero))}</div></div></section>
-   <footer class="sfooter"><div><div class="logo dark"><i>O</i>OLAM</div><p>${t("about_t")}</p></div>
-     <div><h4>OLAM</h4><button onclick="go('explore')">${clean(t("nav_exp"))}</button><button onclick="go('watch')">${clean(t("nav_watch"))}</button><button onclick="openMap()">${clean(t("t_map"))}</button><button onclick="openQuiz()">${clean(t("t_quiz"))}</button><button onclick="openChat()">${clean(t("t_ai"))}</button></div>
+   <footer class="sfooter"><div>${LOGO("dark")}<p>${t("about_t")}</p></div>
+     <div><h4>${BRAND}</h4><button onclick="go('explore')">${clean(t("nav_exp"))}</button><button onclick="go('watch')">${clean(t("nav_watch"))}</button><button onclick="openMap()">${clean(t("t_map"))}</button><button onclick="openQuiz()">${clean(t("t_quiz"))}</button><button onclick="openChat()">${clean(t("t_ai"))}</button></div>
      <div><h4>${clean(t("s_lang"))}</h4>${LANGS.slice(0,6).map(([k,n,f])=>`<button onclick="setLang('${k}')">${n}</button>`).join("")}<a href="${APP_URL}">${t("get_app")}</a></div>
-     <div class="copy"><span>© ${new Date().getFullYear()} OLAM</span><span>Wikipedia · Wikimedia Commons · Pexels · Open-Meteo</span></div></footer>`;
+     <div class="copy"><span>© ${new Date().getFullYear()} Wonderly</span><span>Wikipedia · Wikimedia Commons · Pexels · Open-Meteo</span></div></footer>`;
 }
 function langSheet(){ const S=$("#sh"); S.dataset.k="lang"; S.classList.add("on");
   S.innerHTML=`<div class="shb" onclick="event.stopPropagation()"><div class="shh"><b>${t("s_lang")}</b><button class="x" onclick="closeSheet()">${ICON.down}</button></div><div class="shl"><div class="langs">${LANGS.map(([k,n,f])=>`<button class="${LANG===k?"on":""}" onclick="setLang('${k}');closeSheet()">${n}</button>`).join("")}</div></div></div>`; }
@@ -1634,6 +1648,7 @@ function siteInit(){
 
 /* ================= START ================= */
 if(LIFE&&COL!=="life"){ const pre={odam:"odm_",texnika:"tex_",internet:"net_"}[COL]; for(const l in I18N){ ["brand","kick","h1","sub","sub2","ph","n","g","day","q"].forEach(k=>{ if(I18N[l][pre+k]) I18N[l]["life_"+k]=I18N[l][pre+k]; }); } }
+for(const l in I18N){ I18N[l].life_brand=BRAND; I18N[l].brand=BRAND; }   // brend nomi tarjima qilinmaydi
 if(LIFE){ for(const l in I18N){ if(I18N[l].life_q){ I18N[l].quiz_h=I18N[l].life_q; I18N[l].t_quiz=I18N[l].life_q; } } }
 applyTheme(); applyUI(); applyLang();
 if(!U&&(SITE||LIFE)) U={name:"",country:"UZ",interests:[],regions:[],dream:null,style:"",with:"",season:""};
