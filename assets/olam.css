@@ -1145,14 +1145,18 @@ body.internet .hq,body.internet .htitle{background:linear-gradient(90deg,var(--a
 body.site.internet .htitle{background:none;color:#fff}
 /* ===== Wonderly logosi (Travel — to'q havo rang; har ilova o'z rangida) ===== */
 :root{--brand:#0b72d6}
-body.life{--brand:#0e5a3f} body.odam{--brand:#8a2b1f} body.texnika{--brand:#1f2937} body.internet{--brand:#4c1d95}
+body.life{--brand:#0e5a3f;--brand-t:#15803d;--brand-l:#6ee7b7} body.odam{--brand:#8a2b1f;--brand-t:#c2410c;--brand-l:#fdba74} body.texnika{--brand:#c2410c;--brand-t:#c2410c;--brand-l:#fdba74} body.internet{--brand:#4c1d95;--brand-t:#6d28d9;--brand-l:#c4b5fd}
 .logo{letter-spacing:0}
 .logo i.wm{background:var(--brand);box-shadow:0 8px 18px -8px rgba(11,114,214,.55);overflow:hidden}
 .logo i.wm svg{width:72%;height:auto;display:block;color:#fff}
 .logo .bn{font-weight:800;font-size:18px;letter-spacing:-.3px;white-space:nowrap;line-height:1}
 .logo .bn em{font-style:normal;font-weight:600;color:var(--brand);margin-left:1px}
 [data-theme=dark] .logo .bn em,.ob .body.splash .logo .bn em,.wtop .logo .bn em,.sapp .logo .bn em{color:#8fd0ff}
-body.life .logo .bn em{color:#2fbf84} body.odam .logo .bn em{color:#e4572e} body.internet .logo .bn em{color:#8b5cf6}
+/* logo: barcha ilovalarda bir xil shrift; ilova nomi o'z rangida (och fonda to'qroq, to'q fonda yorug'roq) */
+.logo .bn{font-family:"Plus Jakarta Sans",system-ui,sans-serif!important;text-transform:none!important}
+.logo .bn em{color:var(--brand-t,var(--brand))}
+[data-theme=dark] .logo .bn em,.ob .body.splash .logo .bn em,.wtop .logo .bn em,.sapp .logo .bn em,.sfooter .logo .bn em{color:var(--brand-l,#8fd0ff)}
+[data-ui] .logo i.wm,[data-ui] body.life .logo i.wm{background:var(--brand)!important}
 .ob .logo{justify-content:center;font-size:16px;letter-spacing:0;margin-bottom:14px}
 .ob .logo i.wm{width:44px;height:44px;border-radius:14px}
 .ob .logo .bn{font-size:22px}
@@ -1174,3 +1178,30 @@ body.life .logo .bn em{color:#2fbf84} body.odam .logo .bn em{color:#e4572e} body
 /* joy sahifasi: "Sayohatga qo'shish" — telefonda faqat belgi, kengroq ekranda yozuv ham */
 .tripb .tbl{display:none}
 @media (min-width:700px){ .tripb .tbl{display:inline} }
+/* sayt telefonda: bosh qism ekranga sig'sin, yuqori panel ixcham */
+@media (max-width:899px){ .hgrid{grid-template-columns:minmax(0,1fr)} .hgrid>div,.hpanel{min-width:0} .hchips{flex-wrap:wrap} }
+@media (max-width:560px){
+  .site .tact .tapp,.site #tui{display:none}
+  .site .tcta span{display:none}
+  .site .tcta{padding:0;width:40px;justify-content:center}
+  .site .tact{gap:6px}
+}
+@media (max-width:370px){ .logo .bn em{display:none} }
+@media (max-width:560px){ .site .logo{gap:8px} .site .logo .bn{font-size:16px} .site .logo i.wm{width:34px;height:34px} }
+/* sayt telefonda: toifalar bitta qatorda, yon tomonga suriladi (ilovadagidek) */
+@media (max-width:760px){ .site .chips{flex-wrap:nowrap;overflow-x:auto;margin-left:calc(-1 * var(--gut));margin-right:calc(-1 * var(--gut));padding-left:var(--gut);padding-right:var(--gut)} .site .chips .chip{flex:0 0 auto} }
+/* sayt: raqamlar kartasi och fon ustida ham o'qilsin */
+[data-ui=glass] body.site .hfoot{background:linear-gradient(135deg,rgba(6,22,52,.5),rgba(6,22,52,.28))}
+/* tungi rejim: ikkinchi darajali tugmalar o'qilsin */
+[data-theme=dark] .pill.o2,[data-theme=dark] .aibar button,[data-theme=dark] .pill.o2 span{color:#a9cbff}
+[data-theme=dark] .pill.o2,[data-theme=dark] .aibar button{background:rgba(120,160,255,.14);border-color:rgba(150,185,255,.22)}
+/* sayt (Liquid Glass) + tungi rejim: fon ham to'q, matn yorug' — hamma joyda o'qiladi */
+[data-theme=dark][data-ui=glass] body.site{
+  --card:rgba(22,32,52,.55);--line:rgba(255,255,255,.12);--text:#e9eef7;--mute:#9fb0c9;--skyl:rgba(110,160,255,.16);--sky2:#9cc3ff;
+  --gl:linear-gradient(135deg,rgba(40,56,88,.62),rgba(20,30,48,.34));
+  --gls:inset 0 1px 1px rgba(255,255,255,.22),inset 0 0 18px rgba(255,255,255,.04),0 20px 44px -22px rgba(0,0,0,.6);
+  --lg-bg:linear-gradient(180deg,rgba(255,255,255,.12) 0%,rgba(255,255,255,.03) 100%);--lg-bd:rgba(255,255,255,.2)}
+[data-theme=dark][data-ui=glass] body.site .app{background:linear-gradient(180deg,#0a1322 0%,#0c1730 55%,#09111e 100%)}
+[data-theme=dark][data-ui=glass] body.site .app::before{background:linear-gradient(rgba(6,12,24,.62),rgba(6,12,24,.78)),var(--uibg,none) center/cover no-repeat}
+[data-theme=dark][data-ui=glass] body.site .wiki{color:#c4d1e4}
+[data-theme=dark][data-ui=glass] body.site .detail,[data-theme=dark][data-ui=glass] body.site .ov:not(#mapv),[data-theme=dark][data-ui=glass] body.site .chat,[data-theme=dark][data-ui=glass] body.site .shb{background:rgba(8,14,26,.72)}

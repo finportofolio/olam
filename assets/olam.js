@@ -1455,14 +1455,14 @@ function catDup(c){ if(!CURD) CURD={t:new Set(PLACES.filter(p=>!p.dyn).map(p=>(p
 function catReset(){ for(let i=PLACES.length-1;i>=0;i--){ const p=PLACES[i]; if((p.cat||(p.animal&&p.dyn))&&!saved.has(p.id)){ delete IDX[p.id]; PLACES.splice(i,1); } } WC.n=0; }
 function catTxt(){ return WC.busy?t("ctry_load"):t("cat_st",{n:fmtN(WC.total||WC.n)}); }
 const fmtN=n=>String(n).replace(/\B(?=(\d{3})+(?!\d))/g,"\u00a0");
-function catUI(){ const N=Math.max(PLACES.filter(p=>!p.dyn||p.cat).length,WC.total||0); const h=$("#hN"); if(h) h.textContent=fmtN(N)+"+"; const c=$("#hC"); if(c) c.textContent=(ALLC||CTRY).length; const s=$("#wcst"); if(s) s.textContent=catTxt(); }
+function catUI(){ const N=Math.max(PLACES.filter(p=>!p.dyn||p.cat).length,WC.total||0); const h=$("#hN"); if(h) h.textContent=fmtN(N)+"+"; const c=$("#hC"); if(c) c.textContent=WC.nc||(ALLC||CTRY).length; const s=$("#wcst"); if(s) s.textContent=catTxt(); }
 async function catLoad(){
   if(WC.busy||LIFE) return; WC.busy=true; const lang=catLang();
   try{
     let r=await fetch("assets/catalog/"+lang+".json"); if(!r.ok&&lang!=="en") r=await fetch("assets/catalog/en.json");
     if(r.ok){ const d=await r.json(); if(lang===catLang()){
       if(Array.isArray(d.countries)&&d.countries.length){ const known=new Set(CTRY.map(x=>x[0])); ALLC=[...CTRY,...d.countries.filter(x=>!known.has(x[0])).map(x=>[x[0],x[1],REGFIX[x[0]]||x[2]])]; }
-      WC.total=d.total||0; (d.items||[]).forEach(c=>{ if(!catDup(c)) mkPlace(c,lang,true); }); } }
+      WC.total=d.total||0; WC.nc=(d.countries||[]).length; (d.items||[]).forEach(c=>{ if(!catDup(c)) mkPlace(c,lang,true); }); } }
   }catch(e){}
   WC.busy=false; WC.n=PLACES.filter(p=>p.cat).length; refresh(); catUI(); tryQP();
 }
@@ -1599,7 +1599,7 @@ function renderHomeSite(){ setTimeout(fillAIPicks,0);
         <div class="hbtns"><button class="hbtn" onclick="go('watch')">${t("watch_now")}<span class="arw">${ICON.arrow}</span></button><button class="hbtn gl" onclick="openMap()">${clean(t("map_h"))}</button></div></div>
        <div class="hpanel"><form class="hsearch" onsubmit="event.preventDefault();heroSearch(this.q.value)">${ICON.search}<input name="q" placeholder="${esc(t("search_home"))}" autocomplete="off"><button>${t("search_b")}</button></form>
         <div class="hchips">${["dengiz","tog","tarix","islom","sharshara","shahar"].map(k=>`<button onclick="openMood('${k}')">${C[k]}</button>`).join("")}</div></div></div>
-      <div class="hfoot"><div class="hstat"><i>${ICON.pin}</i><b id="hN">${fmtN(Math.max(N,WC.total||0))}+</b><small>${t("places")}</small></div><div class="hstat"><i>${ICON.map}</i><b id="hC">${(ALLC||CTRY).length}</b><small>${t("st_ctry")}</small></div><div class="hstat"><i><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></i><b>${LANGS.length}</b><small>${t("st_lang")}</small></div><div class="hstat"><i>${ICON.spark}</i><b>AI</b><small>${t("t_ai")}</small></div>
+      <div class="hfoot"><div class="hstat"><i>${ICON.pin}</i><b id="hN">${fmtN(Math.max(N,WC.total||0))}+</b><small>${t("places")}</small></div><div class="hstat"><i>${ICON.map}</i><b id="hC">${WC.nc||(ALLC||CTRY).length}</b><small>${t("st_ctry")}</small></div><div class="hstat"><i><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></i><b>${LANGS.length}</b><small>${t("st_lang")}</small></div><div class="hstat"><i>${ICON.spark}</i><b>AI</b><small>${t("t_ai")}</small></div>
        ${(()=>{ const dp=dailyPlace(); return dp?`<div class="hday" onclick="go('watch','${dp.id}')"><div><small>${t("daily")}</small><b>${esc(pN(dp))} · ${esc(pCountry(dp))}</b></div><span class="arw">${ICON.play}</span></div>`:""; })()}</div>
       <div class="hscroll" aria-hidden="true"></div></section><div id="hbody"></div>`;
     HB.pool=null; clearInterval(HB.timer); heroNext(); HB.timer=setInterval(()=>{ if(!document.hidden) heroNext(); },10000);
@@ -1611,7 +1611,7 @@ function renderHomeSite(){ setTimeout(fillAIPicks,0);
   const top=(l=>l.length>=7?l:list.filter(p=>p.id!==hero.id))(list.filter(p=>p.id!==hero.id&&p.img)).slice(0,7);
   const dp=dailyPlace();
   $("#hbody").innerHTML=`
-   <div class="sec"><div><span class="slabel">${t("dirs")}</span><h2>${t("cats_sub")}</h2></div><span onclick="openCats()">${t("all")} →</span></div>
+   <div class="sec"><div><span class="slabel">${t("dirs")}</span><h2>${t("cats_h")}</h2><small>${t("cats_sub")}</small></div><span onclick="openCats()">${t("all")} →</span></div>
    <div class="dirs">${dirs}</div>
    <div class="sec"><div><span class="slabel">${U?.dream===hero.id?t("dream_place"):t("today")}</span><h2>${t("best_h")}</h2><small>${PR[topTags(1)[0]]||t("based")}</small></div><span onclick="go('explore')">${t("all")} →</span></div>
    <div class="dgrid">${top.map((p,i)=>dcard(p,i===0?"big":"")).join("")}</div>
@@ -1622,7 +1622,7 @@ function renderHomeSite(){ setTimeout(fillAIPicks,0);
       <div class="aipick"><div class="aiph" id="aisec">${clean(t("ai_rec"))}<span onclick="openChat()">${t("ask")} →</span></div><div id="aipick"><div class="ld">${t("ai_loading")}</div></div></div></div></div>
    <div class="sec"><div><span class="slabel">${catIcon("globe")}${t("ctry_h")}</span><h2>${t("ctry_sub")}</h2></div><span onclick="openCountries()">${t("all")} · ${CTRY.length} →</span></div>
    <div class="chips" style="padding-top:0">${ctryChips()}</div>
-   <div class="sec"><div><span class="slabel">${t("cats_h")}</span><h2>${t("cats_sub")}</h2></div><span onclick="openCats()">${t("all")} →</span></div>
+   <div class="sec"><div><span class="slabel">${t("dirs")}</span><h2>${t("cats_h")}</h2><small>${t("cats_sub")}</small></div><span onclick="openCats()">${t("all")} →</span></div>
    <div class="cats">${cats}</div>
    <div class="sec"><div><span class="slabel">${catIcon("wonder")}${clean(t("won_chip"))}</span><h2>${t("won_h")}</h2><small>${t("won_sub")}</small></div><span onclick="X.tag='wonder';X.q='';X.reg='all';go('explore')">${t("all")} →</span></div>
    <div id="wond">${wondersHTML()}</div>
